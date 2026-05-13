@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <!-- ========== Device Services ========== -->
+
+    <service verb="send" noun="DeviceNotification" authenticate="false">
+        <description>Send a notification message for a Device.</description>
+        <in-parameters>
+            <parameter name="deviceId" required="true"/>
+            <parameter name="notificationTopic" required="true"/>
+            <parameter name="notificationType" required="true"/>
+            <parameter name="notificationTitle"/>
+            <parameter name="message" required="true"/>
+        </in-parameters>
+        <actions>
+            <entity-find-one entity-name="moqui.device.DeviceDetail" value-field="device"/>
+            <if condition="device == null"><return error="true" message="Device with ID ${deviceId} not found. Notification not sent."/></if>
+            <script><![CDATA[
+                import org.moqui.context.NotificationMessage
+                import org.moqui.impl.context.NotificationMessageImpl
+
+                Map msgMap = new HashMap<>()
+                msgMap.put("typeString", notificationType)
+                msgMap.put("device", [deviceId:device.deviceId, deviceName:device.deviceName])
+                msgMap.put("message", message)
+
+                NotificationMessage nm = ec.makeNotificationMessage().topic(notificationTopic).title(notificationTitle?:"")
+                nm.message(msgMap)
+                String currentUserId = ec.user.userId
+                if (currentUserId) nm.userId(currentUserId)
+                nm.type(notificationType)
+                nm.send()
+            ]]></script>
+        </actions>
+    </service>
+
+    <!-- ========== Device Request Services ========== -->
+
+    <service verb="run" noun="DeviceRequestGroup" authenticate="false" transaction="ignore">
+        <description>Run a device request group. Mainly used to mark transactions.
+            This is meant to be called as a scheduled service.</description>
+        <in-parameters>
+            <parameter name="requestGroup" required="true"/>
+            <parameter name="async" type="Boolean" default="true"/>
+            <parameter name="distribute" type="Boolean" default="false"/>
+        </in-parameters>
+        <actions>
+            <entity-find entity-name="moqui.device.DeviceRequest" list="requestList" cache="true">
+                <econdition field-name="requestGroup"/>
+                <order-by field-name="priority"/>
+            </entity-find>
+            <iterate list="requestList" entry="request">
+                <log level="info" message="Run device request with name ${request.requestName} in the group ${request.requestGroup}."/>
+                <service-call name="moqui.device.DeviceServices.run#DeviceRequest" in-map="[requestName:request.requestName]"
+                    async="${distribute ? 'distribute' : (async ? 'true' : 'false')}"
+                    ignore-error="true" transaction="ignore"/>
+            </iterate>
+        </actions>
+    </service>
+    <service verb="run" noun="DeviceRequest" authenticate="false" transaction="ignore">
+        <description>Run a device request.</description>
+        <in-parameters>
+            <parameter name="requestName" required="true"/>
+        </in-parameters>
+        <actions>
+            <entity-find-one entity-name="moqui.device.DeviceRequest" value-field="request" cache="true"/>
+            <if condition="!request">
+                <return error="true" message="Device request not found. Could not run the device request with name ${requestName}."/>
+            </if>
+            <if condition="!request.runServiceName">
+                <return error="true" message="The device request does not have a service set. Could not run the device request with name ${requestName}."/>
+            </if>
+
+            <entity-find-one entity-name="moqui.device.Device" value-field="device" cache="true">
+                <field-map field-name="deviceId" from="request.deviceId"/>
+            </entity-find-one>
+
+            <if condition="request.connectionName">
+                <entity-find-one entity-name="moqui.device.DeviceConnection" value-field="connection" cache="true">
+                    <field-map field-name="connectionName" from="request.connectionName"/>
+                </entity-find-one>
+                <if condition="!connection">
+                    <return error="true" message="The device request does not have a connection set. Could not run the device request with name ${requestName}."/>
+                </if>
+            </if>
+
+            <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount" cache="true">
+                <field-map field-name="userId" from="connection?.userId"/>
+            </entity-find-one>
+  
+            <entity-find entity-name="moqui.device.DeviceRequestItem" list="bulkRequestItemList" cache="true">
+                <econdition field-name="requestName" from="requestName"/>
+                <econdition field-name="query" operator="is-null"/>
+                <order-by field-name="sequenceNum"/>
+            </entity-find>
+
+            <entity-find entity-name="moqui.device.DeviceRequestItem" list="requestItemList" cache="true">
+                <econdition field-name="requestName" from="requestName"/>
+                <econdition field-name="query" operator="is-not-null"/>
+                <order-by field-name="sequenceNum"/>
+            </entity-find>
+
+            <!-- Filter write requests to send only changed parameters.
+                 This filtering only makes sense for items not in a bulk request. -->
+            <if condition="'DrtWrite' == request.requestTypeEnumId &amp;&amp; 'Y' == request.onlyChangedParameters">
+                <set field="parameterIdSet" from="requestItemList*.parameterId"/>
+                <entity-find entity-name="moqui.entity.EntityAuditLog" list="changedRows" distinct="true" cache="false">
+                    <econdition field-name="changedEntityName" value="moqui.math.Parameter"/>
+                    <econdition field-name="pkPrimaryValue" operator="in" from="parameterIdSet"/>
+                    <econdition field-name="changedDate" operator="greater" from="request.lastUpdatedStamp"/>
+                    <order-by field-name="parameterId"/>
+                    <select-field field-name="pkPrimaryValue"/>
+                </entity-find>
+                <set field="changedIds" from="changedRows*.pkPrimaryValue"/>
+                <set field="requestItemList" from="requestItemList.findAll { it.parameterId in changedIds }"/>
+            </if>
+            <if condition="!bulkRequestItemList &amp;&amp; !requestItemList">
+                <return message="The device request with name ${requestName} has no items to process."/>
+            </if>
+            <log level="info" message="Running device request with name ${request.requestName}."/>
+            <!-- Call the configured service. -->
+            <service-call name="${request.runServiceName}" in-map="[device:device, request:request,
+                connection:connection, userAccount:userAccount,
+                bulkRequestItemList:bulkRequestItemList, requestItemList:requestItemList]"
+                out-map="context" disable-authz="true" transaction="ignore"/>
+        </actions>
+    </service>
+    <!-- The interface that tools or libraries will need to implement for fieldbus communications. -->
+    <service verb="run" noun="DeviceRequestInternal" type="interface">
+        <description>Run a device request over a fieldbus protocol.</description>
+        <in-parameters>
+            <parameter name="device" required="true" type="EntityValue"/>
+            <parameter name="request" required="true" type="EntityValue"/>
+            <parameter name="connection" type="EntityValue"/>
+            <parameter name="userAccount" type="EntityValue"/>
+            <parameter name="requestItemList" type="List"/>
+            <parameter name="bulkRequestItemList" type="List"/>
+        </in-parameters>
+    </service>
+</services>

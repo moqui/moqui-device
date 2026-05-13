@@ -1,0 +1,667 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a 
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<entity-facade-xml type="seed">
+    <!-- NOTE: Setup data for the device package-->
+
+    <!-- Device Type -->
+    <moqui.basic.EnumerationType description="Device Type" enumTypeId="DeviceType"/>
+
+    <moqui.basic.Enumeration description="Physical Device" enumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Computer" enumId="DtComputer" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Mobile Computer" enumId="DtMobileComputer" parentEnumId="DtComputer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="HandHeld Computer" enumId="DtHandHeldComputer" parentEnumId="DtMobileComputer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Wearable Computer" enumId="DtWearableComputer" parentEnumId="DtMobileComputer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Vehicle Mount Computer" enumId="DtVehicleMountComputer" parentEnumId="DtMobileComputer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Healthcare Computer" enumId="DtHealthcareComputer" parentEnumId="DtMobileComputer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Tablet" enumId="DtTabletComputer" parentEnumId="DtMobileComputer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Rugged Tablet" enumId="DtRuggedTabletComputer" parentEnumId="DtMobileComputer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Mobile Phone" enumId="DtMobilePhone" parentEnumId="DtMobileComputer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Rugged Mobile Phone" enumId="DtRuggedMobilePhone" parentEnumId="DtMobileComputer" enumTypeId="DeviceType"/>
+
+    <moqui.basic.Enumeration description="Server" enumId="DtServer" parentEnumId="DtComputer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Computing Server" enumId="DtComputingServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Rack Server" enumId="DtRackServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Tower Server" enumId="DtTowerServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Blade Server" enumId="DtBladeServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="GPU Server" enumId="DtGPUServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="HPC Server" enumId="DtHPCServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Twin Server" enumId="DtTwinServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Rugged Server" enumId="DtRuggedServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Industrial Server" enumId="DtIndustrialServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
+    
+    <moqui.basic.Enumeration description="Storage Server" enumId="DtStorageServer" parentEnumId="DtServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Primary Data Storage Server" enumId="DtPrimaryDataStorageServer" parentEnumId="DtStorageServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Industrial Primary Data Storage Server" enumId="DtIndustrialPrimaryDataStorageServer" parentEnumId="DtStorageServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Unstructured Data Storage Server" enumId="DtUnstructuredDataStorageServer" parentEnumId="DtStorageServer" enumTypeId="DeviceType"/>
+
+    <moqui.basic.Enumeration description="PC" enumId="DtPc" parentEnumId="DtComputer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Industrial Pc" enumId="DtIndustrialPc" parentEnumId="DtPc" enumTypeId="DeviceType"/>
+    
+    <moqui.basic.Enumeration description="IoT" enumId="DtIoT" parentEnumId="DtComputer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="IoT Gateway" enumId="DtIoTGateway" parentEnumId="DtIoT" enumTypeId="DeviceType"/>
+    
+    <!-- NOTE: Device that provides regulation or management of a system or component (ISO 16484-5:2017).	
+            Typical types of controllers for a piece of equipment include CNC (Computer Numerical Control),
+            PAC (Programmable Automation Control), IPC (Industrialized Computer), or EC (Embedded Computer). -->
+    <moqui.basic.Enumeration description="Controller" enumId="DtController" parentEnumId="DtComputer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="PLC" enumId="DtPLC" parentEnumId="DtController" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Safety PLC" enumId="DtSafetyPLC" parentEnumId="DtController" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="PAC" enumId="DtPAC" parentEnumId="DtController" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Motion Controller" enumId="DtMotionController" parentEnumId="DtController" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Robot Controller" enumId="DtRobotController" parentEnumId="DtController" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Building Controller" enumId="DtBuildingController" parentEnumId="DtController" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Room Controller" enumId="DtRoomController" parentEnumId="DtController" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Lighting Controller" enumId="DtLightingController" parentEnumId="DtController" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Shading Controller" enumId="DtShadingController" parentEnumId="DtController" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Access Controller" enumId="DtAccessController" parentEnumId="DtController" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="HVAC Controller" enumId="DtHVACController" parentEnumId="DtController" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="CNC Controller" enumId="DtCNC" parentEnumId="DtController" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Embedded Controller" enumId="DtEmbeddedController" parentEnumId="DtController" enumTypeId="DeviceType"/>
+    
+    <moqui.basic.Enumeration description="Monitoring Device" enumId="DtMonitoringDevice" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Energy Meter" enumId="DtEnergyMeter" parentEnumId="DtMonitoringDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Condition Monitoring" enumId="DtConditionMonitoring" parentEnumId="DtMonitoringDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Network Analyzer" enumId="DtNetworkAnalyzer" parentEnumId="DtMonitoringDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Network Multimeter" enumId="DtNetworkMultimeter" parentEnumId="DtMonitoringDevice" enumTypeId="DeviceType"/>
+
+    <moqui.basic.Enumeration description="Drive" enumId="DtDrive" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Multidrives" enumId="DtMultiDrives" parentEnumId="DtDrive" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Drive Group" enumId="DtDriveGroup" parentEnumId="DtDrive" enumTypeId="DeviceType"/>
+
+    <moqui.basic.Enumeration description="Product Identification" enumId="DtProductIdentification" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Barcode Scanner" enumId="DtBarcodeScanner" parentEnumId="DtProductIdentification" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Wearable Barcode Scanner" enumId="DtWearableBarcodeScanner" parentEnumId="DtBarcodeScanner" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Mobile Barcode Scanner" enumId="DtMobileBarcodeScanner" parentEnumId="DtBarcodeScanner" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Fixed Mount Barcode Scanner" enumId="DtFixedMountBarcodeScanner" parentEnumId="DtBarcodeScanner" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="RFID Antenna" enumId="DtRFIDAntenna" parentEnumId="DtProductIdentification" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="RFID Reader" enumId="DtRFIDReader" parentEnumId="DtProductIdentification" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="RFID Scanner" enumId="DtRFIDScanner" parentEnumId="DtProductIdentification" enumTypeId="DeviceType"/>
+
+    <moqui.basic.Enumeration description="Smart Actuator" enumId="DtSmartActuator" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Smart Sensor" enumId="DtSmartSensor" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+
+    <moqui.basic.Enumeration description="Remote IO" enumId="DtRemoteIO" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Smart Remote IO" enumId="DtSmartRemoteIO" parentEnumId="DtRemoteIO" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Safety Remote IO" enumId="DtSafetyRemoteIO" parentEnumId="DtRemoteIO" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Extreme Condition Remote IO" enumId="DtExtremeConditionRemoteIO" parentEnumId="DtRemoteIO" enumTypeId="DeviceType"/>
+
+    <moqui.basic.Enumeration description="Network Device" enumId="DtNetworkDevice" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Gateway" enumId="DtGateway" parentEnumId="DtNetworkDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Switch" enumId="DtSwitch" parentEnumId="DtNetworkDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Core Switch" enumId="DtCoreSwitch" parentEnumId="DtSwitch" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Distribution Switch" enumId="DtDistributionSwitch" parentEnumId="DtSwitch" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Access Switch" enumId="DtAccessSwitch" parentEnumId="DtSwitch" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Industrial Access Switch" enumId="DtIndustrialAccessSwitch" parentEnumId="DtSwitch" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Storage Area Network - SAN Switch" enumId="DtSANSwitch" parentEnumId="DtSwitch" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Router" enumId="DtRouter" parentEnumId="DtNetworkDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Firewall" enumId="DtFirewall" parentEnumId="DtNetworkDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Network Bridge" enumId="DtNetworkBridge" parentEnumId="DtNetworkDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Modem" enumId="DtModem" parentEnumId="DtNetworkDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Access Point" enumId="DtAccessPoint" parentEnumId="DtNetworkDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Indoor Access Point" enumId="DtIndoorAccessPoint" parentEnumId="DtAccessPoint" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Outdoor Access Point" enumId="DtOutdoorAccessPoint" parentEnumId="DtAccessPoint" enumTypeId="DeviceType"/>
+
+    <!-- MtConnect Device Types -->
+    <!-- NOTE: Device that coordinates actions and activities between pieces of equipment. -->
+    <moqui.basic.Enumeration description="Interface" enumId="DtInterface" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <!-- NOTE: Device that provides information about a data source for a software agent, adapting the communication protocol. 
+            It may contain connectivity state of the data source and additional telemetry about the data source and source-specific information. -->
+    <moqui.basic.Enumeration description="Adapter" enumId="DtAdapter" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <!-- NOTE: Device composed of removable part(s) of a piece of equipment that provides supplementary or extended functionality. -->
+    <moqui.basic.Enumeration description="Auxiliary" enumId="DtAuxiliary" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <!-- NOTE: Component that is permanently integrated into the piece of equipment. -->
+    <moqui.basic.Enumeration description="System" enumId="DtSystem" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <!-- NOTE: Device composed of a motion system that provides linear or rotational motion for a piece of equipment, controlling each degree of freedom in a machine or robot.
+            Each axis can consist of a controller, drive, motor, and transmission or gear components necessary to couple to the load.
+            In robotics, the term Axis is synonymous with Joint. A Joint is the connection between two parts of the structure that move in relation to each other.
+            An X-Y-Z machine is a three axis machine where the X and Y axes control movement in the horizontal plane and the Z axis controls vertical motion. 
+
+            Some standards have two high-level classes for automation equipment as follows: 
+            (1) Equipment that controls cartesian coordinate axes and 
+            (2) Equipment that controls articulated axes. 
+            There are ambiguous cases where some machines exhibit both characteristics; 
+            when this occurs, the primary control system's configuration determines the classification.
+            Examples of cartesian coordinate equipment are CNC Machine Tools, Coordinate measurement machines, as specified in ISO 841, and 3D Printers.
+            Examples of articulated automation equipment are Robotic systems as specified in ISO 8373.
+            The following sections define the designation of names for the axes and additional guidance when selecting the correct scheme to use for a given piece of equipment.
+
+            Cartesian Coordinate Naming Conventions:
+            A Three-Dimensional Cartesian Coordinate control system organizes its axes orthogonally relative to a machine coordinate system where the manufacturer of the equipment specifies the origin.
+
+            Linear Motion:
+            A piece of equipment must represent prismatic motion using a linear axis and assign its components using the designations X, Y, and Z. 
+            A Linear axis must append a monotonically increasing suffix when there are more than one parallel axes; for example, X2, X3, and X4.
+
+            Rotary Motion:
+            Rotary axes exhibiting rotary motion using A, B, and C. A  
+            Rotary axismust append a monotonically increasing suffix when more than one rotary axis rotates around the same linear axis; for example, A2, A3, and A4.
+
+            Articulated Machine Control Systems:
+            An articulated control system’s axes represent the connecting linkages between two adjacent rigid members of an assembly.
+            The linear axis represents prismatic motion, and the rotary axis represents the rotational motion of the two related members.
+            The control organizes the axes in a kinematic chain from the mounting surface (base) to the end-effector or tooling.
+
+            Articulated Machine Axis Names:
+            The axes of articulated machines represent forward kinematic relationships between mechanical linkages.
+            Each axis is a connection between linkages, also referred to as joints, and MUST be named using a J followed by a monotonically increasing number; for example, J1, J2, J3.
+            The numbering starts at the base axis connected or closest to the mounting surface, J1, incrementing to the mechanical interface, Jn, where n is the number of the last axis.
+            The chain forms a parent-child relationship with the parent being the axis closest to the base.
+
+            A machine having an axis with more than one child should number each branch using its numeric designation followed by a branch number and a monotonically increasing number.
+            For example, if J2 has two children, the first child branch MUST be named J2.1.1 and the second child branch J2.2.1.
+            A child of the first branch MUST be named J2.1.2, incrementing to J2.1.n, where J2.1.n is the number of the last axis in that branch. -->
+    <moqui.basic.Enumeration description="Axis" enumId="DtAxis" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <!-- NOTE: Linear Axis that provides prismatic motion along a fixed axis. -->
+    <moqui.basic.Enumeration description="Linear Axis" enumId="DtLinearAxis" parentEnumId="DtAxis" enumTypeId="DeviceType"/>
+    <!-- NOTE: Rotatory Axis that provides rotation about a fixed axis. -->
+    <moqui.basic.Enumeration description="Rotatory Axis" enumId="DtRotatoryAxis" parentEnumId="DtAxis" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Servo Drive" enumId="DtServoDrive" parentEnumId="DtRotatoryAxis" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Multi-Axes Drive" enumId="DtMultiAxesDrive" parentEnumId="DtRotatoryAxis" enumTypeId="DeviceType"/>
+
+    <!-- Device Group Type -->
+    <moqui.basic.Enumeration description="Device Group" enumId="DtDeviceGroup" enumTypeId="DeviceType"/>
+
+    <!-- MtConnect Device Group Type --> 
+    <moqui.basic.Enumeration description="Interfaces" enumId="DgtInterfaces" parentEnumId="DtDeviceGroup" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Adapters" enumId="DgtAdapters" parentEnumId="DtDeviceGroup" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Auxiliary" enumId="DgtAuxiliary" parentEnumId="DtDeviceGroup" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="System" enumId="DgtSystem" parentEnumId="DtDeviceGroup" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Axes" enumId="DgtAxes" parentEnumId="DtDeviceGroup" enumTypeId="DeviceType"/>
+
+    <moqui.basic.Enumeration description="Cluster Group" enumId="DgtCluster" parentEnumId="DtDeviceGroup" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Master/Slave Group" enumId="DgtMasterSlave" parentEnumId="DgtCluster" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Primary/Secondary Hot-Standby Group" enumId="DgtPrimarySecondary" parentEnumId="DgtMasterSlave" enumTypeId="DeviceType"/>
+
+    <moqui.basic.Enumeration description="Networking Group" enumId="DgtNetworking" parentEnumId="DtDeviceGroup" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Access Layer Group" enumId="DgtAccessLayer" parentEnumId="DgtNetworking" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Distribution Layer Group" enumId="DgtDistributionLayer" parentEnumId="DgtNetworking" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Core Layer Group" enumId="DgtCoreLayer" parentEnumId="DgtNetworking" enumTypeId="DeviceType"/>
+    
+    <moqui.basic.Enumeration description="Monitoring Group" enumId="DgtMonitoring" parentEnumId="DtDeviceGroup" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Energy Monitoring" enumId="DgtEnergyMonitoring" parentEnumId="DgtMonitoring" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Equipment Monitoring" enumId="DgtEquipmentMonitoring" parentEnumId="DgtMonitoring" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Condition Monitoring" enumId="DgtConditionMonitoring" parentEnumId="DgtMonitoring" enumTypeId="DeviceType"/>
+    
+    <moqui.basic.Enumeration description="Control Group" enumId="DgtControl" parentEnumId="DtDeviceGroup" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Master/Follower Control Group" enumId="DgtMasterFollower" parentEnumId="DgtControl" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Auto-Change Master/Follower Control Group" enumId="DgtAutoChangeMasterFollower" parentEnumId="DgtMasterFollower" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Conveyor Control Group" enumId="DgtConveyor" parentEnumId="DgtControl" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Transport systems Control Group" enumId="DgtTransportSystems" parentEnumId="DgtControl" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Robot Control Group" enumId="DgtRobot" parentEnumId="DgtControl" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Processing Cell Control Group" enumId="DgtProcessingCell" parentEnumId="DgtControl" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="HVACR Control Group" enumId="DgtHvacr" parentEnumId="DgtProcessingCell" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Cold Control Group" enumId="DgtCold" parentEnumId="DgtHvacr" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Heat Control Group" enumId="DgtHeat" parentEnumId="DgtHvacr" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Air Handling Unit Control Group" enumId="DgtAHU" parentEnumId="DgtHvacr" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Air Renewal Control Group" enumId="DgtAirRenewal" parentEnumId="DgtHvacr" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Manufacturing Cell Control Group" enumId="DgtManufacturingCell" parentEnumId="DtDeviceGroup" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Lathe CNC Control Group" enumId="DgtLatheCnc" parentEnumId="DgtManufacturingCell" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Milling CNC Control Group" enumId="DgtMillCnc" parentEnumId="DgtManufacturingCell" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Drilling CNC Control Group" enumId="DgtDrillCnc" parentEnumId="DgtManufacturingCell" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Grinding CNC Control Group" enumId="DgtGrinderCnc" parentEnumId="DgtManufacturingCell" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Router CNC Control Group" enumId="DgtRouterCnc" parentEnumId="DgtManufacturingCell" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="3D Printer Control Group" enumId="Dgt3DPrinter" parentEnumId="DgtManufacturingCell" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Plasma Cutting CNC Control Group" enumId="DgtPlasmaCuttingCnc" parentEnumId="DgtManufacturingCell" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Laser Cutting CNC Control Group" enumId="DgtLaserCuttingCnc" parentEnumId="DgtManufacturingCell" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Electric Discharge CNC Control Group" enumId="DgtElectricDischargeCnc" parentEnumId="DgtManufacturingCell" enumTypeId="DeviceType"/>
+
+    <!-- Device Purpose -->
+    <moqui.basic.EnumerationType description="Device Purpose" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Computing" enumId="DepComputing" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Hard Real-Time Computing" enumId="DepHardRealTimeComputing" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Soft Real-Time Computing" enumId="DepSoftRealTimeComputing" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="HPC Computing" enumId="DepHPCComputing" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="GPU Based Computing" enumId="DepGPUBasedComputing" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Stream Processing Computing" enumId="DepStreamProcessingComputing" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Storage" enumId="DepStorage" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Servo Motor Control" enumId="DepServoMotorControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Motor Control" enumId="DepMotorControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Process Control" enumId="DepProcessControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Compressor Control" enumId="DepCompressorControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Fan Control" enumId="DepFanControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Water Pump Control" enumId="DepWaterPumpControl" parentEnumId="DepFanControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Blower Fan Control" enumId="DepBlowerFanControl" parentEnumId="DepFanControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="AHU Fan Control" enumId="DepAhuFanControl" parentEnumId="DepFanControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Cooling Tower Control" enumId="DepCoolingTowerControl" parentEnumId="DepFanControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Condenser Control" enumId="DepCondenserControl" parentEnumId="DepFanControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Pump Control" enumId="DepPumpControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Heat Pump Control" enumId="DepHeatPumpControl" parentEnumId="DepPumpControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Cold Pump Control" enumId="DepColdPumpControl" parentEnumId="DepPumpControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Solar Pump Control" enumId="DepSolarPumpControl" parentEnumId="DepPumpControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Elevator Control" enumId="DepElevatorControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Hoist Control" enumId="DepHoistControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Crane Control" enumId="DepCraneControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Offshore Winch Control" enumId="DepOffshoreWinchControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Deck Machinery Control" enumId="DepDeckMachineryControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Centrifugal Separator Control" enumId="DepCentrifugalSeparatorControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Conveyor Control" enumId="DepConveyorControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Mixer Control" enumId="DepMixerControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Milling Control" enumId="DepMillingControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Crusher Control" enumId="DepCrusherControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Shredder Control" enumId="DepShredderControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Centrifuge Control" enumId="DepCentrifugeControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Transport Systems Control" enumId="DepTransportSystemsControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Robot Control" enumId="DepRobotControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="CNC Control" enumId="DepCncControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Network Control" enumId="DepNetworkControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Security Control" enumId="DepSecurityControl" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Protection Control" enumId="DepProtectionControl" enumTypeId="DevicePurpose"/>
+
+    <!-- Device Control Method -->
+    <moqui.basic.EnumerationType description="Device Control Method" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Classical Control Method" enumId="DcmClassicalControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Open Loop Control" enumId="DcmOpenLoopControl" parentEnumId="DcmClassicalControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="PID (Proportional-Integral-Derivative) Control" enumId="DcmPIDControl" parentEnumId="DcmClassicalControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="PI (Proportional-Integral) Control" enumId="DcmPIControl" parentEnumId="DcmClassicalControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="PD (Proportional-Derivative) Control" enumId="DcmPDControl" parentEnumId="DcmClassicalControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="P (Proportional) Control" enumId="DcmPControl" parentEnumId="DcmClassicalControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Lead-Lag Compensation" enumId="DcmLeadLagCompensation" parentEnumId="DcmClassicalControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Pole-Placement Control" enumId="DcmPolePlacementControl" parentEnumId="DcmClassicalControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Optimal Control Method" enumId="DcmOptimalControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Linear Quadratic Regulator (LQR)" enumId="DcmLQR" parentEnumId="DcmOptimalControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Linear Quadratic Gaussian (LQG)" enumId="DcmLQG" parentEnumId="DcmOptimalControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Model Predictive Control (MPC)" enumId="DcmMPC" parentEnumId="DcmOptimalControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Robust Control Method" enumId="DcmRobustControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="H-Infinity (H∞) Control" enumId="DcmHInfinityControl" parentEnumId="DcmRobustControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Sliding Mode Control (SMC)" enumId="DcmSlidingModeControl" parentEnumId="DcmRobustControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Adaptive Control Method" enumId="DcmAdaptiveControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Model Reference Adaptive Control (MRAC)" enumId="DcmModelReferenceAdaptiveControl" parentEnumId="DcmAdaptiveControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Self-Tuning Regulators (STR)" enumId="DcmSTR" parentEnumId="DcmAdaptiveControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="µ-Synthesis (Mu-Synthesis)" enumId="DcmMuSynthesis" parentEnumId="DcmAdaptiveControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Intelligent Control Method" enumId="DcmICM" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Fuzzy Logic Control" enumId="DcmFuzzyLogicControl" parentEnumId="DcmICM" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Neural Network Control" enumId="DcmNeuralNetworkControl" parentEnumId="DcmICM" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Reinforcement Learning (RL) Control" enumId="DcmRLControl" parentEnumId="DcmICM" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Nonlinear Control Method" enumId="DcmNonlinearControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Feedback Linearization" enumId="DcmFeedbackLinearization" parentEnumId="DcmNonlinearControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Backstepping Control" enumId="DcmBacksteppingControl" parentEnumId="DcmNonlinearControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Lyapunov-Based Control" enumId="DcmLyapunovBasedControl" parentEnumId="DcmNonlinearControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Data-Driven Method" enumId="DcmDataDrivenControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Iterative Learning Control (ILC)" enumId="DcmILC" parentEnumId="DcmDataDrivenControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Intelligent PID (iPID)" enumId="DcmIPID" parentEnumId="DcmDataDrivenControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Model-Free Adaptive Control (MFAC)" enumId="DcmMFAC" parentEnumId="DcmDataDrivenControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Virtual Reference Feedback Tuning (VRFT)" enumId="DcmVRFT" parentEnumId="DcmDataDrivenControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Extremum Seeking Control (ESC)" enumId="DcmESC" parentEnumId="DcmDataDrivenControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Data-Driven Predictive Control (DDPC)" enumId="DcmDDPC" parentEnumId="DcmDataDrivenControl" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="None" enumId="DcmNone" enumTypeId="DeviceControlMethod"/>
+    <!-- Control methods for simple bistable or basic devices.
+        For these devices is necessary to specify how to handle the output signals and their status, ie the input signals. -->
+    <moqui.basic.Enumeration description="Double Actuation Double Feedback" enumId="DcmDoubleActuationDoubleFeedback" parentEnumId="DcmNone" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Single Actuation Double Feedback" enumId="DcmSingleActuationDoubleFeedback" parentEnumId="DcmNone" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Single Actuation Enable Feedback" enumId="DcmSingleActuationEnableFeedback" parentEnumId="DcmNone" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Single Actuation Disable Feedback" enumId="DcmSingleActuationDisableFeedback" parentEnumId="DcmNone" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Single Actuation No Feedback" enumId="DcmSingleActuationNoFeedback" parentEnumId="DcmNone" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="Double Actuation No Retain" enumId="DcmDoubleActuationNoRetain" parentEnumId="DcmNone" enumTypeId="DeviceControlMethod"/>
+    <moqui.basic.Enumeration description="No Actuation Single Feedback" enumId="DcmNoActuationSingleFeedback" parentEnumId="DcmNone" enumTypeId="DeviceControlMethod"/>
+
+    <!-- Device Operating Mode -->
+    <moqui.basic.EnumerationType description="Device Operating Mode" enumTypeId="DeviceOperatingMode"/>
+    <moqui.basic.Enumeration description="Init" enumId="DomInit" enumTypeId="DeviceOperatingMode"/>
+    <moqui.basic.Enumeration description="Run" enumId="DomRun" enumTypeId="DeviceOperatingMode"/>
+    <moqui.basic.Enumeration description="Test" enumId="DomTest" enumTypeId="DeviceOperatingMode"/>
+    <moqui.basic.Enumeration description="Simulation" enumId="DomSimulation" enumTypeId="DeviceOperatingMode"/>
+    
+    <!-- Device Basic Status Flow -->
+    <moqui.basic.StatusType description="Device Basic Status Flow" statusTypeId="DeviceBasicStatus"/>
+    <moqui.basic.StatusItem description="Disabled" sequenceNum="1" statusId="DbsDisabled" statusTypeId="DeviceBasicStatus"/>
+    <moqui.basic.StatusItem description="Standstill" sequenceNum="2" statusId="DbsStandstill" statusTypeId="DeviceBasicStatus"/>
+    <moqui.basic.StatusItem description="Homing" sequenceNum="3" statusId="DbsHoming" statusTypeId="DeviceBasicStatus"/>
+    <moqui.basic.StatusItem description="Run" sequenceNum="4" statusId="DbsRun" statusTypeId="DeviceBasicStatus"/>
+    <moqui.basic.StatusItem description="Synchronized Run" sequenceNum="6" statusId="DbsSynchronizedRun" statusTypeId="DeviceBasicStatus"/>
+    <moqui.basic.StatusItem description="Stopping" sequenceNum="7" statusId="DbsStopping" statusTypeId="DeviceBasicStatus"/>
+    <moqui.basic.StatusItem description="Error Stop" sequenceNum="8" statusId="DbsErrorStop" statusTypeId="DeviceBasicStatus"/>
+    
+    <moqui.basic.StatusFlow statusFlowId="DeviceBasicStatusFlow" statusTypeId="DeviceBasicStatus" description="Device Basic Status Flow"/>
+    
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceBasicStatusFlow" statusId="DbsDisabled" isInitial="Y"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceBasicStatusFlow" statusId="DbsStandstill" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceBasicStatusFlow" statusId="DbsHoming" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceBasicStatusFlow" statusId="DbsRun" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceBasicStatusFlow" statusId="DbsSynchronizedRun" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceBasicStatusFlow" statusId="DbsStopping" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceBasicStatusFlow" statusId="DbsErrorStop" isInitial="N"/>
+    
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsDisabled" toStatusId="DbsStandstill" transitionName="Init" transitionSequence="1"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsStandstill" toStatusId="DbsHoming" transitionName="Homing" transitionSequence="2"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsStandstill" toStatusId="DbsStopping" transitionName="Stopping" transitionSequence="3"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsStandstill" toStatusId="DbsRun" transitionName="Running" transitionSequence="4"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsStandstill" toStatusId="DbsSynchronizedRun" transitionName="Synchronized Run" transitionSequence="6"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsStandstill" toStatusId="DbsErrorStop" transitionName="Error" transitionSequence="7"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsStandstill" toStatusId="DbsDisabled" transitionName="Disabling" transitionSequence="8"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsHoming" toStatusId="DbsStandstill" transitionName="Standstill" transitionSequence="9"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsHoming" toStatusId="DbsStopping" transitionName="Stopping" transitionSequence="10"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsHoming" toStatusId="DbsErrorStop" transitionName="Error" transitionSequence="11"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsHoming" toStatusId="DbsDisabled" transitionName="Disabling" transitionSequence="12"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsRun" toStatusId="DbsStandstill" transitionName="Standstill" transitionSequence="13"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsRun" toStatusId="DbsStopping" transitionName="Stopping" transitionSequence="14"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsRun" toStatusId="DbsSynchronizedRun" transitionName="Synchronized Run" transitionSequence="15"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsRun" toStatusId="DbsErrorStop" transitionName="Error" transitionSequence="17"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsRun" toStatusId="DbsDisabled" transitionName="Disabling" transitionSequence="18"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsSynchronizedRun" toStatusId="DbsStopping" transitionName="Stopping" transitionSequence="24"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsSynchronizedRun" toStatusId="DbsRun" transitionName="Run" transitionSequence="25"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsSynchronizedRun" toStatusId="DbsErrorStop" transitionName="Error" transitionSequence="27"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsSynchronizedRun" toStatusId="DbsDisabled" transitionName="Disabling" transitionSequence="28"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsStopping" toStatusId="DbsStandstill" transitionName="Standstill" transitionSequence="29"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsStopping" toStatusId="DbsErrorStop" transitionName="Error" transitionSequence="30"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsStopping" toStatusId="DbsDisabled" transitionName="Disabling" transitionSequence="31"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsErrorStop" toStatusId="DbsStandstill" transitionName="Standstill" transitionSequence="32"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsErrorStop" toStatusId="DbsDisabled" transitionName="Disabling" transitionSequence="33"/>
+
+    <!-- Device Advanced Status Flow -->
+    <moqui.basic.StatusType description="Device Advanced Status Flow" statusTypeId="DeviceAdvancedStatus"/>
+    <moqui.basic.StatusItem description="Disabled" sequenceNum="1" statusId="DasDisabled" statusTypeId="DeviceAdvancedStatus"/>
+    <moqui.basic.StatusItem description="Standstill" sequenceNum="2" statusId="DasStandstill" statusTypeId="DeviceAdvancedStatus"/>
+    <moqui.basic.StatusItem description="Homing" sequenceNum="3" statusId="DasHoming" statusTypeId="DeviceAdvancedStatus"/>
+    <moqui.basic.StatusItem description="Operation Inhibited" sequenceNum="4" statusId="DasOperationInhibited" statusTypeId="DeviceAdvancedStatus"/>
+    <moqui.basic.StatusItem description="Run" sequenceNum="5" statusId="DasRun" statusTypeId="DeviceAdvancedStatus"/>
+    <moqui.basic.StatusItem description="Synchronized Run" sequenceNum="6" statusId="DasSynchronizedRun" statusTypeId="DeviceAdvancedStatus"/>
+    <moqui.basic.StatusItem description="Stopping" sequenceNum="7" statusId="DasStopping" statusTypeId="DeviceAdvancedStatus"/>
+    <moqui.basic.StatusItem description="Error Stop" sequenceNum="8" statusId="DasErrorStop" statusTypeId="DeviceAdvancedStatus"/>
+    <moqui.basic.StatusItem description="Emergency Stop" sequenceNum="9" statusId="DasEmergencyStop" statusTypeId="DeviceAdvancedStatus"/>
+    
+    <moqui.basic.StatusFlow statusFlowId="DeviceAdvancedStatusFlow" statusTypeId="DeviceAdvancedStatus" description="Device Advanced Status Flow"/>
+    
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceAdvancedStatusFlow" statusId="DasDisabled" isInitial="Y"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceAdvancedStatusFlow" statusId="DasHoming" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceAdvancedStatusFlow" statusId="DasOperationInhibited" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceAdvancedStatusFlow" statusId="DasRun" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceAdvancedStatusFlow" statusId="DasSynchronizedRun" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStopping" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceAdvancedStatusFlow" statusId="DasErrorStop" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceAdvancedStatusFlow" statusId="DasEmergencyStop" isInitial="N"/>
+    
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasDisabled" toStatusId="DasStandstill" transitionName="Init" transitionSequence="1"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill" toStatusId="DasHoming" transitionName="Homing" transitionSequence="2"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill" toStatusId="DasOperationInhibited" transitionName="Operation Inhibited" transitionSequence="3"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill" toStatusId="DasStopping" transitionName="Stopping" transitionSequence="4"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill" toStatusId="DasRun" transitionName="Running" transitionSequence="5"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill" toStatusId="DasSynchronizedRun" transitionName="Synchronized Run" transitionSequence="6"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill" toStatusId="DasErrorStop" transitionName="Error" transitionSequence="7"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill" toStatusId="DasEmergencyStop" transitionName="Emergency" transitionSequence="8"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill" toStatusId="DasDisabled" transitionName="Disabling" transitionSequence="9"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasHoming" toStatusId="DasStandstill" transitionName="Standstill" transitionSequence="10"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasHoming" toStatusId="DasStopping" transitionName="Stopping" transitionSequence="11"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasHoming" toStatusId="DasErrorStop" transitionName="Error" transitionSequence="12"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasHoming" toStatusId="DasEmergencyStop" transitionName="Emergency" transitionSequence="13"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasHoming" toStatusId="DasDisabled" transitionName="Disabling" transitionSequence="14"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasRun" toStatusId="DasStandstill" transitionName="Standstill" transitionSequence="15"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasRun" toStatusId="DasStopping" transitionName="Stopping" transitionSequence="16"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasRun" toStatusId="DasSynchronizedRun" transitionName="Synchronized Run" transitionSequence="17"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasRun" toStatusId="DasErrorStop" transitionName="Error" transitionSequence="18"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasRun" toStatusId="DasEmergencyStop" transitionName="Emergency" transitionSequence="19"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasRun" toStatusId="DasDisabled" transitionName="Disabling" transitionSequence="20"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasSynchronizedRun" toStatusId="DasStopping" transitionName="Stopping" transitionSequence="21"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasSynchronizedRun" toStatusId="DasRun" transitionName="Run" transitionSequence="22"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasSynchronizedRun" toStatusId="DasErrorStop" transitionName="Error" transitionSequence="23"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasSynchronizedRun" toStatusId="DasEmergencyStop" transitionName="Emergency" transitionSequence="24"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasSynchronizedRun" toStatusId="DasDisabled" transitionName="Disabling" transitionSequence="25"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStopping" toStatusId="DasStandstill" transitionName="Standstill" transitionSequence="26"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStopping" toStatusId="DasErrorStop" transitionName="Error" transitionSequence="27"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStopping" toStatusId="DasEmergencyStop" transitionName="Emergency" transitionSequence="28"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStopping" toStatusId="DasDisabled" transitionName="Disabling" transitionSequence="29"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasErrorStop" toStatusId="DasStandstill" transitionName="Standstill" transitionSequence="30"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasErrorStop" toStatusId="DasDisabled" transitionName="Disabling" transitionSequence="31"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasEmergencyStop" toStatusId="DasStandstill" transitionName="Standstill" transitionSequence="32"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasEmergencyStop" toStatusId="DasDisabled" transitionName="Disabling" transitionSequence="33"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasOperationInhibited" toStatusId="DasStandstill" transitionName="Standstill" transitionSequence="34"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasOperationInhibited" toStatusId="DasStopping" transitionName="Stopping" transitionSequence="35"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasOperationInhibited" toStatusId="DasErrorStop" transitionName="Error" transitionSequence="36"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasOperationInhibited" toStatusId="DasEmergencyStop" transitionName="Emergency" transitionSequence="37"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceAdvancedStatusFlow" statusId="DasOperationInhibited" toStatusId="DasDisabled" transitionName="Disabling" transitionSequence="38"/>
+
+    <!-- Single Axes Motion Status Flow -->
+    <moqui.basic.StatusType description="Single Axis Motion Status Flow" statusTypeId="SingleAxisMotionStatus"/>            
+    <moqui.basic.StatusItem description="Disabled" sequenceNum="1" statusId="SamDisabled" statusTypeId="SingleAxisMotionStatus"/>
+    <moqui.basic.StatusItem description="Standstill" sequenceNum="2" statusId="SamStandstill" statusTypeId="SingleAxisMotionStatus"/>
+    <moqui.basic.StatusItem description="Homing" sequenceNum="3" statusId="SamHoming" statusTypeId="SingleAxisMotionStatus"/>
+    <moqui.basic.StatusItem description="Discrete Motion" sequenceNum="4" statusId="SamDiscreteMotion" statusTypeId="SingleAxisMotionStatus"/>
+    <moqui.basic.StatusItem description="Continuous Motion" sequenceNum="5" statusId="SamContinuousMotion" statusTypeId="SingleAxisMotionStatus"/>
+    <moqui.basic.StatusItem description="Synchronized Motion" sequenceNum="6" statusId="SamSynchronizedMotion" statusTypeId="SingleAxisMotionStatus"/>
+    <moqui.basic.StatusItem description="Stopping" sequenceNum="7" statusId="SamStopping" statusTypeId="SingleAxisMotionStatus"/>
+    <moqui.basic.StatusItem description="Error Stop" sequenceNum="8" statusId="SamErrorStop" statusTypeId="SingleAxisMotionStatus"/>
+    
+    <moqui.basic.StatusFlow statusFlowId="SingleAxisMotionStatusFlow" statusTypeId="SingleAxisMotionStatus" description="Single Axis Motion Status Flow"/>
+    
+    <moqui.basic.StatusFlowItem statusFlowId="SingleAxisMotionStatusFlow" statusId="SamDisabled" isInitial="Y"/>
+    <moqui.basic.StatusFlowItem statusFlowId="SingleAxisMotionStatusFlow" statusId="SamStandstill" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="SingleAxisMotionStatusFlow" statusId="SamHoming" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="SingleAxisMotionStatusFlow" statusId="SamDiscreteMotion" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="SingleAxisMotionStatusFlow" statusId="SamContinuousMotion" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="SingleAxisMotionStatusFlow" statusId="SamSynchronizedMotion" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="SingleAxisMotionStatusFlow" statusId="SamStopping" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="SingleAxisMotionStatusFlow" statusId="SamErrorStop" isInitial="N"/>
+    
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamDisabled" toStatusId="SamStandstill" transitionName="Init" transitionSequence="1"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamStandstill" toStatusId="SamHoming" transitionName="Homing" transitionSequence="2"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamStandstill" toStatusId="SamStopping" transitionName="Stopping" transitionSequence="3"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamStandstill" toStatusId="SamDiscreteMotion" transitionName="Discrete Motion" transitionSequence="4"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamStandstill" toStatusId="SamContinuousMotion" transitionName="Continuous Motion" transitionSequence="5"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamStandstill" toStatusId="SamSynchronizedMotion" transitionName="Synchronized Motion" transitionSequence="6"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamStandstill" toStatusId="SamErrorStop" transitionName="Error" transitionSequence="7"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamStandstill" toStatusId="SamDisabled" transitionName="Disabling" transitionSequence="8"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamHoming" toStatusId="SamStandstill" transitionName="Standstill" transitionSequence="9"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamHoming" toStatusId="SamStopping" transitionName="Stopping" transitionSequence="10"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamHoming" toStatusId="SamErrorStop" transitionName="Error" transitionSequence="11"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamHoming" toStatusId="SamDisabled" transitionName="Disabling" transitionSequence="12"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamDiscreteMotion" toStatusId="SamStandstill" transitionName="Standstill" transitionSequence="13"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamDiscreteMotion" toStatusId="SamStopping" transitionName="Stopping" transitionSequence="14"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamDiscreteMotion" toStatusId="SamSynchronizedMotion" transitionName="Synchronized Motion" transitionSequence="15"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamDiscreteMotion" toStatusId="SamContinuousMotion" transitionName="Continuous Motion" transitionSequence="16"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamDiscreteMotion" toStatusId="SamErrorStop" transitionName="Error" transitionSequence="17"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamDiscreteMotion" toStatusId="SamDisabled" transitionName="Disabling" transitionSequence="18"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamContinuousMotion" toStatusId="SamStopping" transitionName="Stopping" transitionSequence="19"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamContinuousMotion" toStatusId="SamSynchronizedMotion" transitionName="Synchronized Motion" transitionSequence="20"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamContinuousMotion" toStatusId="SamDiscreteMotion" transitionName="Discrete Motion" transitionSequence="21"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamContinuousMotion" toStatusId="SamErrorStop" transitionName="Error" transitionSequence="22"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamContinuousMotion" toStatusId="SamDisabled" transitionName="Disabling" transitionSequence="23"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamSynchronizedMotion" toStatusId="SamStopping" transitionName="Stopping" transitionSequence="24"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamSynchronizedMotion" toStatusId="SamDiscreteMotion" transitionName="Discrete Motion" transitionSequence="25"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamSynchronizedMotion" toStatusId="SamContinuousMotion" transitionName="Continuous Motion" transitionSequence="26"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamSynchronizedMotion" toStatusId="SamErrorStop" transitionName="Error" transitionSequence="27"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamSynchronizedMotion" toStatusId="SamDisabled" transitionName="Disabling" transitionSequence="28"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamStopping" toStatusId="SamStandstill" transitionName="Standstill" transitionSequence="29"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamStopping" toStatusId="SamErrorStop" transitionName="Error" transitionSequence="30"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamStopping" toStatusId="SamDisabled" transitionName="Disabling" transitionSequence="31"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamErrorStop" toStatusId="SamStandstill" transitionName="Standstill" transitionSequence="32"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="SingleAxisMotionStatusFlow" statusId="SamErrorStop" toStatusId="SamDisabled" transitionName="Disabling" transitionSequence="33"/>
+
+    <!-- Device Group Basic Status Flow -->
+    <moqui.basic.StatusType description="Device Group Basic Status Flow" statusTypeId="DeviceGroupBasicStatus"/>
+    <moqui.basic.StatusItem description="Disabled" sequenceNum="1" statusId="DgbsDisabled" statusTypeId="DeviceGroupBasicStatus"/>
+    <moqui.basic.StatusItem description="Standstill" sequenceNum="2" statusId="DgbsStandstill" statusTypeId="DeviceGroupBasicStatus"/>
+    <moqui.basic.StatusItem description="Homing" sequenceNum="3" statusId="DgbsHoming" statusTypeId="DeviceGroupBasicStatus"/>
+    <moqui.basic.StatusItem description="Run" sequenceNum="4" statusId="DgbsRun" statusTypeId="DeviceGroupBasicStatus"/>
+    <moqui.basic.StatusItem description="Synchronized Run" sequenceNum="6" statusId="DgbsSynchronizedRun" statusTypeId="DeviceGroupBasicStatus"/>
+    <moqui.basic.StatusItem description="Stopping" sequenceNum="7" statusId="DgbsStopping" statusTypeId="DeviceGroupBasicStatus"/>
+    <moqui.basic.StatusItem description="Error Stop" sequenceNum="8" statusId="DgbsErrorStop" statusTypeId="DeviceGroupBasicStatus"/>
+    
+    <moqui.basic.StatusFlow statusFlowId="DeviceGroupBasicStatusFlow" statusTypeId="DeviceGroupBasicStatus" description="Device Basic Status Flow"/>
+    
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsDisabled" isInitial="Y"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsStandstill" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsHoming" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsRun" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsSynchronizedRun" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsStopping" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsErrorStop" isInitial="N"/>
+    
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsDisabled" toStatusId="DgbsStandstill" transitionName="Init" transitionSequence="1"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsStandstill" toStatusId="DgbsHoming" transitionName="Homing" transitionSequence="2"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsStandstill" toStatusId="DgbsStopping" transitionName="Stopping" transitionSequence="3"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsStandstill" toStatusId="DgbsRun" transitionName="Running" transitionSequence="4"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsStandstill" toStatusId="DgbsSynchronizedRun" transitionName="Synchronized Run" transitionSequence="6"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsStandstill" toStatusId="DgbsErrorStop" transitionName="Error" transitionSequence="7"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsStandstill" toStatusId="DgbsDisabled" transitionName="Disabling" transitionSequence="8"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsHoming" toStatusId="DgbsStandstill" transitionName="Standstill" transitionSequence="9"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsHoming" toStatusId="DgbsStopping" transitionName="Stopping" transitionSequence="10"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsHoming" toStatusId="DgbsErrorStop" transitionName="Error" transitionSequence="11"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsHoming" toStatusId="DgbsDisabled" transitionName="Disabling" transitionSequence="12"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsRun" toStatusId="DgbsStandstill" transitionName="Standstill" transitionSequence="13"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsRun" toStatusId="DgbsStopping" transitionName="Stopping" transitionSequence="14"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsRun" toStatusId="DgbsSynchronizedRun" transitionName="Synchronized Run" transitionSequence="15"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsRun" toStatusId="DgbsErrorStop" transitionName="Error" transitionSequence="17"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsRun" toStatusId="DgbsDisabled" transitionName="Disabling" transitionSequence="18"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsSynchronizedRun" toStatusId="DgbsStopping" transitionName="Stopping" transitionSequence="24"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsSynchronizedRun" toStatusId="DgbsRun" transitionName="Run" transitionSequence="25"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsSynchronizedRun" toStatusId="DgbsErrorStop" transitionName="Error" transitionSequence="27"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsSynchronizedRun" toStatusId="DgbsDisabled" transitionName="Disabling" transitionSequence="28"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsStopping" toStatusId="DgbsStandstill" transitionName="Standstill" transitionSequence="29"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsStopping" toStatusId="DgbsErrorStop" transitionName="Error" transitionSequence="30"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsStopping" toStatusId="DgbsDisabled" transitionName="Disabling" transitionSequence="31"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsErrorStop" toStatusId="DgbsStandstill" transitionName="Standstill" transitionSequence="32"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsErrorStop" toStatusId="DgbsDisabled" transitionName="Disabling" transitionSequence="33"/>
+
+    <!-- Axes Group Motion Status Flow -->
+    <moqui.basic.StatusType description="Axis Group Motion Status Flow" statusTypeId="AxisGroupMotionStatus"/> 
+    <moqui.basic.StatusItem description="Group Disabled" sequenceNum="1" statusId="AgmsGroupDisabled" statusTypeId="AxisGroupMotionStatus"/>
+    <moqui.basic.StatusItem description="Group Standby" sequenceNum="2" statusId="AgmsGroupStandby" statusTypeId="AxisGroupMotionStatus"/>
+    <moqui.basic.StatusItem description="Group Homing" sequenceNum="3" statusId="AgmsGroupHoming" statusTypeId="AxisGroupMotionStatus"/>
+    <moqui.basic.StatusItem description="Group Moving" sequenceNum="4" statusId="AgmsGroupMoving" statusTypeId="AxisGroupMotionStatus"/>
+    <moqui.basic.StatusItem description="Group Stopping" sequenceNum="5" statusId="AgmsGroupStopping" statusTypeId="AxisGroupMotionStatus"/>
+    <moqui.basic.StatusItem description="Group Error Stop" sequenceNum="6" statusId="AgmsGroupErrorStop" statusTypeId="AxisGroupMotionStatus"/>
+
+    <moqui.basic.StatusFlow statusFlowId="AxisGroupMotionStatusFlow" statusTypeId="AxisGroupMotionStatus" description="Axis Group Motion Status Flow"/>
+
+    <moqui.basic.StatusFlowItem statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupDisabled" isInitial="Y"/>
+    <moqui.basic.StatusFlowItem statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupStandby" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupHoming" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupMoving" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupStopping" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupErrorStop" isInitial="N"/>
+
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupDisabled" toStatusId="AgmsGroupStandby" transitionName="Init" transitionSequence="1"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupStandby" toStatusId="AgmsGroupDisabled" transitionName="Disabling" transitionSequence="2"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupStandby" toStatusId="AgmsGroupHoming" transitionName="Homing" transitionSequence="3"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupStandby" toStatusId="AgmsGroupMoving" transitionName="Moving" transitionSequence="4"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupStandby" toStatusId="AgmsGroupStopping" transitionName="Stopping" transitionSequence="5"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupStandby" toStatusId="AgmsGroupErrorStop" transitionName="Error" transitionSequence="6"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupHoming" toStatusId="AgmsGroupStandby" transitionName="Standby" transitionSequence="7"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupHoming" toStatusId="AgmsGroupStopping" transitionName="Stopping" transitionSequence="8"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupHoming" toStatusId="AgmsGroupErrorStop" transitionName="Error" transitionSequence="9"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupMoving" toStatusId="AgmsGroupStandby" transitionName="Standby" transitionSequence="10"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupMoving" toStatusId="AgmsGroupStopping" transitionName="Stopping" transitionSequence="11"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupMoving" toStatusId="AgmsGroupErrorStop" transitionName="Error" transitionSequence="12"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupStopping" toStatusId="AgmsGroupStandby" transitionName="Standby" transitionSequence="13"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupStopping" toStatusId="AgmsGroupErrorStop" transitionName="Error" transitionSequence="14"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="AxisGroupMotionStatusFlow" statusId="AgmsGroupErrorStop" toStatusId="AgmsGroupStandby" transitionName="Standby" transitionSequence="15"/>
+
+    <!-- Device Event Type -->
+    <moqui.basic.EnumerationType description="Device Event Type" enumTypeId="DeviceEventType"/>
+    <!-- Physical Device Event Type -->
+    <moqui.basic.Enumeration description="Physical Device Event" enumId="DetPhysicalDeviceEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Device Lifecycle Event" enumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Boot Event" enumId="DetBootEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Reboot Event" enumId="DeviceRebootEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Prepare Shutdown Event" enumId="DevicePrepareShutdownEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Shutdown Event" enumId="DeviceShutdownEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Prepare Setup or Upgrade Event" enumId="DevicePrepareSetupEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Setup or Upgrade Event" enumId="DeviceSetupEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Prepare Reset Event" enumId="DevicePrepareResetEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Reset Event" enumId="DeviceResetEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Device Entity Update Event" enumId="DeviceEntityUpdateEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Status Flow Entity Update Event" enumId="DeviceStatusFlowEntityUpdateEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Parameter Entity Update Event" enumId="DeviceParameterEntityUpdateEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Content Update Event" enumId="DeviceContentUpdateEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Measurement Collection Toggle Event" enumId="DeviceMeasurementCollectionEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Notification Message Collection Toggle Event" enumId="DeviceNotificationMessageCollectionEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Log Collection Toggle Event" enumId="DeviceLogEventCollectionEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>           
+    <moqui.basic.Enumeration description="After Reading Inputs Event" enumId="DeviceAfterReadingInputsEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="After Writing Outputs Event" enumId="DeviceAfterWritingOutputsEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Before Reading Inputs Event" enumId="DeviceBeforeReadingInputsEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Before Writing Outputs Event" enumId="DeviceBeforeWritingOutputsEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Prepare Download Data Event" enumId="DevicePrepareDownloadDataEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Download Data Event" enumId="DeviceDownloadDataEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Login Event" enumId="DeviceLoginEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Logout Event" enumId="DeviceLogoutEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Prepare Stop Event" enumId="DevicePrepareStopEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Stop Event" enumId="DeviceStopEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Prepare Start Event" enumId="DevicePrepareStartEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Start Event" enumId="DeviceStartEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Device Failure Event" enumId="DetFailure" parentEnumId="DetPhysicalDeviceEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Device Membership Event" enumId="DetMembership" parentEnumId="DetPhysicalDeviceEvent" enumTypeId="DeviceEventType"/>
+    <!-- Device Group Event Type -->
+    <moqui.basic.Enumeration description="Device Group Event" enumId="DetDeviceGroupEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Device Group Lifecycle Event" enumId="DgetLifecycle" parentEnumId="DetDeviceGroupEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Device Group Failure Event" enumId="DgetFailure" parentEnumId="DetDeviceGroupEvent" enumTypeId="DeviceEventType"/>
+    <!-- Device Group Membership Event Type -->
+    <moqui.basic.Enumeration description="Device Membership Event" enumId="DetDeviceMembershipEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Device Member Added Event" enumId="DeviceMemberAddedEvent" parentEnumId="DetDeviceMembershipEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Device Member Removed Event" enumId="DeviceMemberRemovedEvent" parentEnumId="DetDeviceMembershipEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Device Leader Election Event" enumId="DeviceLeaderElectionEvent" parentEnumId="DetDeviceMembershipEvent" enumTypeId="DeviceEventType"/>
+    <!-- Device Event Severity -->
+    <moqui.basic.EnumerationType enumTypeId="DeviceEventSeverity" description="Device Event Severity"/>
+    <moqui.basic.Enumeration enumId="DesCritical" enumTypeId="DeviceEventSeverity" description="Critical Fault"/>
+    <moqui.basic.Enumeration enumId="DesWarning" enumTypeId="DeviceEventSeverity" description="Soft Warning"/>
+    <moqui.basic.Enumeration enumId="DesInfo" enumTypeId="DeviceEventSeverity" description="Information"/>
+    <!-- Device Event Handler -->
+    <moqui.basic.EnumerationType enumTypeId="DeviceEventHandler" description="Device Event Handler"/>
+    <moqui.basic.Enumeration enumId="DehPLC" enumTypeId="DeviceEventHandler" description="PLC Handled"/>
+    <moqui.basic.Enumeration enumId="DehMoqui" enumTypeId="DeviceEventHandler" description="Moqui Handled"/>
+
+    <!-- Device Group Member Purpose -->
+    <moqui.basic.EnumerationType description="Device Group Member Purpose" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpClusterManager" description="Cluster Manager" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpClusterMember" description="Cluster Member" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpClusterMemberPrimary" description="Cluster Member Primary" parentEnumId="DgmpClusterMember" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpClusterMemberSecondary" description="Cluster Member Secondary" parentEnumId="DgmpClusterMember" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpController" description="Controller" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpMotionController" description="Motion Controller" parentEnumId="DgmpController" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpSafetyPLC" description="Safety PLC" parentEnumId="DgmpController" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpProcessPLC" description="Process PLC" parentEnumId="DgmpController" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpDrive" description="Drive" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpMasterDrive" description="Master Drive" parentEnumId="DgmpDrive" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpFollowerDrive" description="Follower Drive" parentEnumId="DgmpDrive" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpServoDrive" description="Servo Drive" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpMasterServoDrive" description="Master Servo Drive" parentEnumId="DgmpServoDrive" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpFollowerServoDrive" description="Follower Servo Drive" parentEnumId="DgmpServoDrive" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpAxis" description="Axis" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpVirtualAxis" description="Virtual Axis" parentEnumId="DgmpAxis" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpMasterAxis" description="Master Axis" parentEnumId="DgmpAxis" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpSlaveAxis" description="Slave Axis" parentEnumId="DgmpAxis" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpRemoteIO" description="Remote IO" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpSafetyRemoteIO" description="Safety Remote IO" parentEnumId="DgmpRemoteIO" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpExtremeConditionRemoteIO" description="Extreme Condition Remote IO" parentEnumId="DgmpRemoteIO" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpMonitoringDevices" description="Monitoring Devices" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpEnergyMeter" description="Energy Meter" parentEnumId="DgmpMonitoringDevices" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpNetworkAnalyzer" description="Network Analyzer" parentEnumId="DgmpMonitoringDevices" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpNetworkMultimeter" description="Network Multimeter" parentEnumId="DgmpMonitoringDevices" enumTypeId="DeviceGroupMemberPurpose"/>
+    <!-- Device Group Member Status -->
+    <moqui.basic.StatusType description="Device Group Member Status" statusTypeId="DeviceGroupMemberStatus"/>
+    <moqui.basic.StatusItem description="Down" sequenceNum="1" statusId="DgmsDown" statusTypeId="DeviceGroupMemberStatus"/>
+    <moqui.basic.StatusItem description="Init" sequenceNum="2" statusId="DgmsInit" statusTypeId="DeviceGroupMemberStatus"/>
+    <moqui.basic.StatusItem description="Alive" sequenceNum="3" statusId="DgmsAlive" statusTypeId="DeviceGroupMemberStatus"/>
+
+    <moqui.basic.StatusFlow statusFlowId="ClusterMembership" statusTypeId="DeviceGroupMemberStatus" description="Cluster membership status flow."/>
+    
+    <moqui.basic.StatusFlowItem statusFlowId="ClusterMembership" statusId="DgmsDown" isInitial="Y"/>
+    <moqui.basic.StatusFlowItem statusFlowId="ClusterMembership" statusId="DgmsInit" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="ClusterMembership" statusId="DgmsAlive" isInitial="N"/>
+
+    <moqui.basic.StatusFlowTransition statusFlowId="ClusterMembership" statusId="DgmsDown" toStatusId="DgmsInit" transitionName="Init"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="ClusterMembership" statusId="DgmsInit" toStatusId="DgmsDown" transitionName="Reset"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="ClusterMembership" statusId="DgmsInit" toStatusId="DgmsAlive" transitionName="Run"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="ClusterMembership" statusId="DgmsAlive" toStatusId="DgmsDown" transitionName="Down"/>
+
+    <!-- Device Notification Topic -->
+    <moqui.security.user.NotificationTopic topic="Device-${device.deviceName?:''}-${device.deviceId}-${typeString}" description="Device ${device.deviceName?:''} [${device.deviceId}] ${typeString}"
+            typeString="${typeString}" showAlert="Y" persistOnSend="Y" receiveNotifications="Y" isPrivate="N" emailTemplateId="NOTIFICATION"
+            titleTemplate="Device ${device.deviceName?:''} [${device.deviceId?:''}] ${typeString} - ${message?:'N/A'}"
+            linkTemplate="/qapps/system/Device/Devices/DeviceDetail?deviceId=${device.deviceId}"/>
+    <moqui.security.user.NotificationTopic topic="DeviceGroup-${deviceGroup.groupName?:''}-${deviceGroup.deviceGroupId}-${typeString}" description="Device Group ${deviceGroup.groupName?:''} [${deviceGroup.deviceGroupId}] ${typeString}"
+            typeString="${typeString}" showAlert="Y" persistOnSend="Y" receiveNotifications="Y" isPrivate="N" emailTemplateId="NOTIFICATION"
+            titleTemplate="Device Group ${deviceGroup.groupName?:''} [${deviceGroup.deviceGroupId}] ${typeString} - ${message?:'N/A'}"
+            linkTemplate="/qapps/system/Device/DeviceGroups/DeviceGroupDetail?deviceGroupId=${deviceGroup.deviceGroupId}"/>
+</entity-facade-xml>

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-3.xsd">
+
+    <!-- ========================================================= -->
+    <!-- moqui.device -->
+    <!-- ========================================================= -->
+
+    <!-- ========== Device and Device Group ========== -->
+    <view-entity entity-name="DeviceDetail" package="moqui.device">
+        <member-entity entity-alias="DEV" entity-name="moqui.device.Device"/>
+        <member-entity entity-alias="PDEV" entity-name="moqui.device.PhysicalDevice" join-from-alias="DEV" join-optional="true">
+            <key-map field-name="deviceId"/></member-entity>
+        <member-entity entity-alias="DGRP" entity-name="moqui.device.DeviceGroup" join-from-alias="DEV" join-optional="true">
+            <key-map field-name="deviceId"/></member-entity>
+        <alias-all entity-alias="DEV"/>
+        <alias-all entity-alias="PDEV"/>
+        <alias-all entity-alias="DGRP"/>
+    </view-entity>
+    <view-entity entity-name="DeviceGroupAndMember" package="moqui.device">
+        <member-entity entity-alias="DGM" entity-name="moqui.device.DeviceGroupMember"/>
+        <member-relationship entity-alias="DG" join-from-alias="DGM" relationship="group"/>
+        <alias-all entity-alias="DGM">
+            <exclude field="description"/><exclude field="statusFlowId"/><exclude field="statusId"/>
+        </alias-all>
+        <alias-all entity-alias="DG"><exclude field="deviceId"/></alias-all>
+    </view-entity>
+
+    <!-- ========== Device Request ========== -->
+    <view-entity entity-name="DeviceRequestItemDetail" package="moqui.device" cache="true">
+        <member-entity entity-alias="DRI" entity-name="moqui.device.DeviceRequestItem"/>
+        <member-entity entity-alias="PAR" entity-name="moqui.math.Parameter" join-from-alias="DRI">
+            <key-map field-name="parameterId"/></member-entity>
+        <alias-all entity-alias="DRI"/>
+        <alias-all entity-alias="PAR"><exclude field="parameterId"/><exclude field="sequenceNum"/></alias-all>
+        <alias entity-alias="PAR" name="parameterSequenceNum" field="sequenceNum"/>
+
+        <relationship type="one" related="moqui.device.DeviceRequest" short-alias="request"/>
+        <relationship type="one" related="moqui.math.Parameter" short-alias="parameter"/>
+    </view-entity>
+
+    <!-- ========== Device Log ========== -->
+    <!-- NOTE: Create your own view-entity to query the device log from the JSONB fields.
+         The following is an example of how to create a view-entity for the DeviceLog entity.
+         You can customize it according to your needs.
+         This entity could replace the ParameterLog entity for performance and flexibility.
+         The view-entity allows you to query the device log data without needing to parse the JSONB fields in your queries.
+         You can use the aliases to access the fields in the payload JSON.
+    <view-entity entity-name="DeviceLogView" package="moqui.device">
+        <member-entity entity-alias="DL" entity-name="moqui.device.DeviceLog"/>
+
+        <alias-all entity-alias="DL"/>
+        <alias name="temperature" entity-alias="DL" function="CAST(payload->>'temperature' AS NUMERIC)"/>
+        <alias name="rpm" entity-alias="DL" function="CAST(payload->>'rpm' AS INTEGER)"/>
+        <alias name="status" entity-alias="DL" function="payload->>'status'"/>
+    </view-entity>
+    -->
+
+    <!-- ========== Device Configuration ========== -->
+    <view-entity entity-name="DeviceConfigSetAndMember" package="moqui.device">
+        <member-entity entity-alias="DCSM" entity-name="moqui.device.DeviceConfigSetMember"/>
+        <member-relationship entity-alias="DCS" join-from-alias="DCSM" relationship="configSet"/>
+        <alias-all entity-alias="DCSM"><exclude field="description"/></alias-all>
+        <alias-all entity-alias="DCS"><exclude field="deviceConfigId"/></alias-all>
+    </view-entity>
+</entities>

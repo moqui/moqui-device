@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+To the extent possible under law, the author(s) have dedicated all
+copyright and related and neighboring rights to this software to the
+public domain worldwide. This software is distributed without any
+warranty.
+
+You should have received a copy of the CC0 Public Domain Dedication
+along with this software (see the LICENSE.md file). If not, see
+<http://creativecommons.org/publicdomain/zero/1.0/>.
+-->
+<services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
+
+    <service verb="run" noun="GatewayDeviceRequest" authenticate="false" transaction="ignore">
+        <description>
+            Implements run#DeviceRequestInternal for the standalone moqui-device-gateway process.
+            Called by run#DeviceRequest when
+                DeviceRequest.runServiceName = "moqui.device.DeviceGatewayServices.run#GatewayDeviceRequest"
+
+            Data Model Conventions
+            Each moqui-device-gateway instance is modelled as a Device in its own right:
+
+            Device.deviceId = moqui-device-gateway1 (one per gateway process)
+            Device.deviceName = "Moqui Device Gateway 1"
+
+            The Moqui-side dispatch DeviceRequest (deviceId = gateway device) is a routing
+            record only. It is distinct from the gateway-side DeviceRequest (different
+            deviceId, e.g. virtual-plc-1) that the gateway reads from the shared DB to
+            obtain fieldbus configuration (MQTT broker URI, OPC UA connection, topics, etc.).
+
+            Moqui-side DeviceRequest fields:
+                deviceId = moqui-device-gateway1
+                routerEnumId = DrrMoquiDeviceGateway
+                runServiceName = moqui.device.DeviceGatewayServices.run#GatewayDeviceRequest
+                requestTypeEnumId = same type as the target gateway-side request
+                    (DrtWrite / DrtSubscribe / DrtUnsubscribe / etc.)
+                brokerUri = gateway REST base URL
+                    e.g.  http://gateway-host:8081
+                    http://gateway-host:8081?apiKey=secret
+                query = requestName of the gateway-side DeviceRequest
+                    e.g.  VPL_MQTT_PUBLISH_REQ   (deviceId=virtual-plc-1)
+                connectionName = DeviceConnection (driverEnumId=DcdOpcUa) — required for
+                    OPC UA requests; the gateway reads the same record to
+                    resolve the OPC UA server address.
+                    Leave null for MQTT requests.
+                timeout = HTTP timeout in seconds (optional; defaults to 30)
+
+            Gateway-side DeviceRequest fields (unchanged — fieldbus configuration):
+                deviceId = virtual-plc-1 (the actual field device)
+                requestName = VPL_MQTT_PUBLISH_REQ ← matches Moqui-side query field
+                brokerUri = paho-mqtt5:virtual_plc_reference?brokerUrl=...
+                (etc.)
+
+            Dispatch Mapping:
+            requestTypeEnumId → gateway REST endpoint
+            DrtWrite, DrtConfigWrite, DrtRead → POST /api/device-request/run/{query}
+            DrtSubscribe, DrtEvent, DrtStateChange, DrtCyclic → POST /api/device-request/subscribe/{query}
+            DrtUnsubscribe → POST /api/device-request/unsubscribe/{query}
+
+            Notes
+            requestItemList and bulkRequestItemList are received but intentionally discarded:
+            the gateway re-executes all DB queries autonomously using its own connection pool,
+            so forwarding pre-resolved items would be redundant and potentially stale.
+
+            The onlyChangedParameters guard in run#DeviceRequest remains valuable: when no
+            parameter has changed the gateway is never called at all.
+        </description>
+        <implements service="moqui.device.DeviceServices.run#DeviceRequestInternal"/>
+        <actions><script><![CDATA[
+            import org.moqui.util.RestClient
+
+            // requestItemList and bulkRequestItemList intentionally not used —
+            // the gateway re-queries the DB for all fieldbus configuration.
+
+            // resolve gateway base URL and optional API key
+            String rawUri = request.brokerUri
+            if (!rawUri) {
+                ec.message.addError("DeviceRequest ${request.requestName} (deviceId=${request.deviceId}) " +
+                    "is missing brokerUri. Set brokerUri to the gateway REST base URL " +
+                    "(e.g. http://gateway-host:8081 or http://gateway-host:8081?apiKey=secret).")
+                return
+            }
+
+            String gatewayBaseUrl = rawUri
+            String apiKey = null
+            int qIdx = rawUri.indexOf('?')
+            if (qIdx >= 0) {
+                gatewayBaseUrl = rawUri.substring(0, qIdx)
+                rawUri.substring(qIdx + 1).split('&').each { String kv ->
+                    String[] parts = kv.split('=', 2)
+                    if (parts.length == 2 && 'apiKey' == parts[0].trim()) apiKey = parts[1].trim()
+                }
+            }
+            gatewayBaseUrl = gatewayBaseUrl.replaceAll('/+$', '')
+
+            // resolve gateway-side requestName from DeviceRequest.query
+            String gwRequestName = request.query
+            if (!gwRequestName) {
+                ec.message.addError("DeviceRequest ${request.requestName} (deviceId=${request.deviceId}) " +
+                    "is missing query. Set query to the gateway-side requestName " +
+                    "(the DeviceRequest the gateway will look up in the shared DB).")
+                return
+            }
+
+            // map requestTypeEnumId to gateway REST endpoint
+            String reqType = request.requestTypeEnumId
+            String path
+            if (reqType in ['DrtWrite', 'DrtConfigWrite', 'DrtRead']) {
+                path = "/api/device-request/run/${gwRequestName}"
+            } else if (reqType in ['DrtSubscribe', 'DrtEvent', 'DrtStateChange', 'DrtCyclic']) {
+                path = "/api/device-request/subscribe/${gwRequestName}"
+            } else if ('DrtUnsubscribe' == reqType) {
+                path = "/api/device-request/unsubscribe/${gwRequestName}"
+            } else {
+                ec.message.addError("Unsupported request type ${reqType} for gateway dispatch " +
+                    "(DeviceRequest ${request.requestName}, gateway requestName ${gwRequestName}).")
+                return
+            }
+
+            // protocol detection (for logging only)
+            boolean isOpcUa = ('DcdOpcUa' == connection?.driverEnumId)
+            ec.logger.info("Dispatching ${reqType} to gateway ${gatewayBaseUrl}${path} " +
+                "[protocol=${isOpcUa ? 'OPC UA' : 'MQTT'}, gwRequest=${gwRequestName}]")
+
+            // call gateway
+            int timeoutSec = request.timeout != null ? (int) request.timeout : 30
+            RestClient rc = new RestClient()
+                .method(RestClient.POST)
+                .uri(gatewayBaseUrl + path)
+                .contentType("application/json")
+                .acceptContentType("application/json")
+                .timeout(timeoutSec)
+            if (apiKey) rc.addHeader("X-API-Key", apiKey)
+
+            RestClient.RestResponse resp = rc.call()
+            resp.checkError()
+
+            ec.logger.info("Gateway dispatch completed for ${gwRequestName}: ${resp.text()}")
+        ]]></script></actions>
+    </service>
+
+    <service verb="transfer" noun="DeviceContent" authenticate="false" transaction="ignore">
+        <description>
+            Transfers a DeviceContent file (G-Code, CNC program, firmware, etc.) to a device
+            via the moqui-device-gateway process.
+
+            Data Model Conventions
+            Moqui-side DeviceRequest fields:
+                deviceId = moqui-device-gateway1
+                routerEnumId = DrrMoquiDeviceGateway
+                requestTypeEnumId = DrtContentTransfer
+                runServiceName = moqui.device.DeviceGatewayServices.transfer#DeviceContent
+                brokerUri = gateway REST base URL (e.g. http://gateway-host:8081?apiKey=secret)
+                query = gateway-side DeviceRequest.requestName
+
+            Gateway-side DeviceRequest fields:
+                requestTypeEnumId = DrtContentTransfer
+                brokerUri = Camel SFTP or file endpoint
+                    e.g. sftp:operator@cnc1.factory.local:22/programs
+                    file:/mnt/cnc-share/programs
+
+            The file is read from DeviceContent.contentLocation via the Moqui resource system
+            and streamed as Base64 JSON to the gateway, which decodes and transfers it via
+            the Camel SFTP/file component to the destination in its brokerUri.
+        </description>
+        <in-parameters>
+            <parameter name="deviceContentId" required="true"/>
+            <parameter name="requestName" required="true">
+                <description>Moqui-side DeviceRequest.requestName (routerEnumId=DrrMoquiDeviceGateway).</description>
+            </parameter>
+        </in-parameters>
+        <actions><script><![CDATA[
+            import org.moqui.util.RestClient
+
+            // load DeviceContent
+            def content = ec.entity.find("moqui.device.DeviceContent")
+                .condition("deviceContentId", deviceContentId).one()
+            if (!content) {
+                ec.message.addError("DeviceContent ${deviceContentId} not found.")
+                return
+            }
+            if (!content.contentLocation) {
+                ec.message.addError("DeviceContent ${deviceContentId} has no contentLocation.")
+                return
+            }
+
+            // load Moqui-side DeviceRequest
+            def dr = ec.entity.find("moqui.device.DeviceRequest")
+                .condition("requestName", requestName).one()
+            if (!dr) {
+                ec.message.addError("DeviceRequest ${requestName} not found.")
+                return
+            }
+
+            // parse gateway base URL and optional API key from brokerUri
+            String rawUri = dr.brokerUri
+            if (!rawUri) {
+                ec.message.addError("DeviceRequest ${requestName} is missing brokerUri (gateway REST base URL).")
+                return
+            }
+            String gatewayBaseUrl = rawUri
+            String apiKey = null
+            int qIdx = rawUri.indexOf('?')
+            if (qIdx >= 0) {
+                gatewayBaseUrl = rawUri.substring(0, qIdx)
+                rawUri.substring(qIdx + 1).split('&').each { String kv ->
+                    String[] parts = kv.split('=', 2)
+                    if (parts.length == 2 && 'apiKey' == parts[0].trim()) apiKey = parts[1].trim()
+                }
+            }
+            gatewayBaseUrl = gatewayBaseUrl.replaceAll('/+$', '')
+
+            String gwRequestName = dr.query
+            if (!gwRequestName) {
+                ec.message.addError("DeviceRequest ${requestName} is missing query (gateway-side requestName).")
+                return
+            }
+
+            // read file bytes via Moqui resource system and encode as Base64
+            InputStream is = ec.resource.getLocationReference(content.contentLocation).openStream()
+            byte[] fileBytes = is.bytes
+            is.close()
+            String encoded = java.util.Base64.encoder.encodeToString(fileBytes)
+            String filename = content.contentLocation.tokenize('/').last()
+
+            ec.logger.info("Transferring DeviceContent ${deviceContentId} (${filename}, ${fileBytes.length} bytes) " +
+                "to gateway ${gatewayBaseUrl} → gwRequest=${gwRequestName}")
+
+            int timeoutSec = dr.timeout != null ? (int) dr.timeout : 30
+            RestClient rc = new RestClient()
+                .method(RestClient.POST)
+                .uri(gatewayBaseUrl + "/api/device-content/transfer/" + gwRequestName)
+                .contentType("application/json")
+                .acceptContentType("application/json")
+                .timeout(timeoutSec)
+            if (apiKey) rc.addHeader("X-API-Key", apiKey)
+            rc.jsonObject([filename: filename, contentBase64: encoded, contentTypeEnumId: (content.contentTypeEnumId ?: '')])
+
+            RestClient.RestResponse resp = rc.call()
+            resp.checkError()
+
+            ec.logger.info("DeviceContent transfer completed: ${resp.text()}")
+        ]]></script></actions>
+    </service>
+</services>
