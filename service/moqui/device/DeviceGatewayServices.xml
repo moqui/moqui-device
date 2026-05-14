@@ -143,6 +143,87 @@ along with this software (see the LICENSE.md file). If not, see
         ]]></script></actions>
     </service>
 
+    <service verb="export" noun="DeviceConfig" authenticate="false" transaction="ignore">
+        <description>
+            Exports a device configuration recipe (Codesys txt-recipe format) via the
+            moqui-device-gateway process.
+
+            The gateway queries DEVICE_RULE_SET → DEVICE_RULE → DEVICE_CONFIG → PARAMETER
+            and produces a recipe file in the format:
+
+                DeviceName.ParameterName:=ParameterValue
+
+            When a DeviceRuleSet spans more than one DeviceRule (and therefore more than one
+            deviceId), all devices' parameters are included, each prefixed with the
+            PHYSICAL_DEVICE.deviceName. When deviceId is supplied, only that device's
+            parameters are exported (single-device recipe).
+
+            Moqui-side DeviceRequest fields:
+                deviceId = moqui-device-gateway1
+                routerEnumId = DrrMoquiDeviceGateway
+                requestTypeEnumId = DrtConfigWrite
+                runServiceName = moqui.device.DeviceGatewayServices.export#DeviceConfig
+                brokerUri = gateway REST base URL (e.g. http://gateway-host:8081?apiKey=secret)
+                timeout = HTTP timeout in seconds (optional; defaults to 30)
+        </description>
+        <in-parameters>
+            <parameter name="deviceRuleSetId" required="true"/>
+            <parameter name="deviceId">
+                <description>Optional. When set, limits the export to parameters belonging to
+                    this device's rules only. When omitted, all devices in the rule set are
+                    included (multi-device recipe).</description>
+            </parameter>
+            <parameter name="requestName" required="true">
+                <description>Moqui-side DeviceRequest.requestName (routerEnumId=DrrMoquiDeviceGateway).</description>
+            </parameter>
+        </in-parameters>
+        <actions><script><![CDATA[
+            import org.moqui.util.RestClient
+
+            def dr = ec.entity.find("moqui.device.DeviceRequest")
+                .condition("requestName", requestName).one()
+            if (!dr) {
+                ec.message.addError("DeviceRequest ${requestName} not found.")
+                return
+            }
+
+            String rawUri = dr.brokerUri
+            if (!rawUri) {
+                ec.message.addError("DeviceRequest ${requestName} is missing brokerUri (gateway REST base URL).")
+                return
+            }
+            String gatewayBaseUrl = rawUri
+            String apiKey = null
+            int qIdx = rawUri.indexOf('?')
+            if (qIdx >= 0) {
+                gatewayBaseUrl = rawUri.substring(0, qIdx)
+                rawUri.substring(qIdx + 1).split('&').each { String kv ->
+                    String[] parts = kv.split('=', 2)
+                    if (parts.length == 2 && 'apiKey' == parts[0].trim()) apiKey = parts[1].trim()
+                }
+            }
+            gatewayBaseUrl = gatewayBaseUrl.replaceAll('/+$', '')
+
+            int timeoutSec = dr.timeout != null ? (int) dr.timeout : 30
+            RestClient rc = new RestClient()
+                .method(RestClient.POST)
+                .uri(gatewayBaseUrl + "/api/device-config/export")
+                .contentType("application/json")
+                .acceptContentType("application/json")
+                .timeout(timeoutSec)
+            if (apiKey) rc.addHeader("X-API-Key", apiKey)
+
+            Map<String, Object> payload = [deviceRuleSetId: deviceRuleSetId]
+            if (deviceId) payload.deviceId = deviceId
+            rc.jsonObject(payload)
+
+            RestClient.RestResponse resp = rc.call()
+            resp.checkError()
+
+            ec.logger.info("DeviceConfig export completed for ruleSet ${deviceRuleSetId}: ${resp.text()}")
+        ]]></script></actions>
+    </service>
+
     <service verb="transfer" noun="DeviceContent" authenticate="false" transaction="ignore">
         <description>
             Transfers a DeviceContent file (G-Code, CNC program, firmware, etc.) to a device
