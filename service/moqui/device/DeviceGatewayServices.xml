@@ -148,15 +148,19 @@ along with this software (see the LICENSE.md file). If not, see
             Exports a device configuration recipe (Codesys txt-recipe format) via the
             moqui-device-gateway process.
 
-            The gateway queries DEVICE_RULE_SET → DEVICE_RULE → DEVICE_CONFIG → PARAMETER
-            and produces a recipe file in the format:
+            The gateway queries DEVICE_RULE_SET → DEVICE_RULE → DEVICE_CONFIG → PARAMETER,
+            groups rules by DEVICE_RULE.PRIORITY, and produces one recipe file per priority group.
 
+            File format (one line per parameter):
                 DeviceName.ParameterName:=ParameterValue
 
-            When a DeviceRuleSet spans more than one DeviceRule (and therefore more than one
-            deviceId), all devices' parameters are included, each prefixed with the
-            PHYSICAL_DEVICE.deviceName. When deviceId is supplied, only that device's
-            parameters are exported (single-device recipe).
+            Filename pattern: {ruleSetName}_p{priority:02d}.txt
+            Response:  { "files": [{"filename": ..., "priority": ..., "rowCount": ...}] }
+
+            When a DeviceRuleSet spans more than one DeviceRule, all devices sharing the same
+            PRIORITY are included in a single file, each parameter prefixed with the
+            PHYSICAL_DEVICE.deviceName. Provide deviceId or deviceRuleId to restrict the
+            export to a subset of rules.
 
             Moqui-side DeviceRequest fields:
                 deviceId = moqui-device-gateway1
@@ -170,8 +174,11 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="deviceRuleSetId" required="true"/>
             <parameter name="deviceId">
                 <description>Optional. When set, limits the export to parameters belonging to
-                    this device's rules only. When omitted, all devices in the rule set are
-                    included (multi-device recipe).</description>
+                    this device's rules only.</description>
+            </parameter>
+            <parameter name="deviceRuleId">
+                <description>Optional. When set, limits the export to a single DeviceRule.
+                    Can be combined with deviceId for more specific filtering.</description>
             </parameter>
             <parameter name="requestName" required="true">
                 <description>Moqui-side DeviceRequest.requestName (routerEnumId=DrrMoquiDeviceGateway).</description>
@@ -215,6 +222,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             Map<String, Object> payload = [deviceRuleSetId: deviceRuleSetId]
             if (deviceId) payload.deviceId = deviceId
+            if (deviceRuleId) payload.deviceRuleId = deviceRuleId
             rc.jsonObject(payload)
 
             RestClient.RestResponse resp = rc.call()
@@ -325,6 +333,56 @@ along with this software (see the LICENSE.md file). If not, see
             resp.checkError()
 
             ec.logger.info("DeviceContent transfer completed: ${resp.text()}")
+        ]]></script></actions>
+    </service>
+
+    <service verb="receive" noun="GatewayNotification" authenticate="false" transaction="ignore">
+        <description>
+            Receives inbound error and recovery notifications sent by the moqui-device-gateway
+            process when persistent DB write failures are detected or cleared.
+
+            The gateway sends a POST to this endpoint when:
+              - eventType = "inboundError":   consecutive DB failures have exceeded
+                gateway.inbound.error.notification.threshold.seconds.
+              - eventType = "inboundRecovered": the first successful DB write after
+                a period of errors.
+
+            Configure the gateway to call this service:
+              gateway.inbound.error.notification.uri =
+                http://moqui:8080/rest/s1/org/moqui/device/receiveGatewayNotification
+
+            POST body shape:
+              {
+                "eventType": "inboundError" | "inboundRecovered",
+                "routeId": "device-request-consumer-VPL_OPCUA_READ_REQ-0",
+                "requestName": "VPL_OPCUA_READ_REQ",
+                "protocol": "OPC UA",
+                "errorMessage": "Connection refused",        // present on inboundError only
+                "firstErrorTime": "2026-05-02T10:00:00Z",
+                "errorDurationSeconds": 63
+              }
+        </description>
+        <in-parameters>
+            <parameter name="eventType" required="true"/>
+            <parameter name="routeId"/>
+            <parameter name="requestName"/>
+            <parameter name="protocol"/>
+            <parameter name="errorMessage"/>
+            <parameter name="firstErrorTime"/>
+            <parameter name="errorDurationSeconds" type="Long"/>
+        </in-parameters>
+        <actions><script><![CDATA[
+            if (eventType == 'inboundError') {
+                ec.logger.warn("Gateway inbound error on route ${routeId} (${protocol}): " +
+                    "${errorMessage}. First error: ${firstErrorTime}, duration: ${errorDurationSeconds}s")
+                // TODO: raise a DeviceAlert or other notification
+            } else if (eventType == 'inboundRecovered') {
+                ec.logger.info("Gateway inbound recovered on route ${routeId}: " +
+                    "error duration was ${errorDurationSeconds}s since ${firstErrorTime}")
+                // TODO: clear DeviceAlert or other notification
+            } else {
+                ec.logger.warn("Unknown gateway notification eventType: ${eventType}")
+            }
         ]]></script></actions>
     </service>
 </services>
