@@ -657,6 +657,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration enumId="DgmpEnergyMeter" description="Energy Meter" parentEnumId="DgmpMonitoringDevices" enumTypeId="DeviceGroupMemberPurpose"/>
     <moqui.basic.Enumeration enumId="DgmpNetworkAnalyzer" description="Network Analyzer" parentEnumId="DgmpMonitoringDevices" enumTypeId="DeviceGroupMemberPurpose"/>
     <moqui.basic.Enumeration enumId="DgmpNetworkMultimeter" description="Network Multimeter" parentEnumId="DgmpMonitoringDevices" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpEdgeGateway" description="Edge Gateway" enumTypeId="DeviceGroupMemberPurpose"/>
     <!-- Device Group Member Status -->
     <moqui.basic.StatusType description="Device Group Member Status" statusTypeId="DeviceGroupMemberStatus"/>
     <moqui.basic.StatusItem description="Down" sequenceNum="1" statusId="DgmsDown" statusTypeId="DeviceGroupMemberStatus"/>
