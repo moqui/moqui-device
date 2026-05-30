@@ -317,7 +317,6 @@ along with this software (see the LICENSE.md file). If not, see
     </extend-entity>
 
     <!-- ========== Device Log ========== -->
-    <!-- Currently unused -->
     <entity entity-name="DeviceLog" package="moqui.device" cache="never" sequence-bank-size="1000" short-alias="deviceLog">
         <field name="deviceLogId" type="id" is-pk="true"/>
         <field name="deviceId" type="id" not-null="true"/>

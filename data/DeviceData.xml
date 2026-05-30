@@ -18,6 +18,17 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- Device Type -->
     <moqui.basic.EnumerationType description="Device Type" enumTypeId="DeviceType"/>
 
+    <!-- Moqui PLC Device Type -->
+    <!-- Virtual device types for PLCs implmented with the moqui-plc framework -->
+    <moqui.basic.Enumeration description="Moqui PLC" enumId="DtMoquiPlc" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Moqui PLC Actuator" enumId="DtMoquiPlcActuator" parentEnumId="DtMoquiPlc" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Moqui PLC ActuatorGroup" enumId="DtMoquiPlcActuatorGroup" parentEnumId="DtMoquiPlc" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Moqui PLC Process PID" enumId="DtMoquiPlcProcessPID" parentEnumId="DtMoquiPlc" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Moqui PLC Axis" enumId="DtMoquiPlcAxis" parentEnumId="DtMoquiPlc" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Moqui PLC Axis Group" enumId="DtMoquiPlcAxisGroup" parentEnumId="DtMoquiPlc" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Moqui PLC Signal Management" enumId="DtMoquiPlcSignalMgmt" parentEnumId="DtMoquiPlc" enumTypeId="DeviceType"/>
+
+    <!-- Physical Device Type --> 
     <moqui.basic.Enumeration description="Physical Device" enumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Computer" enumId="DtComputer" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Mobile Computer" enumId="DtMobileComputer" parentEnumId="DtComputer" enumTypeId="DeviceType"/>
@@ -70,6 +81,14 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="CNC Controller" enumId="DtCNC" parentEnumId="DtController" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Embedded Controller" enumId="DtEmbeddedController" parentEnumId="DtController" enumTypeId="DeviceType"/>
     
+    <moqui.basic.Enumeration description="Sensor" enumId="DtSensor" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Analog Sensor" enumId="DtAnalogSensor" parentEnumId="DtSensor" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Input Analog Sensor" enumId="DtInputAnalogSensor" parentEnumId="DtAnalogSensor" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Output Analog Sensor" enumId="DtOutputAnalogSensor" parentEnumId="DtAnalogSensor" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Digital Sensor" enumId="DtDigitalSensor" parentEnumId="DtSensor" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Input Digital Sensor" enumId="DtInputDigitalSensor" parentEnumId="DtDigitalSensor" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Output Digital Sensor" enumId="DtOutputDigitalSensor" parentEnumId="DtDigitalSensor" enumTypeId="DeviceType"/>
+
     <moqui.basic.Enumeration description="Monitoring Device" enumId="DtMonitoringDevice" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Energy Meter" enumId="DtEnergyMeter" parentEnumId="DtMonitoringDevice" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Condition Monitoring" enumId="DtConditionMonitoring" parentEnumId="DtMonitoringDevice" enumTypeId="DeviceType"/>

@@ -56,10 +56,10 @@ along with this software (see the LICENSE.md file). If not, see
                 (etc.)
 
             Dispatch Mapping:
-            requestTypeEnumId → gateway REST endpoint
-            DrtWrite, DrtConfigWrite, DrtRead → POST /api/device-request/run/{query}
-            DrtSubscribe, DrtEvent, DrtStateChange, DrtCyclic → POST /api/device-request/subscribe/{query}
-            DrtUnsubscribe → POST /api/device-request/unsubscribe/{query}
+            every supported DeviceRequest is forwarded to the single gateway endpoint
+                POST /api/device-request/run/{query}
+            and the standalone gateway dispatches internally based on the gateway-side
+            DeviceRequest.requestTypeEnumId and connection metadata.
 
             Notes
             requestItemList and bulkRequestItemList are received but intentionally discarded:
@@ -106,20 +106,8 @@ along with this software (see the LICENSE.md file). If not, see
                 return
             }
 
-            // map requestTypeEnumId to gateway REST endpoint
             String reqType = request.requestTypeEnumId
-            String path
-            if (reqType in ['DrtWrite', 'DrtConfigWrite', 'DrtRead']) {
-                path = "/api/device-request/run/${gwRequestName}"
-            } else if (reqType in ['DrtSubscribe', 'DrtEvent', 'DrtStateChange', 'DrtCyclic']) {
-                path = "/api/device-request/subscribe/${gwRequestName}"
-            } else if ('DrtUnsubscribe' == reqType) {
-                path = "/api/device-request/unsubscribe/${gwRequestName}"
-            } else {
-                ec.message.addError("Unsupported request type ${reqType} for gateway dispatch " +
-                    "(DeviceRequest ${request.requestName}, gateway requestName ${gwRequestName}).")
-                return
-            }
+            String path = "/api/device-request/run/${gwRequestName}"
 
             // protocol detection (for logging only)
             boolean isOpcUa = ('DcdOpcUa' == connection?.driverEnumId)
