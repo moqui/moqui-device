@@ -13,21 +13,22 @@ described without modelling what it computes. `moqui-device` is the device half
 of that pairing — the single, auditable source of truth for what a device *is*,
 what it *runs*, and what it *did*.
 
-## Everything that runs is a trajectory
+## Trajectories and discrete-event systems
 
-One modelling choice runs through the whole component, and it is worth stating
-plainly. A device's behaviour over time is a **trajectory** — and not only in the
-obvious robotic sense. A robot arm follows a trajectory in space; a thermodynamic
-process follows one in state space; so does a market, an ecosystem moving toward
-its attractors, a metabolic or molecular path. In systems-theory terms, the state
-of a real system is never frozen — it is always in motion along a path, in
-space-time or in an abstract state space.
+A device's behaviour over time falls into one of two forms, and the model covers
+both. Either it is a **trajectory** — a continuous path through a state space — or
+it is a **discrete-event system (DES)**, a sequence of state transitions fired by
+events. A robot arm moving through space and a thermodynamic process following a
+temperature profile are trajectories; a batch advancing through its phases or an
+industrial bioprocess stepping between operating states is a DES.
 
-The math/device duality captures this directly: `moqui.math.Trajectory` describes
-the path, and `TrajectoryAxisBinding` maps its axes (position, velocity,
-acceleration, jerk, snap) onto the concrete parameters of the device that
-executes it. The same structure serves a servo axis, a temperature ramp, or any
-state-space evolution you need to command, log, and audit.
+The math/device duality captures the continuous case directly:
+`moqui.math.Trajectory` describes the path, and `TrajectoryAxisBinding` maps its
+axes (position, velocity, acceleration, jerk, snap) onto the concrete parameters
+of the device that executes it — a servo axis or a temperature ramp alike. The
+discrete case is captured by the device status flows (below), where state and
+transition are the modelling primitives. The same component therefore lets you
+model, command, log, and audit both how a device *moves* and how it *switches*.
 
 ## Contents
 
@@ -37,12 +38,13 @@ state-space evolution you need to command, log, and audit.
 | Math Binding | `DeviceMathModel` — binds a `Device` to a `moqui.math.MathModel` for training, inference, simulation, or monitoring |
 | Connectivity | `DeviceConnection` — Modbus TCP, OPC UA, EtherNet/IP, CANopen, PROFINET, BACnet/IP, KNXnet/IP, MTConnect, Logix CIP/EIP |
 | Requests | `DeviceRequest`, `DeviceRequestItem` — Read, Write, ConfigWrite, Subscribe (Event / StateChange / Cyclic), Unsubscribe, ContentTransfer, Browse, Discovery |
-| Configuration | `DeviceConfig`, `DeviceConfigSet`, `DeviceConfigSetMember` |
-| Rules | `DeviceRuleSet`, `DeviceRule` — apply, assert, and validate configurations; supports hierarchical rule sets and priority ordering |
+| Configuration | `DeviceConfig`, `DeviceConfigSet`, `DeviceConfigSetMember` — recipe and configuration definitions modelled along ISA-88 / IEC 61512 (batch control and recipe management) lines |
+| Rules | `DeviceRuleSet`, `DeviceRule` — apply, assert, and validate configurations; supports hierarchical rule sets and priority ordering, consistent with the ISA-88 / IEC 61512 separation of recipe logic from equipment control |
+| FSM definition (moqui-framework `BasicEntities.xml`) | `StatusType`, `StatusItem`, `StatusFlow`, `StatusFlowItem`, `StatusFlowTransition` — data-driven definition of the finite state machines that govern device behaviour |
 | Trajectory Binding | `TrajectoryAxisBinding` — maps `moqui.math.Trajectory` axes to device parameters (position, velocity, acceleration, jerk, snap) |
 | Dashboards | `DeviceDashboard` |
 
-### Device status flows
+### Device status flows, and why automation reduces to FSMs
 
 Two built-in status flows are provided as seed data:
 
@@ -52,7 +54,34 @@ Two built-in status flows are provided as seed data:
 Both follow the IEC 61131-3 / PLCopen Motion Control state-machine conventions.
 These status flows are not only documentation: combined with the device model
 they are the source from which [moqui-plc](https://github.com/moqui/moqui-plc)
-generates the FSM logic that runs on the controller.
+generates the FSM logic that runs on the controller, defined data-driven through
+the `StatusType`, `StatusItem`, `StatusFlow`, `StatusFlowItem`, and
+`StatusFlowTransition` entities of moqui-framework's `BasicEntities.xml`.
+
+The architectural reason this works is worth stating, because it is the central
+design choice of the whole stack. The reusable components — `Actuator`,
+`ActuatorGroup`, `Axis`, `AxisGroup`, `SignalMgmt` — form a **Hardware
+Abstraction Layer**. Once the messy device-level detail (handshakes, motion
+function blocks, signal conditioning) is hidden behind that HAL, the *behaviour*
+of a machine or process can be expressed as a **finite state machine**: a small
+set of states, a set of input and output symbols, and the transition and output
+functions between them.
+
+This is not a loose analogy. An FSM is a precise mathematical object — the
+ordered quintuple (input alphabet, output alphabet, set of states, next-state
+function, output function) familiar from logic-network and automata theory.
+Expressing automation problems in this form gives them a **solid mathematical
+basis**: the model is finite, enumerable, and analysable. Bringing this
+hardware-design discipline — the methods of synchronous logic networks — into the
+software layer is what makes the approach valuable beyond convenience. Because the
+state space and transitions are explicit and finite, the generated code can be
+**tested and validated as a mathematical object**: every state reachable, every
+transition exercised, every output checked against the specification. The model
+that defines the FSM is the same model against which its test suite is built.
+
+The two flows above are the built-in starting points; real machines extend and
+compose them, and the HAL keeps even complex coordinated systems expressible as
+FSMs over abstracted components rather than as ad hoc procedural code.
 
 ### Device type taxonomy
 
