@@ -188,6 +188,8 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="deviceId" type="id" is-pk="true"/>
         <field name="deviceName" type="text-medium">
             <description>Name of a smart component or a piece of equipment.</description></field>
+        <field name="vendorName" type="text-medium"/>
+        <field name="modelName" type="text-medium"/>
         <field name="version" type="text-short"/>
         <field name="hardwareVersion" type="text-short"/>
         <field name="firmwareVersion" type="text-short"/>
@@ -942,7 +944,6 @@ along with this software (see the LICENSE.md file). If not, see
         <relationship type="one" title="DeviceDashboardPurpose" related="moqui.basic.Enumeration" short-alias="purpose">
             <key-map field-name="purposeEnumId"/></relationship>
         <seed-data>
-            <!-- Device Dashboard Purpose -->
             <moqui.basic.EnumerationType description="Device Dashboard Purpose" enumTypeId="DeviceDashboardPurpose"/>
             <moqui.basic.Enumeration description="Summary Dashboard" enumId="DdpSummary" enumTypeId="DeviceDashboardPurpose"/>
             <moqui.basic.Enumeration description="Reporting" enumId="DdpReporting" enumTypeId="DeviceDashboardPurpose"/>
