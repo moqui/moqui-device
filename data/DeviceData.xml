@@ -62,6 +62,7 @@ along with this software (see the LICENSE.md file). If not, see
     
     <moqui.basic.Enumeration description="IoT" enumId="DtIoT" parentEnumId="DtComputer" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="IoT Gateway" enumId="DtIoTGateway" parentEnumId="DtIoT" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Edge Gateway" enumId="DtEdgeGateway" parentEnumId="DtIoTGateway" enumTypeId="DeviceType"/>
     
     <!-- NOTE: Device that provides regulation or management of a system or component (ISO 16484-5:2017).	
             Typical types of controllers for a piece of equipment include CNC (Computer Numerical Control),
@@ -214,6 +215,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Condition Monitoring" enumId="DgtConditionMonitoring" parentEnumId="DgtMonitoring" enumTypeId="DeviceType"/>
     
     <moqui.basic.Enumeration description="Control Group" enumId="DgtControl" parentEnumId="DtDeviceGroup" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Subsystem Control Group" enumId="DgtSubsystem" parentEnumId="DgtControl" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Master/Follower Control Group" enumId="DgtMasterFollower" parentEnumId="DgtControl" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Auto-Change Master/Follower Control Group" enumId="DgtAutoChangeMasterFollower" parentEnumId="DgtMasterFollower" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Conveyor Control Group" enumId="DgtConveyor" parentEnumId="DgtControl" enumTypeId="DeviceType"/>
@@ -637,6 +639,8 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration enumId="DgmpClusterMemberPrimary" description="Cluster Member Primary" parentEnumId="DgmpClusterMember" enumTypeId="DeviceGroupMemberPurpose"/>
     <moqui.basic.Enumeration enumId="DgmpClusterMemberSecondary" description="Cluster Member Secondary" parentEnumId="DgmpClusterMember" enumTypeId="DeviceGroupMemberPurpose"/>
     <moqui.basic.Enumeration enumId="DgmpController" description="Controller" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpSubsystem" description="Subsystem" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpControlledDevice" description="Controlled Device" enumTypeId="DeviceGroupMemberPurpose"/>
     <moqui.basic.Enumeration enumId="DgmpMotionController" description="Motion Controller" parentEnumId="DgmpController" enumTypeId="DeviceGroupMemberPurpose"/>
     <moqui.basic.Enumeration enumId="DgmpSafetyPLC" description="Safety PLC" parentEnumId="DgmpController" enumTypeId="DeviceGroupMemberPurpose"/>
     <moqui.basic.Enumeration enumId="DgmpProcessPLC" description="Process PLC" parentEnumId="DgmpController" enumTypeId="DeviceGroupMemberPurpose"/>
