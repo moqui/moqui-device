@@ -1,15 +1,60 @@
-// moqui-device component build
-// Adds DJL (Deep Java Library) + ONNX Runtime for the run#TrajectoryPlanner service.
+/*
+ * This software is in the public domain under CC0 1.0 Universal plus a
+ * Grant of Patent License.
+ *
+ * To the extent possible under law, the author(s) have dedicated all
+ * copyright and related and neighboring rights to this software to the
+ * public domain worldwide. This software is distributed without any
+ * warranty.
+ *
+ * You should have received a copy of the CC0 Public Domain Dedication
+ * along with this software (see the LICENSE.md file). If not, see
+ * <http://creativecommons.org/publicdomain/zero/1.0/>.
+ */
 
 apply plugin: 'groovy'
 
+def componentNode = parseComponent(project)
+version = componentNode.'@version'
+def jarBaseName = componentNode.'@name'
+def moquiDir = projectDir.parentFile.parentFile.parentFile
+def frameworkDir = file(moquiDir.absolutePath + '/framework')
+
+repositories {
+    flatDir name: 'localLib', dirs: frameworkDir.absolutePath + '/lib'
+    mavenCentral()
+}
+
 dependencies {
-    // DJL API
-    runtimeOnly 'ai.djl:api:0.31.0'
+    implementation project(':framework')
 
-    // DJL ONNX Runtime engine (bundles the ONNX Runtime JNI bridge)
+    // DJL (Deep Java Library) for ONNX inference — run#TrajectoryPlanner service
+    implementation 'ai.djl:api:0.31.0'
     runtimeOnly 'ai.djl.onnxruntime:onnxruntime-engine:0.31.0'
-
-    // Microsoft ONNX Runtime native library (CPU)
+    // Microsoft ONNX Runtime (CPU) — bundles native JNI libraries
     runtimeOnly 'com.microsoft.onnxruntime:onnxruntime:1.18.0'
 }
+
+// by default the Java plugin runs test on build, change to not do that
+check.dependsOn.clear()
+
+task cleanLib(type: Delete) { delete fileTree(dir: projectDir.absolutePath + '/lib', include: '*') }
+clean.dependsOn cleanLib
+
+jar {
+    destinationDirectory = file(projectDir.absolutePath + '/lib')
+    archiveBaseName = jarBaseName
+}
+
+// Copies all runtime JARs that are NOT already part of the framework into lib/
+// so that moqui can load them at startup.
+task copyDependencies { doLast {
+    copy {
+        from(configurations.runtimeClasspath
+                - project(':framework').configurations.runtimeClasspath
+                - project(':framework').jar.archiveFile.get().asFile)
+        into file(projectDir.absolutePath + '/lib')
+    }
+} }
+copyDependencies.dependsOn cleanLib
+jar.dependsOn copyDependencies
