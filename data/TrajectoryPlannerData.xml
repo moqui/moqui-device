@@ -99,6 +99,6 @@ along with this software (see the LICENSE.md file). If not, see
             modelAlias="trj-planner-v1"
             description="Production instance of the 6-DOF MLP trajectory planner v1."
             statusId="MathModelProduction"
-            statusFlowId="MathModelRun"/>
+            statusFlowId="MathModelStatusFlow"/>
 
 </entity-facade-xml>

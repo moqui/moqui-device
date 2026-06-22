@@ -2,6 +2,10 @@
 build
 lib/test-*.jar
 
+# ML model binaries — generated locally by script/train_trajectory_planner.py
+data/ml/*.onnx
+data/ml/*.pt
+
 # IntelliJ IDEA files
 .idea/
 out/
