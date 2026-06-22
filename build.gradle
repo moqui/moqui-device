@@ -1,0 +1,15 @@
+// moqui-device component build
+// Adds DJL (Deep Java Library) + ONNX Runtime for the run#TrajectoryPlanner service.
+
+apply plugin: 'groovy'
+
+dependencies {
+    // DJL API
+    runtimeOnly 'ai.djl:api:0.31.0'
+
+    // DJL ONNX Runtime engine (bundles the ONNX Runtime JNI bridge)
+    runtimeOnly 'ai.djl.onnxruntime:onnxruntime-engine:0.31.0'
+
+    // Microsoft ONNX Runtime native library (CPU)
+    runtimeOnly 'com.microsoft.onnxruntime:onnxruntime:1.18.0'
+}
