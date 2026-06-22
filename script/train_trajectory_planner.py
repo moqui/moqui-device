@@ -8,7 +8,7 @@ run#TrajectoryPlanner service.
 
 Usage
 -----
-    pip install torch numpy onnx
+    pip install torch numpy onnx onnxscript
     python script/train_trajectory_planner.py
 
 Output
@@ -136,7 +136,18 @@ def train():
 
 # ── ONNX export ───────────────────────────────────────────────────────────────
 
+def _ensure_onnxscript():
+    """PyTorch >= 2.5 requires onnxscript even for the legacy exporter path."""
+    try:
+        import onnxscript  # noqa: F401
+    except ModuleNotFoundError:
+        import subprocess, sys
+        print("Installing onnxscript (required by this PyTorch version) …")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "onnxscript"])
+
+
 def export_onnx(model: nn.Module):
+    _ensure_onnxscript()
     os.makedirs(OUT_DIR, exist_ok=True)
     model.eval()
     dummy = torch.zeros(1, 12, dtype=torch.float32)
