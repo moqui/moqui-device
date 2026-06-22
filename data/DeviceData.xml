@@ -380,6 +380,24 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsErrorStop" toStatusId="DbsStandstill" transitionName="Standstill" transitionSequence="32"/>
     <moqui.basic.StatusFlowTransition statusFlowId="DeviceBasicStatusFlow" statusId="DbsErrorStop" toStatusId="DbsDisabled" transitionName="Disabling" transitionSequence="33"/>
 
+    <!-- GenICam Camera Status Flow -->
+    <moqui.basic.StatusFlow statusFlowId="GenicamCameraStatusFlow" statusTypeId="DeviceBasicStatus" description="GenICam Camera Status Flow"/>
+    
+    <moqui.basic.StatusFlowItem statusFlowId="GenicamCameraStatusFlow" statusId="DbsDisabled" isInitial="Y"/>
+    <moqui.basic.StatusFlowItem statusFlowId="GenicamCameraStatusFlow" statusId="DbsStandstill" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="GenicamCameraStatusFlow" statusId="DbsRun" isInitial="N"/>
+    <moqui.basic.StatusFlowItem statusFlowId="GenicamCameraStatusFlow" statusId="DbsErrorStop" isInitial="N"/>
+    
+    <moqui.basic.StatusFlowTransition statusFlowId="GenicamCameraStatusFlow" statusId="DbsDisabled" toStatusId="DbsStandstill" transitionName="Init" transitionSequence="1"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="GenicamCameraStatusFlow" statusId="DbsStandstill" toStatusId="DbsDisabled" transitionName="Disabling" transitionSequence="2"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="GenicamCameraStatusFlow" statusId="DbsStandstill" toStatusId="DbsRun" transitionName="AcquisitionStart" transitionSequence="3"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="GenicamCameraStatusFlow" statusId="DbsStandstill" toStatusId="DbsErrorStop" transitionName="Error" transitionSequence="4"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="GenicamCameraStatusFlow" statusId="DbsRun" toStatusId="DbsStandstill" transitionName="AcquisitionStop" transitionSequence="5"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="GenicamCameraStatusFlow" statusId="DbsRun" toStatusId="DbsErrorStop" transitionName="Error" transitionSequence="6"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="GenicamCameraStatusFlow" statusId="DbsRun" toStatusId="DbsDisabled" transitionName="Disabling" transitionSequence="7"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="GenicamCameraStatusFlow" statusId="DbsErrorStop" toStatusId="DbsStandstill" transitionName="Reset" transitionSequence="8"/>
+    <moqui.basic.StatusFlowTransition statusFlowId="GenicamCameraStatusFlow" statusId="DbsErrorStop" toStatusId="DbsDisabled" transitionName="Disabling" transitionSequence="9"/>
+
     <!-- Device Advanced Status Flow -->
     <moqui.basic.StatusType description="Device Advanced Status Flow" statusTypeId="DeviceAdvancedStatus"/>
     <moqui.basic.StatusItem description="Disabled" sequenceNum="1" statusId="DasDisabled" statusTypeId="DeviceAdvancedStatus"/>
