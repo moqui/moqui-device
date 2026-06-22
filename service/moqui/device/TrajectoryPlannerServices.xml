@@ -64,14 +64,13 @@ along with this software (see the LICENSE.md file). If not, see
         </out-parameters>
         <actions><script><![CDATA[
 import groovy.json.JsonOutput
-import ai.djl.Model
-import ai.djl.ndarray.NDArray
-import ai.djl.ndarray.NDList
-import ai.djl.ndarray.NDManager
-import ai.djl.ndarray.types.Shape
-import ai.djl.translate.NoopTranslator
-import java.nio.file.Path
 import java.nio.file.Paths
+// DJL classes are NOT imported here — they are resolved at runtime via fully-qualified names
+// so that moqui can compile this script at startup even when DJL JARs are absent.
+// Place the required JARs in runtime/component/moqui-device/lib/ or runtime/lib/:
+//   ai.djl:api:0.31.0
+//   ai.djl.onnxruntime:onnxruntime-engine:0.31.0
+//   com.microsoft.onnxruntime:onnxruntime:1.18.0
 
 long t0 = System.currentTimeMillis()
 
@@ -106,21 +105,23 @@ runVal.create()
 String runId = runVal.mathModelRunId
 
 // ── 3. DJL ONNX inference ───────────────────────────────────────────────────
+// All DJL class references use fully-qualified names so the script compiles
+// without DJL on the classpath (Groovy resolves them at runtime).
 
 float[] rawOutput
 int nWaypoints
-Model onnxModel = null
-NDManager manager = null
+def onnxModel = null
+def manager   = null
 def predictor = null
 try {
     URL modelUrl = ec.resource.getLocationReference(onnxContent.contentLocation).getUrl()
-    Path modelFile = Paths.get(modelUrl.toURI())
+    def modelFile = Paths.get(modelUrl.toURI())
     String modelName = modelFile.fileName.toString().replaceAll('\\.onnx$', '')
 
-    manager  = NDManager.newBaseManager("OnnxRuntime")
-    onnxModel = Model.newInstance(modelName, "OnnxRuntime")
+    manager   = ai.djl.ndarray.NDManager.newBaseManager("OnnxRuntime")
+    onnxModel = ai.djl.Model.newInstance(modelName, "OnnxRuntime")
     onnxModel.load(modelFile.parent, modelName)
-    predictor = onnxModel.newPredictor(new NoopTranslator())
+    predictor = onnxModel.newPredictor(new ai.djl.translate.NoopTranslator())
 
     float[] inputData = new float[12]
     for (int i = 0; i < 6; i++) {
@@ -128,10 +129,13 @@ try {
         inputData[6 + i] = (float) (goalConfig.get(i)  as double)
     }
 
-    NDArray inputArr = manager.create(inputData, new Shape(1L, 12L))
-    NDList outList   = predictor.predict(new NDList(inputArr))
-    rawOutput        = outList.get(0).toFloatArray()
-    nWaypoints       = rawOutput.length / 6
+    def inputArr = manager.create(inputData, new ai.djl.ndarray.types.Shape(1L, 12L))
+    def outList  = predictor.predict(new ai.djl.ndarray.NDList(inputArr))
+    rawOutput    = outList.get(0).toFloatArray()
+    nWaypoints   = rawOutput.length / 6
+} catch (NoClassDefFoundError | ClassNotFoundException djlMissing) {
+    ec.message.addError("DJL JARs not found on classpath. Place api-0.31.0.jar, onnxruntime-engine-0.31.0.jar and onnxruntime-1.18.0.jar in runtime/component/moqui-device/lib/ and restart.")
+    return
 } catch (Exception ex) {
     long elapsed = System.currentTimeMillis() - t0
     def runRef = ec.entity.find("moqui.math.MathModelRun")

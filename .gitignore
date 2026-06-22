@@ -6,6 +6,9 @@ lib/test-*.jar
 data/ml/*.onnx
 data/ml/*.pt
 
+# Runtime JARs — downloaded by script/download-djl-jars.ps1
+lib/*.jar
+
 # IntelliJ IDEA files
 .idea/
 out/
