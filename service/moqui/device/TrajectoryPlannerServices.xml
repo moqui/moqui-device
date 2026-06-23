@@ -57,260 +57,189 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="approximatedFunctionId"/>
             <parameter name="mathModelPerfId"/>
         </out-parameters>
-        <actions><script><![CDATA[
-            import groovy.json.JsonOutput
-            // DJL classes are NOT imported here — they are resolved at runtime via fully-qualified names
-            // so that moqui can compile this script at startup even when DJL JARs are absent.
-            // Place the required JARs in runtime/component/moqui-device/lib/ or runtime/lib/:
-            //   ai.djl:api:0.31.0
-            //   ai.djl.onnxruntime:onnxruntime-engine:0.31.0
-            //   com.microsoft.onnxruntime:onnxruntime:1.18.0
+        <actions>
+            <entity-find-one entity-name="moqui.math.MathModel" value-field="mathModel">
+                <field-map field-name="mathModelId"/>
+            </entity-find-one>
+            <if condition="!mathModel">
+                <return error="true" message="MathModel ${mathModelId} not found"/>
+            </if>
 
-            long t0 = System.currentTimeMillis()
+            <entity-find-one entity-name="moqui.math.MathModelDefContent" value-field="onnxContent">
+                <field-map field-name="mathModelDefId" from="mathModel.mathModelDefId"/>
+                <field-map field-name="contentTypeEnumId" value="MmCntOnnx"/>
+            </entity-find-one>
+            <if condition="!onnxContent">
+                <return error="true" message="No ONNX content for MathModelDef ${mathModel.mathModelDefId}"/>
+            </if>
 
-            // load MathModel + ONNX content location
-            EntityValue mathModel = ec.entity.find("moqui.math.MathModel").condition("mathModelId", mathModelId).one()
-            if (!mathModel) {
-                ec.message.addError("MathModel ${mathModelId} not found")
-                return
-            }
+            <script><![CDATA[
+                import groovy.json.JsonOutput
+                import org.moqui.device.TrajectoryGenerator
 
-            EntityValue onnxContent = ec.entity.find("moqui.math.MathModelDefContent")
-                .condition("mathModelDefId", mathModel.mathModelDefId)
-                .condition("contentTypeEnumId", "MmCntOnnx")
-                .list().first()
-            if (!onnxContent) {
-                ec.message.addError("No ONNX content for MathModelDef ${mathModel.mathModelDefId}")
-                return
-            }
+                startConfigList = TrajectoryGenerator.normalizeJointConfig(startConfig, "startConfig")
+                goalConfigList = TrajectoryGenerator.normalizeJointConfig(goalConfig, "goalConfig")
+                mathModelRunParameters = JsonOutput.toJson([startConfig: startConfigList, goalConfig: goalConfigList])
+                trajectoryLabel = trajectoryName ?: null
+            ]]></script>
 
-            // open MathModelRun
-            EntityValue runVal = ec.entity.makeValue("moqui.math.MathModelRun")
-                .setAll([mathModelId : mathModelId, startTime : ec.user.nowTimestamp,
-                    parameters : JsonOutput.toJson([startConfig: startConfig, goalConfig : goalConfig]),
-                    hasError : 'N'])
-            runVal.setSequencedIdPrimary()
-            runVal.create()
-            String runId = runVal.mathModelRunId
+            <set field="mathModelRunFields" from="[mathModelId: mathModelId, startTime: ec.user.nowTimestamp,
+                parameters: mathModelRunParameters, hasError: 'N']"/>
+            <entity-make-value entity-name="moqui.math.MathModelRun" value-field="runVal" map="mathModelRunFields"/>
+            <script><![CDATA[
+                t0 = System.currentTimeMillis()
+                runVal.setSequencedIdPrimary()
+            ]]></script>
+            <entity-create value-field="runVal"/>
+            <set field="runId" from="runVal.mathModelRunId"/>
 
-            // DJL ONNX inference
-            // all DJL class references use fully-qualified names so the script compiles
-            // without DJL on the classpath (Groovy resolves them at runtime).
-            float[] rawOutput
-            int nWaypoints
-            long inferenceLatencyMs = 0L
-            def onnxModel = null
-            def manager = null
-            def predictor = null
-            File tempOnnx = null
-            File tempDataFile = null
-            java.nio.file.Path tempDir = null
-            try {
-                // Copy ONNX to a temp directory preserving the original filename.
-                // Reason 1: getUrl() returns jar: URLs in WAR deployments — Paths.get(uri) fails.
-                // Reason 2: PyTorch 2.x may export external data ({name}.onnx + {name}.onnx.data);
-                //     ONNX Runtime resolves the .data file relative to the .onnx location,
-                //     so both files must live in the same directory with their original names.
-                String origName = onnxContent.contentLocation.substring(
-                    onnxContent.contentLocation.lastIndexOf('/') + 1) // "trajectory_planner.onnx"
-                String modelName = origName.replaceAll('\\.onnx$', '') // "trajectory_planner"
-                tempDir = java.nio.file.Files.createTempDirectory("djl-onnx-")
-                tempOnnx = new File(tempDir.toFile(), origName)
-                ec.resource.getLocationReference(onnxContent.contentLocation).openStream()
-                    .withStream { inp -> tempOnnx.withOutputStream { out -> out << inp } }
-                // Copy companion .data file if it exists (PyTorch external data format)
+            <script><![CDATA[
+                import groovy.json.JsonOutput
+                import org.moqui.context.ExecutionContext
+                import org.moqui.device.TrajectoryGenerator
+
+                ExecutionContext ec = context.ec
+
                 try {
-                    EntityValue dataRef = ec.resource.getLocationReference(onnxContent.contentLocation + ".data")
-                    dataRef.openStream().withStream { inp ->
-                        tempDataFile = new File(tempDir.toFile(), origName + ".data")
-                        tempDataFile.withOutputStream { out -> out << inp }
+                    Map inference = TrajectoryGenerator.runInference(ec, onnxContent.contentLocation as String,
+                        startConfigList, goalConfigList)
+                    waypoints = inference.waypoints
+                    waypointCount = inference.waypointCount
+                    inferenceLatencyMs = inference.inferenceLatencyMs ?: 0L
+                } catch (Throwable t) {
+                    long elapsed = System.currentTimeMillis() - t0
+                    def runRef = ec.entity.find("moqui.math.MathModelRun").condition("mathModelRunId", runId).one()
+                    if (runRef) {
+                        runRef.setAll([endDate : ec.user.nowTimestamp, runningTimeMillis: (float) elapsed,
+                            hasError : 'Y', errors : t.message])
+                        runRef.update()
                     }
-                } catch (Exception ignored) {}
-
-                manager = ai.djl.ndarray.NDManager.newBaseManager("OnnxRuntime")
-                onnxModel = ai.djl.Model.newInstance(modelName, "OnnxRuntime")
-                onnxModel.load(tempDir, modelName)
-                predictor = onnxModel.newPredictor(new ai.djl.translate.NoopTranslator())
-
-                float[] inputData = new float[12]
-                for (int i = 0; i < 6; i++) {
-                    inputData[i] = (float) (startConfig.get(i) as double)
-                    inputData[6 + i] = (float) (goalConfig.get(i)  as double)
+                    throw t
                 }
+            ]]></script>
 
-                def inputArr = manager.create(inputData, new ai.djl.ndarray.types.Shape(1L, 12L))
-                long tInfer = System.currentTimeMillis()
-                def outList = predictor.predict(new ai.djl.ndarray.NDList(inputArr))
-                inferenceLatencyMs = System.currentTimeMillis() - tInfer
-                rawOutput = outList.get(0).toFloatArray()
-                nWaypoints = rawOutput.length / 6
-            } catch (NoClassDefFoundError | ClassNotFoundException djlMissing) {
-                ec.message.addError("DJL JARs not found on classpath. Place api-0.31.0.jar, onnxruntime-engine-0.31.0.jar and onnxruntime-1.18.0.jar in runtime/component/moqui-device/lib/ and restart.")
-                return
-            } catch (Exception ex) {
+            <set field="trajectoryLabel" from="trajectoryLabel ?: 'AI Trajectory ' + runId"/>
+            <set field="approximatedFunctionFields" from="[vectorSpaceEnumId: 'EngJointSpace6Dof', codomainTypeEnumId: 'AfctVector',
+                dataStorageEnumId: 'AfdsPointTable', purposeEnumId: 'AfpRobotMotion', interpolationEnumId: 'AfiAIPath',
+                name: trajectoryLabel, description: '6-DOF robot trajectory from MLP planner']"/>
+            <entity-make-value entity-name="moqui.math.ApproximatedFunction" value-field="approximatedFunctionValue" map="approximatedFunctionFields"/>
+            <script><![CDATA[approximatedFunctionValue.setSequencedIdPrimary()]]></script>
+            <entity-create value-field="approximatedFunctionValue"/>
+            <set field="approximatedFunctionId" from="approximatedFunctionValue.approximatedFunctionId"/>
+
+            <set field="parametricPathFields" from="[approximatedFunctionId: approximatedFunctionId, profileEnumId: 'PppfTrajectoryProfile']"/>
+            <entity-make-value entity-name="moqui.math.ParametricPath" value-field="parametricPathValue" map="parametricPathFields"/>
+            <entity-create value-field="parametricPathValue"/>
+
+            <set field="trajectoryFields" from="[approximatedFunctionId: approximatedFunctionId, actuationTypeEnumId: 'PtaDirect',
+                actuatorTypeEnumId: 'PtactRevolute', controlMethodEnumId: 'PtcmNNControl']"/>
+            <entity-make-value entity-name="moqui.math.Trajectory" value-field="trajectoryValue" map="trajectoryFields"/>
+            <entity-create value-field="trajectoryValue"/>
+
+            <set field="stepMs" from="waypointCount > 1 ? 1000.0d / (waypointCount - 1) : 0.0d"/>
+            <set field="waypointIndex" from="0" type="Integer"/>
+            <iterate list="waypoints" entry="waypoint">
+                <set field="waypointVectorFields" from="[vectorTypeEnumId: 'VtOrdinary', purposeEnumId: 'VpPosition', dimension: 6]"/>
+                <entity-make-value entity-name="moqui.math.Vector" value-field="waypointVectorValue" map="waypointVectorFields"/>
+                <script><![CDATA[waypointVectorValue.setSequencedIdPrimary()]]></script>
+                <entity-create value-field="waypointVectorValue"/>
+                <set field="waypointVectorId" from="waypointVectorValue.vectorId"/>
+
+                <set field="jointIndex" from="0" type="Integer"/>
+                <iterate list="waypoint" entry="jointValue">
+                    <set field="waypointComponentFields" from="[vectorId: waypointVectorId, dimensionIndex: jointIndex,
+                        componentTypeEnumId: 'VctCanonical', realValue: jointValue]"/>
+                    <entity-make-value entity-name="moqui.math.VectorComponent" value-field="waypointComponentValue" map="waypointComponentFields"/>
+                    <script><![CDATA[waypointComponentValue.setSequencedIdPrimary()]]></script>
+                    <entity-create value-field="waypointComponentValue"/>
+                    <set field="jointIndex" from="jointIndex + 1" type="Integer"/>
+                </iterate>
+
+                <set field="sampleTypeEnumId" from="waypointIndex == 0 ? 'AfstStartPoint' : (waypointIndex == (waypointCount - 1) ? 'AfstEndPoint' : 'AfstWaypoint')"/>
+                <set field="sampleFields" from="[approximatedFunctionId: approximatedFunctionId, sampleCode: 'WP' + String.format('%04d', waypointIndex),
+                    sampleName: 'Waypoint ' + waypointIndex, sequenceNum: waypointIndex, sampleTypeEnumId: sampleTypeEnumId,
+                    sampleVectorId: waypointVectorId]"/>
+                <entity-make-value entity-name="moqui.math.ApproximatedFunctionSample" value-field="sampleValue" map="sampleFields"/>
+                <script><![CDATA[sampleValue.setSequencedIdSecondary()]]></script>
+                <entity-create value-field="sampleValue"/>
+                <set field="sampleId" from="sampleValue.approximatedFunctionSampleId"/>
+
+                <set field="pathPointFields" from="[approximatedFunctionId: approximatedFunctionId, approximatedFunctionSampleId: sampleId]"/>
+                <entity-make-value entity-name="moqui.math.ParametricPathPoint" value-field="pathPointValue" map="pathPointFields"/>
+                <entity-create value-field="pathPointValue"/>
+
+                <set field="trajectoryPointFields" from="[approximatedFunctionId: approximatedFunctionId,
+                    approximatedFunctionSampleId: sampleId, pointTimeOffsetMillis: waypointIndex * stepMs]"/>
+                <entity-make-value entity-name="moqui.math.TrajectoryPoint" value-field="trajectoryPointValue" map="trajectoryPointFields"/>
+                <entity-create value-field="trajectoryPointValue"/>
+
+                <set field="waypointIndex" from="waypointIndex + 1" type="Integer"/>
+            </iterate>
+
+            <set field="inputVectorList" from="[[name: 'q_start', values: startConfigList], [name: 'q_goal', values: goalConfigList]]"/>
+            <set field="inputVectorIdList" from="[]" type="NewList"/>
+            <iterate list="inputVectorList" entry="inputVector">
+                <set field="inputVectorFields" from="[vectorTypeEnumId: 'VtOrdinary', purposeEnumId: 'VpPosition',
+                    dimension: 6, name: inputVector.name]"/>
+                <entity-make-value entity-name="moqui.math.Vector" value-field="inputVectorValue" map="inputVectorFields"/>
+                <script><![CDATA[inputVectorValue.setSequencedIdPrimary()]]></script>
+                <entity-create value-field="inputVectorValue"/>
+                <script><![CDATA[inputVectorIdList.add(inputVectorValue.vectorId)]]></script>
+
+                <set field="jointIndex" from="0" type="Integer"/>
+                <iterate list="inputVector.values" entry="jointValue">
+                    <set field="inputVectorComponentFields" from="[vectorId: inputVectorValue.vectorId, dimensionIndex: jointIndex,
+                        componentTypeEnumId: 'VctCanonical', realValue: jointValue]"/>
+                    <entity-make-value entity-name="moqui.math.VectorComponent" value-field="inputVectorComponentValue" map="inputVectorComponentFields"/>
+                    <script><![CDATA[inputVectorComponentValue.setSequencedIdPrimary()]]></script>
+                    <entity-create value-field="inputVectorComponentValue"/>
+                    <set field="jointIndex" from="jointIndex + 1" type="Integer"/>
+                </iterate>
+            </iterate>
+
+            <set field="startVectorId" from="inputVectorIdList[0]"/>
+            <set field="goalVectorId" from="inputVectorIdList[1]"/>
+
+            <set field="outputModelDataFields" from="[mathModelId: mathModelId, dataTypeEnumId: 'MmdtApproxFunc',
+                purposeEnumId: 'MmdpModelOutputs', generatedByRunId: runId, approximatedFunctionId: approximatedFunctionId,
+                sequenceNum: 1]"/>
+            <entity-make-value entity-name="moqui.math.MathModelData" value-field="outputModelDataValue" map="outputModelDataFields"/>
+            <script><![CDATA[outputModelDataValue.setSequencedIdPrimary()]]></script>
+            <entity-create value-field="outputModelDataValue"/>
+
+            <set field="startModelDataFields" from="[mathModelId: mathModelId, dataTypeEnumId: 'MmdtVector',
+                purposeEnumId: 'MmdpModelInputs', generatedByRunId: runId, vectorId: startVectorId, sequenceNum: 2]"/>
+            <entity-make-value entity-name="moqui.math.MathModelData" value-field="startModelDataValue" map="startModelDataFields"/>
+            <script><![CDATA[startModelDataValue.setSequencedIdPrimary()]]></script>
+            <entity-create value-field="startModelDataValue"/>
+
+            <set field="goalModelDataFields" from="[mathModelId: mathModelId, dataTypeEnumId: 'MmdtVector',
+                purposeEnumId: 'MmdpModelInputs', generatedByRunId: runId, vectorId: goalVectorId, sequenceNum: 3]"/>
+            <entity-make-value entity-name="moqui.math.MathModelData" value-field="goalModelDataValue" map="goalModelDataFields"/>
+            <script><![CDATA[goalModelDataValue.setSequencedIdPrimary()]]></script>
+            <entity-create value-field="goalModelDataValue"/>
+
+            <script><![CDATA[
+                import groovy.json.JsonOutput
+
                 long elapsed = System.currentTimeMillis() - t0
-                EntityValue runRef = ec.entity.find("moqui.math.MathModelRun").condition("mathModelRunId", runId).one()
-                runRef.setAll([endDate : ec.user.nowTimestamp, runningTimeMillis: (float) elapsed,
-                    hasError : 'Y', errors : ex.getMessage()])
+                double totalDurationSec = elapsed > 0 ? elapsed / 1000.0d : 0.001d
+                resultsJson = JsonOutput.toJson([approximatedFunctionId: approximatedFunctionId, waypointCount: waypointCount])
+
+                def runRef = ec.entity.find("moqui.math.MathModelRun").condition("mathModelRunId", runId).one()
+                runRef.setAll([endDate : ec.user.nowTimestamp, runningTimeMillis : (float) elapsed,
+                    approximatedFunctionId: approximatedFunctionId, results : resultsJson])
                 runRef.update()
-                ec.message.addError("Trajectory inference failed: ${ex.getMessage()}")
-                return
-            } finally {
-                if (predictor) predictor.close()
-                if (onnxModel) onnxModel.close()
-                if (manager) manager.close()
-                if (tempDataFile?.exists()) tempDataFile.delete()
-                if (tempOnnx?.exists()) tempOnnx.delete()
-                if (tempDir != null) tempDir.toFile().delete()
-            }
 
-            // persist ApproximatedFunction -> ParametricPath -> Trajectory
-
-            String label = trajectoryName ?: "AI Trajectory ${runId}"
-
-            EntityValue afVal = ec.entity.makeValue("moqui.math.ApproximatedFunction")
-                .setAll([vectorSpaceEnumId : "EngJointSpace6Dof", codomainTypeEnumId : "AfctVector",
-                    dataStorageEnumId : "AfdsPointTable", purposeEnumId : "AfpRobotMotion",
-                    interpolationEnumId : "AfiAIPath", name : label,
-                    description : "6-DOF robot trajectory from MLP planner"])
-            afVal.setSequencedIdPrimary()
-            afVal.create()
-            String afId = afVal.approximatedFunctionId
-
-            ec.entity.makeValue("moqui.math.ParametricPath").setAll([approximatedFunctionId: afId,
-                profileEnumId : "PppfTrajectoryProfile"]).create()
-
-            ec.entity.makeValue("moqui.math.Trajectory").setAll([approximatedFunctionId: afId,
-                actuationTypeEnumId : "PtaDirect", actuatorTypeEnumId : "PtactRevolute",
-                controlMethodEnumId : "PtcmNNControl"]).create()
-
-            // persist waypoints
-
-            double stepMs = nWaypoints > 1 ? 1000.0 / (nWaypoints - 1) : 0.0
-
-            for (int i = 0; i < nWaypoints; i++) {
-                // Vector for this waypoint's joint positions
-                EntityValue vecVal = ec.entity.makeValue("moqui.math.Vector")
-                    .setAll([vectorTypeEnumId: "VtOrdinary", purposeEnumId : "VpPosition", dimension : 6])
-                vecVal.setSequencedIdPrimary()
-                vecVal.create()
-                String vecId = vecVal.vectorId
-
-                // 6 VectorComponents (one per joint)
-                for (int j = 0; j < 6; j++) {
-                    EntityValue compVal = ec.entity.makeValue("moqui.math.VectorComponent")
-                        .setAll([vectorId : vecId, dimensionIndex : j, componentTypeEnumId : "VctCanonical",
-                        realValue : (double) rawOutput[i * 6 + j]])
-                    compVal.setSequencedIdPrimary()
-                    compVal.create()
-                }
-
-                String sampleType = (i == 0) ? "AfstStartPoint"
-                    : (i == nWaypoints - 1) ? "AfstEndPoint"
-                    : "AfstWaypoint"
-
-                EntityValue sampleVal = ec.entity.makeValue("moqui.math.ApproximatedFunctionSample")
-                    .setAll([approximatedFunctionId: afId, sampleCode : "WP${String.format('%04d', i)}",
-                        sampleName : "Waypoint ${i}", sequenceNum : i,
-                        sampleTypeEnumId : sampleType, sampleVectorId : vecId])
-                sampleVal.setSequencedIdSecondary()
-                sampleVal.create()
-                String sampleId = sampleVal.approximatedFunctionSampleId
-
-                ec.entity.makeValue("moqui.math.ParametricPathPoint")
-                    .setAll([approximatedFunctionId : afId,
-                        approximatedFunctionSampleId : sampleId]).create()
-
-                ec.entity.makeValue("moqui.math.TrajectoryPoint")
-                    .setAll([approximatedFunctionId : afId,
-                        approximatedFunctionSampleId : sampleId,
-                        pointTimeOffsetMillis : i * stepMs]).create()
-            }
-
-            // TrajectoryAxisBinding — limit verification note (not used here):
-            // Each VectorComponent value above is a joint angle setpoint. When dispatched
-            // to a real servo drive, it becomes the value of the drive parameter identified
-            // by TrajectoryAxisBinding.pointParameterDefId (position), velocityParameterDefId,
-            // accelerationParameterDefId, jerkParameterDefId, and snapParameterDefId.
-            // By modelling those ParameterDef records with min/max bounds and comparing them
-            // against the VectorComponent values computed in the loop above, one could verify
-            // kinematic limit compliance before the trajectory is sent to the hardware —
-            // without ever dispatching an out-of-range setpoint to the drive.
-
-            // persist input vectors (q_start / q_goal)
-
-            EntityValue startVecVal = ec.entity.makeValue("moqui.math.Vector")
-                .setAll([vectorTypeEnumId: "VtOrdinary", purposeEnumId: "VpPosition",
-                    dimension: 6, name: "q_start"])
-            startVecVal.setSequencedIdPrimary()
-            startVecVal.create()
-            String startVecId = startVecVal.vectorId
-            for (int j = 0; j < 6; j++) {
-                EntityValue c = ec.entity.makeValue("moqui.math.VectorComponent")
-                    .setAll([vectorId: startVecId, dimensionIndex: j,
-                        componentTypeEnumId: "VctCanonical", realValue: (startConfig.get(j) as double)])
-                c.setSequencedIdPrimary(); c.create()
-            }
-
-            EntityValue goalVecVal = ec.entity.makeValue("moqui.math.Vector")
-                .setAll([vectorTypeEnumId: "VtOrdinary", purposeEnumId: "VpPosition", dimension: 6, name: "q_goal"])
-            goalVecVal.setSequencedIdPrimary()
-            goalVecVal.create()
-            String goalVecId = goalVecVal.vectorId
-            for (int j = 0; j < 6; j++) {
-                EntityValue c = ec.entity.makeValue("moqui.math.VectorComponent")
-                    .setAll([vectorId: goalVecId, dimensionIndex: j,
-                        componentTypeEnumId: "VctCanonical",
-                        realValue: (goalConfig.get(j) as double)])
-                c.setSequencedIdPrimary(); c.create()
-            }
-
-            // MathModelData — output trajectory + input vectors
-
-            EntityValue outData = ec.entity.makeValue("moqui.math.MathModelData")
-                .setAll([mathModelId : mathModelId, dataTypeEnumId : "MmdtApproxFunc",
-                    purposeEnumId : "MmdpModelOutputs", generatedByRunId : runId,
-                    approximatedFunctionId : afId, sequenceNum : 1])
-            outData.setSequencedIdPrimary(); outData.create()
-
-            EntityValue startData = ec.entity.makeValue("moqui.math.MathModelData")
-                .setAll([mathModelId : mathModelId, dataTypeEnumId : "MmdtVector",
-                    purposeEnumId : "MmdpModelInputs", generatedByRunId : runId,
-                    vectorId : startVecId, sequenceNum : 2])
-            startData.setSequencedIdPrimary(); startData.create()
-
-            EntityValue goalData = ec.entity.makeValue("moqui.math.MathModelData")
-                .setAll([mathModelId : mathModelId, dataTypeEnumId : "MmdtVector",
-                    purposeEnumId : "MmdpModelInputs", generatedByRunId : runId,
-                    vectorId : goalVecId, sequenceNum : 3])
-            goalData.setSequencedIdPrimary(); goalData.create()
-
-            // close MathModelRun
-
-            long elapsed = System.currentTimeMillis() - t0
-
-            EntityValue runRef = ec.entity.find("moqui.math.MathModelRun")
-                .condition("mathModelRunId", runId).one()
-            runRef.setAll([endDate : ec.user.nowTimestamp, runningTimeMillis : (float) elapsed,
-                approximatedFunctionId: afId, results : JsonOutput.toJson([approximatedFunctionId: afId,
-                waypointCount : nWaypoints])])
-            runRef.update()
-
-            // MathModelPerf
-
-            EntityValue perfVal = ec.entity.makeValue("moqui.math.MathModelPerf")
-                .setAll([mathModelRunId      : runId,
-                         totalDurationSec    : elapsed / 1000.0 as double,
-                         inferenceLatencyMs  : inferenceLatencyMs as double,
-                         throughputSamplesSec: nWaypoints / (elapsed / 1000.0) as double])
-            perfVal.setSequencedIdPrimary()
-            perfVal.create()
-
-            // output parameters
-
-            mathModelRunId = runId
-            approximatedFunctionId = afId
-            mathModelPerfId = perfVal.mathModelPerfId
-        ]]></script></actions>
+                perfFields = [mathModelRunId: runId, totalDurationSec: totalDurationSec,
+                    inferenceLatencyMs: inferenceLatencyMs as double,
+                    throughputSamplesSec: (waypointCount as double) / totalDurationSec]
+            ]]></script>
+            <entity-make-value entity-name="moqui.math.MathModelPerf" value-field="perfValue" map="perfFields"/>
+            <script><![CDATA[perfValue.setSequencedIdPrimary()]]></script>
+            <entity-create value-field="perfValue"/>
+            <set field="mathModelRunId" from="runId"/>
+            <set field="mathModelPerfId" from="perfValue.mathModelPerfId"/>
+        </actions>
     </service>
 </services>
