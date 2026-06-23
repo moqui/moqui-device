@@ -227,6 +227,16 @@ along with this software (see the LICENSE.md file). If not, see
                         pointTimeOffsetMillis : i * stepMs]).create()
             }
 
+            // TrajectoryAxisBinding — limit verification note (not used here):
+            // Each VectorComponent value above is a joint angle setpoint. When dispatched
+            // to a real servo drive, it becomes the value of the drive parameter identified
+            // by TrajectoryAxisBinding.pointParameterDefId (position), velocityParameterDefId,
+            // accelerationParameterDefId, jerkParameterDefId, and snapParameterDefId.
+            // By modelling those ParameterDef records with min/max bounds and comparing them
+            // against the VectorComponent values computed in the loop above, one could verify
+            // kinematic limit compliance before the trajectory is sent to the hardware —
+            // without ever dispatching an out-of-range setpoint to the drive.
+
             // persist input vectors (q_start / q_goal)
 
             EntityValue startVecVal = ec.entity.makeValue("moqui.math.Vector")

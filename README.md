@@ -109,7 +109,9 @@ detail; here it is co-primary.
 | `moqui.device.DeviceServices.run#DeviceRequestGroup` | Runs all requests in a named group; designed to be called as a scheduled service |
 | `moqui.device.DeviceServices.run#DeviceRequestInternal` | Interface that driver components (e.g. `moqui-plc4j`) must implement |
 | `moqui.device.DeviceServices.send#DeviceNotification` | Sends a Moqui notification for a device event |
-| `moqui.device.DeviceGatewayServices.run#GatewayDeviceRequest` | Dispatches requests via the `moqui-device-gateway` REST API (MQTT / OPC UA) |
+| `moqui.device.DeviceGatewayServices.run#GatewayDeviceRequest` | Dispatches scalar parameter write/read/subscribe requests via the `moqui-device-gateway` REST API (MQTT / OPC UA) |
+| `moqui.device.DeviceGatewayServices.export#DeviceConfig` | Exports a device configuration recipe (Codesys txt format, persistent data) via the gateway |
+| `moqui.device.DeviceGatewayServices.export#Trajectory` | Exports a computed trajectory as a structured JSON payload to the gateway for MQTT publishing (ephemeral bulk data) |
 | `moqui.device.DeviceGatewayServices.transfer#DeviceContent` | Streams a file (G-Code, firmware, recipe) to a device via the gateway SFTP/file endpoint |
 
 ## Service layer — Python ecosystem via moqui-jep
@@ -238,11 +240,12 @@ definition. Once the binding is in place it becomes possible to:
   `accelerationParameterDefId` and compare each `VectorComponent` value against
   the drive's configured min/max bounds. Any waypoint that violates a limit can be
   flagged before a single motion command is issued.
-- **Generate device requests automatically**: iterate over
-  `ApproximatedFunctionSample` records ordered by `sequenceNum`, read the
-  corresponding `VectorComponent` values, and create `DeviceRequest` /
-  `DeviceRequestItem` rows targeting the bound device — a repeatable, audited
-  motion command sequence derived entirely from the data model.
+- **Dispatch the trajectory to the drive**: call `export#Trajectory` (ephemeral
+  bulk path) or `export#DeviceConfig` (persistent recipe path). `export#Trajectory`
+  reads the `ApproximatedFunctionSample` / `VectorComponent` chain directly and
+  publishes a structured per-axis JSON payload via `moqui-device-gateway` → MQTT →
+  `MqttParameterSub` on the controller. `export#DeviceConfig` serialises parameters
+  as a Codesys txt recipe that the PLC recipe FB loads from the filesystem.
 - **Close the feedback loop**: bind the velocity and acceleration derivatives
   (computed from consecutive waypoints and `TrajectoryPoint.pointTimeOffsetMillis`)
   to feed-forward parameters of the drive, reducing tracking error without
@@ -252,6 +255,53 @@ The `TrajectoryAxisBinding` entity uses `use="configuration"` with
 `enable-audit-log="true"`, so every change to axis assignments is audited and
 effective-dated — essential when certifying motion programs for safety-critical
 machinery.
+
+### Dispatching the computed trajectory — export#Trajectory
+
+`TrajectoryPlannerData.xml` ships minimal seed data to test the ephemeral dispatch
+path end-to-end:
+
+| Record | Key |
+|---|---|
+| `Device` | `deviceId = moqui-device-gateway1` |
+| `DeviceRequest` | `requestName = ROBOT_ARM_TRAJECTORY_EXPORT` |
+
+The `DeviceRequest` points to a local gateway instance (`brokerUri = http://localhost:8081`)
+and carries the MQTT topic in its `query` field (`moqui/robot/arm1/trajectory`).
+
+To dispatch after planning:
+
+```
+moqui.device.DeviceGatewayServices.export#Trajectory
+    approximatedFunctionId = <output of run#RobotArmTrajectoryPlanner>
+    requestName            = ROBOT_ARM_TRAJECTORY_EXPORT
+```
+
+The service reads the `ApproximatedFunctionSample` / `VectorComponent` chain directly
+(no `DeviceRequestItem` or `Parameter` records required) and POSTs the following
+JSON to the gateway endpoint `POST /api/trajectory/export`:
+
+```json
+{
+  "approximatedFunctionId": "100000",
+  "waypointCount": 10,
+  "mqttTopic": "moqui/robot/arm1/trajectory",
+  "axes": {
+    "J1": [0.10, 0.18, …],
+    "J2": [0.00, 0.05, …],
+    "J3": […], "J4": […], "J5": […], "J6": […]
+  }
+}
+```
+
+The gateway publishes this payload to the MQTT topic; `MqttParameterSub` on the
+PLC receives it and passes each key/value pair to `JsonToParametersMapper`, which
+maps `"J1"`…`"J6"` array values to the controller's trajectory buffer.
+
+For the **persistent recipe path** use `export#DeviceConfig` instead: store
+waypoints as `DeviceConfig/Parameter` entries under a `DeviceRuleSet`, then call
+`export#DeviceConfig` to serialise them as a Codesys txt recipe that the PLC
+recipe FB loads autonomously from the filesystem.
 
 ## Related components
 

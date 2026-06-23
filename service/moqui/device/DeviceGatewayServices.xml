@@ -150,6 +150,18 @@ along with this software (see the LICENSE.md file). If not, see
             PHYSICAL_DEVICE.deviceName. Provide deviceId or deviceRuleId to restrict the
             export to a subset of rules.
 
+            Persistent trajectories:
+            Trajectory waypoints stored as DeviceConfig/Parameter entries (one Parameter per
+            axis per waypoint, under a dedicated DeviceRuleSet) are exported by this same
+            service alongside regular device configuration — no separate code path needed.
+            The gateway serialises them as Codesys txt-recipe lines that the PLC recipe FB
+            loads from the filesystem and interpolates autonomously.  This is the persistent
+            trajectory path, as opposed to export#Trajectory which sends ephemeral bulk data
+            via MQTT for immediate execution by MqttParameterSub.
+            The same distinction is documented in the moqui-device-gateway Camel route
+            configuration: /api/device-config/export handles both device config and
+            persistent trajectories; /api/trajectory/export handles the ephemeral path.
+
             Moqui-side DeviceRequest fields:
                 deviceId = moqui-device-gateway1
                 routerEnumId = DrrMoquiDeviceGateway
@@ -321,6 +333,127 @@ along with this software (see the LICENSE.md file). If not, see
             resp.checkError()
 
             ec.logger.info("DeviceContent transfer completed: ${resp.text()}")
+        ]]></script></actions>
+    </service>
+
+    <service verb="export" noun="Trajectory" authenticate="false" transaction="ignore">
+        <description>
+            Exports a computed trajectory as a structured JSON payload to the moqui-device-gateway
+            for MQTT publishing (ephemeral bulk data path — counterpart to export#DeviceConfig
+            for persistent recipe data).
+
+            Reads ApproximatedFunctionSample + VectorComponent records for the given
+            approximatedFunctionId in sequenceNum order and serialises them as per-axis
+            value arrays.  The gateway receives the payload and publishes it to the MQTT
+            topic specified in DeviceRequest.query; MqttParameterSub on the PLC then
+            delivers each key/value pair to JsonToParametersMapper.
+
+            Axis names are derived from VectorComponent.dimensionIndex (0 → "J1", …, 5 → "J6").
+            TrajectoryAxisBinding is intentionally not used here: it belongs to
+            run#RobotArmTrajectoryPlanner as a servo-drive parameter limit verification tool.
+
+            JSON payload shape sent to gateway:
+                {
+                  "approximatedFunctionId": "100051",
+                  "waypointCount": 10,
+                  "mqttTopic": "moqui/robot/arm1/trajectory",
+                  "axes": {
+                    "J1": [0.10, 0.20, …],
+                    "J2": [0.00, 0.05, …],
+                    …
+                  }
+                }
+
+            Gateway endpoint: POST /api/trajectory/export
+
+            Moqui-side DeviceRequest fields:
+                deviceId        = moqui-device-gateway1
+                routerEnumId    = DrrMoquiDeviceGateway
+                brokerUri       = gateway REST base URL (e.g. http://gateway-host:8081?apiKey=secret)
+                query           = MQTT topic (e.g. moqui/robot/arm1/trajectory)
+        </description>
+        <in-parameters>
+            <parameter name="approximatedFunctionId" required="true"/>
+            <parameter name="requestName" required="true">
+                <description>Moqui-side DeviceRequest.requestName (routerEnumId=DrrMoquiDeviceGateway)
+                    used to resolve the gateway brokerUri and MQTT topic (DeviceRequest.query).</description>
+            </parameter>
+        </in-parameters>
+        <actions><script><![CDATA[
+            import org.moqui.util.RestClient
+
+            EntityValue dr = ec.entity.find("moqui.device.DeviceRequest")
+                .condition("requestName", requestName).one()
+            if (!dr) {
+                ec.message.addError("DeviceRequest ${requestName} not found.")
+                return
+            }
+
+            String rawUri = dr.brokerUri
+            if (!rawUri) {
+                ec.message.addError("DeviceRequest ${requestName} is missing brokerUri (gateway REST base URL).")
+                return
+            }
+            String gatewayBaseUrl = rawUri
+            String apiKey = null
+            int qIdx = rawUri.indexOf('?')
+            if (qIdx >= 0) {
+                gatewayBaseUrl = rawUri.substring(0, qIdx)
+                rawUri.substring(qIdx + 1).split('&').each { String kv ->
+                    String[] parts = kv.split('=', 2)
+                    if (parts.length == 2 && 'apiKey' == parts[0].trim()) apiKey = parts[1].trim()
+                }
+            }
+            gatewayBaseUrl = gatewayBaseUrl.replaceAll('/+$', '')
+
+            String mqttTopic = dr.query ?: ''
+
+            // load waypoints in sequenceNum order
+            EntityList samples = ec.entity.find("moqui.math.ApproximatedFunctionSample")
+                .condition("approximatedFunctionId", approximatedFunctionId)
+                .orderBy("sequenceNum").list()
+            if (!samples) {
+                ec.message.addError("No ApproximatedFunctionSample found for approximatedFunctionId ${approximatedFunctionId}.")
+                return
+            }
+
+            // build per-axis arrays: dimensionIndex 0 → "J1", …, 5 → "J6"
+            Map<String, List<Double>> axes = [:]
+            for (def sample in samples) {
+                def components = ec.entity.find("moqui.math.VectorComponent")
+                    .condition("vectorId", sample.sampleVectorId)
+                    .orderBy("dimensionIndex").list()
+                for (def comp in components) {
+                    String axisKey = "J${(comp.dimensionIndex as int) + 1}"
+                    if (!axes.containsKey(axisKey)) axes[axisKey] = []
+                    axes[axisKey] << (comp.realValue as double)
+                }
+            }
+
+            Map<String, Object> payload = [
+                approximatedFunctionId: approximatedFunctionId,
+                waypointCount : samples.size(),
+                mqttTopic : mqttTopic,
+                axes : axes
+            ]
+
+            ec.logger.info("Exporting trajectory ${approximatedFunctionId} " +
+                "(${samples.size()} waypoints, ${axes.size()} axes) to gateway ${gatewayBaseUrl}, topic=${mqttTopic}")
+
+            int timeoutSec = dr.timeout != null ? (int) dr.timeout : 30
+            RestClient rc = new RestClient()
+                .method(RestClient.POST)
+                .uri(gatewayBaseUrl + "/api/trajectory/export")
+                .contentType("application/json")
+                .acceptContentType("application/json")
+                .timeout(timeoutSec)
+            if (apiKey) rc.addHeader("X-API-Key", apiKey)
+            rc.jsonObject(payload)
+
+            RestClient.RestResponse resp = rc.call()
+            resp.checkError()
+
+            ec.logger.info("Trajectory export completed for ${approximatedFunctionId}: ${resp.text()}")
         ]]></script></actions>
     </service>
 
