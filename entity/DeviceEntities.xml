@@ -933,6 +933,7 @@ along with this software (see the LICENSE.md file). If not, see
     </entity>
 
     <!-- ========== Device Dashboard ========== -->
+    <!--
     <entity entity-name="DeviceDashboard" package="moqui.device" cache="true">
         <field name="dashboardId" type="id" is-pk="true"/>
         <field name="deviceId" type="id" is-pk="true"/>
@@ -952,6 +953,7 @@ along with this software (see the LICENSE.md file). If not, see
             <moqui.basic.Enumeration description="Tracing Dashboard" enumId="DdpTracing" enumTypeId="DeviceDashboardPurpose"/>
         </seed-data>
     </entity>
+    -->
 
     <!-- ========== Device Trajectory ========== -->
     <extend-entity entity-name="TrajectoryPointRun" package="moqui.math" use="nontransactional" cache="never" sequence-bank-size="100">

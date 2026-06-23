@@ -20,6 +20,19 @@ def jarBaseName = componentNode.'@name'
 def moquiDir = projectDir.parentFile.parentFile.parentFile
 def frameworkDir = file(moquiDir.absolutePath + '/framework')
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+// Log4J has annotation processors, disable to avoid warning
+tasks.withType(JavaCompile).configureEach { options.compilerArgs << '-proc:none' }
+tasks.withType(GroovyCompile).configureEach {
+    options.compilerArgs << '-proc:none'
+    groovyOptions.optimizationOptions = ['indy': true]
+}
+
 repositories {
     flatDir name: 'localLib', dirs: frameworkDir.absolutePath + '/lib'
     mavenCentral()
@@ -28,7 +41,7 @@ repositories {
 dependencies {
     implementation project(':framework')
 
-    // DJL (Deep Java Library) for ONNX inference — run#TrajectoryPlanner service
+    // DJL (Deep Java Library) for ONNX inference — run#RobotArmTrajectoryPlanner service
     implementation 'ai.djl:api:0.31.0'
     runtimeOnly 'ai.djl.onnxruntime:onnxruntime-engine:0.31.0'
     // Microsoft ONNX Runtime (CPU) — bundles native JNI libraries
@@ -58,3 +71,22 @@ task copyDependencies { doLast {
 } }
 copyDependencies.dependsOn cleanLib
 jar.dependsOn copyDependencies
+
+test {
+    useJUnitPlatform()
+
+    dependsOn cleanTest
+    systemProperty 'moqui.runtime', moquiDir.absolutePath + '/runtime'
+    systemProperty 'moqui.conf', 'conf/MoquiDevConf.xml'
+    systemProperty 'moqui.init.static', 'true'
+    maxHeapSize = '512M'
+
+    testLogging.showStandardStreams = true
+
+    classpath += files(sourceSets.main.output.classesDirs)
+    classpath = classpath.filter { it.exists() }
+
+    beforeTest { descriptor ->
+        logger.lifecycle("Running test: ${descriptor}")
+    }
+}

@@ -123,6 +123,136 @@ python-snap7, etc.) embedded via **moqui-jep**. Control algorithms and ML
 inference services likewise run through moqui-jep using NumPy, SciPy, JAX, or
 python-control.
 
+## Example service: 6-DOF robot arm trajectory planning
+
+`moqui-device` ships an end-to-end example that shows how math modelling,
+ML inference, and device binding work together. The service
+`moqui.device.TrajectoryPlannerServices.run#RobotArmTrajectoryPlanner`
+computes a collision-free joint-space trajectory for a 6-DOF robot arm using a
+small feedforward neural network and persists the full output chain into the
+moqui-math entity model.
+
+### Neural network
+
+A three-layer MLP (12 → 128 → 256 → 60) is trained offline on 50 000 synthetic
+quintic-spline trajectories with the script
+`script/train_robot_arm_trajectory_planner.py`. The quintic (degree-5) basis
+enforces zero velocity and acceleration at both endpoints, giving smooth,
+jerk-limited motion. Inference runs at runtime via
+[DJL](https://djl.ai/) 0.31.0 + ONNX Runtime 1.19.0, which are declared as
+Gradle dependencies and placed in `lib/` by the `copyDependencies` task.
+
+Input shape: `float32[1, 12]` — `[q_start(6) ‖ q_goal(6)]` joint angles in
+radians. Output shape: `float32[1, 60]` — 10 waypoints × 6 joints, flat
+row-major.
+
+### Data modelling
+
+The service writes to the following entity chain on every successful call:
+
+```
+MathModelDef ──► MathModel ──► MathModelRun ──► MathModelPerf
+                                   │
+                                   └──► MathModelData (3 rows)
+                                            │
+                         ┌──────────────────┼──────────────────────┐
+                         ▼                  ▼                      ▼
+               ApproximatedFunction     Vector (q_start)    Vector (q_goal)
+                     │
+          ┌──────────┼──────────────┐
+          ▼          ▼              ▼
+    ParametricPath  Trajectory  ApproximatedFunctionSample (×10)
+                                        │
+                          ┌─────────────┴──────────────┐
+                          ▼                             ▼
+                  ParametricPathPoint            TrajectoryPoint
+                  (path geometry)             (time offset ms)
+                          │
+                          ▼
+                    Vector + VectorComponent (×6, joint angles)
+```
+
+| Entity | Role |
+|---|---|
+| `MathModelDef` (`TrjPlannerMlp6Dof`) | Blueprint: model type, service name, version |
+| `MathModel` (`TrjPlannerMlp6DofV1`) | Versioned production instance; governed by `MathModelStatusFlow` |
+| `MathModelDefContent` | Points to the ONNX file via `component://moqui-device/data/ml/trajectory_planner.onnx` |
+| `MathModelRun` | Nontransactional execution record; survives TX rollback; stores input parameters as JSON and output summary |
+| `MathModelPerf` | Performance counters: `totalDurationSec` (end-to-end), `inferenceLatencyMs` (DJL `predict()` only), `throughputSamplesSec` |
+| `MathModelData` | Three rows per run: output `ApproximatedFunction` + input `Vector` for q_start and q_goal |
+| `ApproximatedFunction` | The trajectory container; `vectorSpaceEnumId = EngJointSpace6Dof` (6-DOF revolute joint space) |
+| `ParametricPath` | Path-level metadata; `profileEnumId = PppfTrajectoryProfile` |
+| `Trajectory` | Time-tagged motion; `controlMethodEnumId = PtcmNNControl` |
+| `ApproximatedFunctionSample` (×10) | One per waypoint (WP0000–WP0009); start, waypoint, end type |
+| `ParametricPathPoint` (×10) | Path geometry for each sample |
+| `TrajectoryPoint` (×10) | Absolute time offset in milliseconds (uniform 1 s total) |
+| `Vector` + `VectorComponent` | Per-waypoint 6-DOF joint angle vector; plus separate vectors for q_start and q_goal |
+
+### Model lifecycle tracking
+
+The `MathModel` lifecycle is governed by `MathModelStatusFlow`
+(`Draft → Validation → Production → Archived`). Every inference call creates a
+`MathModelRun` record (nontransactional, `use="nontransactional"`) that captures:
+
+- `startTime` / `endDate` — wall-clock span
+- `parameters` — JSON snapshot of `startConfig` and `goalConfig`
+- `results` — JSON summary (`approximatedFunctionId`, `waypointCount`)
+- `hasError` / `errors` — fault isolation without rolling back the parent transaction
+- `approximatedFunctionId` — direct FK to the output trajectory
+
+`MathModelPerf` records two timing levels: `totalDurationSec` covers the full
+service call including entity persistence; `inferenceLatencyMs` covers only the
+DJL `predictor.predict()` call, which is the figure relevant to real-time control
+cycle budgets.
+
+The `MathModelData` snowflake table links the run to all mathematical objects it
+produced or consumed, enabling complete data lineage: given a `MathModelRun` it
+is possible to reconstruct exactly which model version, which inputs, and which
+output trajectory were involved.
+
+### Extending to real servo drives with TrajectoryAxisBinding
+
+The `moqui.math.Trajectory` computed above is a **mathematical object** — a
+sequence of 6-DOF joint-angle waypoints. To **execute** it on a physical robot
+arm the waypoints must be mapped to the parameters of real servo drives or a
+motion controller. That bridge is `TrajectoryAxisBinding`:
+
+```
+ApproximatedFunction ──► TrajectoryAxisBinding
+                              │   (per axis / per device)
+                              ├── approximatedFunctionId  (FK → Trajectory)
+                              ├── axisName                (e.g. "J1" … "J6")
+                              ├── deviceId                (FK → Device / servo drive)
+                              ├── pointParameterDefId     (position setpoint parameter)
+                              ├── velocityParameterDefId  (velocity feed-forward)
+                              ├── accelerationParameterDefId
+                              ├── jerkParameterDefId
+                              └── snapParameterDefId
+```
+
+Each row binds one axis of the mathematical trajectory to one device parameter
+definition. Once the binding is in place it becomes possible to:
+
+- **Validate kinematic limits before execution**: retrieve the `ParameterDef`
+  records identified by `pointParameterDefId` / `velocityParameterDefId` /
+  `accelerationParameterDefId` and compare each `VectorComponent` value against
+  the drive's configured min/max bounds. Any waypoint that violates a limit can be
+  flagged before a single motion command is issued.
+- **Generate device requests automatically**: iterate over
+  `ApproximatedFunctionSample` records ordered by `sequenceNum`, read the
+  corresponding `VectorComponent` values, and create `DeviceRequest` /
+  `DeviceRequestItem` rows targeting the bound device — a repeatable, audited
+  motion command sequence derived entirely from the data model.
+- **Close the feedback loop**: bind the velocity and acceleration derivatives
+  (computed from consecutive waypoints and `TrajectoryPoint.pointTimeOffsetMillis`)
+  to feed-forward parameters of the drive, reducing tracking error without
+  requiring explicit PID tuning changes.
+
+The `TrajectoryAxisBinding` entity uses `use="configuration"` with
+`enable-audit-log="true"`, so every change to axis assignments is audited and
+effective-dated — essential when certifying motion programs for safety-critical
+machinery.
+
 ## Related components
 
 - **[moqui-math](https://github.com/moqui/moqui-math)** — the dual math model (models, runs, lineage, trajectories).

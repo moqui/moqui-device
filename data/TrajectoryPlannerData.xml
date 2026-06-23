@@ -14,24 +14,22 @@ along with this software (see the LICENSE.md file). If not, see
 -->
 <entity-facade-xml type="seed">
 
-    <!--
-    ========== 6-DOF Joint Space vector-space definition ==========
-    vectorSpaceEnumId references EnumGroup entries in moqui.basic.Enumeration.
-    EnumGroupMember links dimension enumerations to the group.
+    <!-- ========== 6-DOF Joint Space vector-space definition ========== -->
+    <!-- vectorSpaceEnumId references EnumGroup entries in moqui.basic.Enumeration.
+        EnumGroupMember links dimension enumerations to the group.
     -->
 
     <!-- Dimension enumerations for 6 revolute joints -->
     <moqui.basic.EnumerationType description="Joint Dimension" enumTypeId="JointDimension"/>
-    <moqui.basic.Enumeration description="Joint 1 (θ₁)"  enumId="DimJ1" enumTypeId="JointDimension"/>
-    <moqui.basic.Enumeration description="Joint 2 (θ₂)"  enumId="DimJ2" enumTypeId="JointDimension"/>
-    <moqui.basic.Enumeration description="Joint 3 (θ₃)"  enumId="DimJ3" enumTypeId="JointDimension"/>
-    <moqui.basic.Enumeration description="Joint 4 (θ₄)"  enumId="DimJ4" enumTypeId="JointDimension"/>
-    <moqui.basic.Enumeration description="Joint 5 (θ₅)"  enumId="DimJ5" enumTypeId="JointDimension"/>
-    <moqui.basic.Enumeration description="Joint 6 (θ₆)"  enumId="DimJ6" enumTypeId="JointDimension"/>
+    <moqui.basic.Enumeration description="Joint 1 (θ₁)" enumId="DimJ1" enumTypeId="JointDimension"/>
+    <moqui.basic.Enumeration description="Joint 2 (θ₂)" enumId="DimJ2" enumTypeId="JointDimension"/>
+    <moqui.basic.Enumeration description="Joint 3 (θ₃)" enumId="DimJ3" enumTypeId="JointDimension"/>
+    <moqui.basic.Enumeration description="Joint 4 (θ₄)" enumId="DimJ4" enumTypeId="JointDimension"/>
+    <moqui.basic.Enumeration description="Joint 5 (θ₅)" enumId="DimJ5" enumTypeId="JointDimension"/>
+    <moqui.basic.Enumeration description="Joint 6 (θ₆)" enumId="DimJ6" enumTypeId="JointDimension"/>
 
     <!-- EnumGroup: 6-DOF joint configuration space -->
-    <moqui.basic.Enumeration description="6-DOF Joint Configuration Space"
-            enumId="EngJointSpace6Dof" enumTypeId="EnumGroup"/>
+    <moqui.basic.Enumeration description="6-DOF Joint Configuration Space" enumId="EngJointSpace6Dof" enumTypeId="EnumGroup"/>
     <moqui.basic.EnumGroupMember enumId="DimJ1" enumGroupEnumId="EngJointSpace6Dof" sequenceNum="1"/>
     <moqui.basic.EnumGroupMember enumId="DimJ2" enumGroupEnumId="EngJointSpace6Dof" sequenceNum="2"/>
     <moqui.basic.EnumGroupMember enumId="DimJ3" enumGroupEnumId="EngJointSpace6Dof" sequenceNum="3"/>
@@ -39,66 +37,47 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.EnumGroupMember enumId="DimJ5" enumGroupEnumId="EngJointSpace6Dof" sequenceNum="5"/>
     <moqui.basic.EnumGroupMember enumId="DimJ6" enumGroupEnumId="EngJointSpace6Dof" sequenceNum="6"/>
 
-    <!--
-    ========== MathModelDef: 6-DOF MLP Trajectory Planner ==========
-    Model type  : MmtDlFeedforward (Feedforward Neural Network, sub-type of MmtDlModel)
-    Usage       : MmucInference
-    Domain      : MmdEngineering
-    Service     : moqui.device.TrajectoryPlannerServices.run#TrajectoryPlanner
+    <!-- ========== MathModelDef: 6-DOF MLP Trajectory Planner ========== -->
+    <!-- 
+        Model type  : MmtDlFeedforward (Feedforward Neural Network, sub-type of MmtDlModel)
+        Usage : MmucInference
+        Domain : MmdEngineering
+        Service : moqui.device.TrajectoryPlannerServices.run#RobotArmTrajectoryPlanner
     -->
-    <moqui.math.MathModelDef
-            mathModelDefId="TrjPlannerMlp6Dof"
-            modelTypeEnumId="MmtDlFeedforward"
-            usageContextEnumId="MmucInference"
-            domainEnumId="MmdEngineering"
-            serviceName="moqui.device.TrajectoryPlannerServices.run#TrajectoryPlanner"
-            modelName="6-DOF MLP Trajectory Planner"
-            description="Three-layer MLP (12→128→256→N*6) trained on synthetic quintic-spline
-                         trajectories. Input: [q_start(6) ‖ q_goal(6)]. Output: N_WAYPOINTS × 6
-                         joint angles (flat). Default N_WAYPOINTS=10."
-            versionNumber="1"
-            releaseStatusId="MathModelProduction"/>
+    <moqui.math.MathModelDef mathModelDefId="TrjPlannerMlp6Dof"
+        modelTypeEnumId="MmtDlFeedforward" usageContextEnumId="MmucInference"
+        domainEnumId="MmdEngineering" serviceName="moqui.device.TrajectoryPlannerServices.run#RobotArmTrajectoryPlanner"
+        modelName="6-DOF MLP Trajectory Planner"
+        description="Three-layer MLP (12→128→256→N*6) trained on synthetic quintic-spline
+            trajectories. Input: [q_start(6) ‖ q_goal(6)]. Output: N_WAYPOINTS × 6
+            joint angles (flat). Default N_WAYPOINTS=10."
+        versionNumber="1" releaseStatusId="MathModelProduction"/>
 
-    <!--
-    ========== MathModelDefIdentification: internal registry ==========
-    externalSystemEnumId: MmesInternal (Internal Registry)
-    externalId: moqui-device/trajectory-planner-mlp-6dof
+    <!-- ========== MathModelDefIdentification: internal registry ========== -->
+    <!-- 
+        externalSystemEnumId: MmesInternal (Internal Registry)
+        externalId: moqui-device/trajectory-planner-mlp-6dof
     -->
-    <moqui.math.MathModelDefIdentification
-            mathModelDefId="TrjPlannerMlp6Dof"
-            externalSystemEnumId="MmesInternal"
-            fromDate="2026-06-22 00:00:00"
-            externalId="moqui-device/trajectory-planner-mlp-6dof"
-            externalVersion="1.0"
-            isPrimary="Y"
-            description="Internal identifier for the bundled 6-DOF trajectory planner model."/>
+    <moqui.math.MathModelDefIdentification mathModelDefId="TrjPlannerMlp6Dof"
+        externalSystemEnumId="MmesInternal" fromDate="2026-06-22 00:00:00"
+        externalId="moqui-device/trajectory-planner-mlp-6dof" externalVersion="1.0"
+        isPrimary="Y" description="Internal identifier for the bundled 6-DOF trajectory planner model."/>
 
-    <!--
-    ========== MathModelDefContent: ONNX file ==========
-    The ONNX file is generated by running script/train_trajectory_planner.py
-    and placed at component://moqui-device/data/ml/trajectory_planner.onnx.
+    <!-- ========== MathModelDefContent: ONNX file ========== -->
+    <!-- 
+        The ONNX file is generated by running script/train_robot_arm_trajectory_planner.py
+        and placed at component://moqui-device/data/ml/trajectory_planner.onnx.
     -->
-    <moqui.math.MathModelDefContent
-            mathModelContentId="TrjPlannerMlp6DofOnnx"
-            mathModelDefId="TrjPlannerMlp6Dof"
-            contentLocation="component://moqui-device/data/ml/trajectory_planner.onnx"
-            contentTypeEnumId="MmCntOnnx"
-            purposeEnumId="MmCnpMainLogic"
-            contentDate="2026-06-22 00:00:00"
-            description="ONNX export of the 6-DOF MLP trajectory planner.
-                         Generate with: python script/train_trajectory_planner.py"/>
+    <moqui.math.MathModelDefContent mathModelContentId="TrjPlannerMlp6DofOnnx"
+        mathModelDefId="TrjPlannerMlp6Dof" contentLocation="component://moqui-device/data/ml/trajectory_planner.onnx"
+        contentTypeEnumId="MmCntOnnx" purposeEnumId="MmCnpMainLogic" contentDate="2026-06-22 00:00:00"
+        description="ONNX export of the 6-DOF MLP trajectory planner.
+            Generate with: python script/train_robot_arm_trajectory_planner.py"/>
 
-    <!--
-    ========== MathModel: production instance ==========
-    sourceEnumId: MmsSimulated (trained on synthetic quintic-spline data)
-    -->
-    <moqui.math.MathModel
-            mathModelId="TrjPlannerMlp6DofV1"
-            mathModelDefId="TrjPlannerMlp6Dof"
-            sourceEnumId="MmsSimulated"
-            modelAlias="trj-planner-v1"
-            description="Production instance of the 6-DOF MLP trajectory planner v1."
-            statusId="MathModelProduction"
-            statusFlowId="MathModelStatusFlow"/>
-
+    <!-- ========== MathModel: production instance ========== -->
+    <!-- sourceEnumId: MmsSimulated (trained on synthetic quintic-spline data) -->
+    <moqui.math.MathModel mathModelId="TrjPlannerMlp6DofV1" mathModelDefId="TrjPlannerMlp6Dof"
+        sourceEnumId="MmsSimulated" modelAlias="trj-planner-v1"
+        description="Production instance of the 6-DOF MLP trajectory planner v1."
+        statusId="MathModelProduction" statusFlowId="MathModelStatusFlow"/>
 </entity-facade-xml>

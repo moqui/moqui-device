@@ -4,7 +4,7 @@
 
 Trains a 3-layer MLP on synthetic quintic-spline trajectories and exports
 the trained model to ONNX format for use with the moqui-device
-run#TrajectoryPlanner service.
+run#RobotArmTrajectoryPlanner service.
 
 Usage
 -----
@@ -29,27 +29,27 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-# ── Configuration ─────────────────────────────────────────────────────────────
+# Configuration
 
-N_JOINTS    = 6
+N_JOINTS = 6
 N_WAYPOINTS = 10
-N_OUT       = N_WAYPOINTS * N_JOINTS   # 60
+N_OUT = N_WAYPOINTS * N_JOINTS # 60
 
-JOINT_LIMITS = (-np.pi, np.pi)         # radians, symmetric
+JOINT_LIMITS = (-np.pi, np.pi) # radians, symmetric
 
-N_TRAIN     = 50_000
-N_VAL       = 5_000
-BATCH       = 512
-EPOCHS      = 80
-LR          = 1e-3
+N_TRAIN = 50_000
+N_VAL = 5_000
+BATCH = 512
+EPOCHS = 80
+LR = 1e-3
 
 OUT_DIR  = os.path.join(os.path.dirname(__file__), "..", "data", "ml")
 OUT_PATH = os.path.join(OUT_DIR, "trajectory_planner.onnx")
 
-# ── Synthetic data generation (quintic spline) ────────────────────────────────
+# Synthetic data generation (quintic spline)
 
 def quintic_spline_waypoints(q_start: np.ndarray, q_goal: np.ndarray,
-                             n_waypoints: int) -> np.ndarray:
+    n_waypoints: int) -> np.ndarray:
     """
     Interpolate between q_start and q_goal using a degree-5 polynomial that
     enforces zero velocity and acceleration at both endpoints.
@@ -76,7 +76,7 @@ def generate_dataset(n: int):
     return inputs, targets
 
 
-# ── Model ─────────────────────────────────────────────────────────────────────
+# Model
 
 class TrajectoryMLP(nn.Module):
     def __init__(self):
@@ -93,23 +93,23 @@ class TrajectoryMLP(nn.Module):
         return self.net(x)
 
 
-# ── Training loop ─────────────────────────────────────────────────────────────
+# Training loop
 
 def train():
     print("Generating training data …")
     X_train, y_train = generate_dataset(N_TRAIN)
-    X_val,   y_val   = generate_dataset(N_VAL)
+    X_val, y_val = generate_dataset(N_VAL)
 
     X_train_t = torch.from_numpy(X_train)
     y_train_t = torch.from_numpy(y_train)
-    X_val_t   = torch.from_numpy(X_val)
-    y_val_t   = torch.from_numpy(y_val)
+    X_val_t = torch.from_numpy(X_val)
+    y_val_t = torch.from_numpy(y_val)
 
     dataset = torch.utils.data.TensorDataset(X_train_t, y_train_t)
-    loader  = torch.utils.data.DataLoader(dataset, batch_size=BATCH, shuffle=True)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=BATCH, shuffle=True)
 
-    model   = TrajectoryMLP()
-    opt     = optim.Adam(model.parameters(), lr=LR)
+    model = TrajectoryMLP()
+    opt = optim.Adam(model.parameters(), lr=LR)
     loss_fn = nn.MSELoss()
 
     print(f"Training {N_TRAIN} samples, {EPOCHS} epochs …")
@@ -134,7 +134,7 @@ def train():
     return model
 
 
-# ── ONNX export ───────────────────────────────────────────────────────────────
+# ONNX export
 
 def _ensure_onnxscript():
     """PyTorch >= 2.5 requires onnxscript even for the legacy exporter path."""
@@ -151,20 +151,23 @@ def export_onnx(model: nn.Module):
     os.makedirs(OUT_DIR, exist_ok=True)
     model.eval()
     dummy = torch.zeros(1, 12, dtype=torch.float32)
-    torch.onnx.export(
-        model,
-        dummy,
-        OUT_PATH,
-        input_names=["input"],
-        output_names=["waypoints"],
-        dynamic_axes={"input": {0: "batch"}, "waypoints": {0: "batch"}},
-        opset_version=17,
-    )
+    torch.onnx.export(model, dummy, OUT_PATH, input_names=["input"], output_names=["waypoints"],
+        dynamic_axes={"input": {0: "batch"}, "waypoints": {0: "batch"}}, opset_version=17)
+    # PyTorch 2.x may export as external data ({name}.onnx + {name}.onnx.data).
+    # Consolidate into a single self-contained file so DJL can load it from any path.
+    data_file = OUT_PATH + ".data"
+    if os.path.exists(data_file):
+        import onnx as _onnx
+        print("External data detected — consolidating into single-file ONNX …")
+        model_proto = _onnx.load(OUT_PATH)   # loads graph + external weights
+        os.remove(OUT_PATH)
+        os.remove(data_file)
+        _onnx.save(model_proto, OUT_PATH)    # embeds all tensors inline
     size_kb = os.path.getsize(OUT_PATH) / 1024
     print(f"Exported → {OUT_PATH}  ({size_kb:.1f} KB)")
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
+# Main
 
 if __name__ == "__main__":
     np.random.seed(42)
