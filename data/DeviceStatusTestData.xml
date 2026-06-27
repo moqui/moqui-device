@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+-->
+<entity-facade-xml>
+    <moqui.device.Device
+            deviceId="moqui-device-gateway1"
+            statusFlowId="DeviceBasicStatusFlow"
+            statusTypeId="DeviceBasicStatus"
+            statusId="DbsDisabled"/>
+</entity-facade-xml>

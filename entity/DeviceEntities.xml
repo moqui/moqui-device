@@ -40,8 +40,10 @@ along with this software (see the LICENSE.md file). If not, see
             <description>The current status flow used to control this device.</description></field>
         <field name="statusId" type="id">
             <description>The current status item.</description></field>
-        <field name="configId" type="id">
-            <description>The device configuration currently applied.</description></field>
+        <field name="deviceRuleSetId" type="id">
+            <description>The rule set currently applied.</description></field>
+        <field name="deviceRuleId" type="id">
+            <description>The device rule currently applied.</description></field>
 
         <!-- At most only one of coordinate system or transformation must be defined for a child device (if the parentDeviceId field is not empty). -->
         <field name="coordinateSystemId" type="id">
@@ -78,8 +80,8 @@ along with this software (see the LICENSE.md file). If not, see
         <relationship type="one" related="moqui.basic.StatusType" short-alias="statusType"/>
         <relationship type="one" related="moqui.basic.StatusFlow" short-alias="statusFlow"/>
         <relationship type="one" related="moqui.basic.StatusItem" short-alias="status"/>
-        <relationship type="one" related="moqui.device.DeviceConfig" short-alias="config">
-            <key-map field-name="configId" related="deviceConfigId"/></relationship>
+	    <relationship type="one" related="moqui.device.DeviceRuleSet" short-alias="ruleSet"/>
+        <relationship type="one" related="moqui.device.DeviceRule" short-alias="rule"/>
         <relationship type="one" related="moqui.math.CoordinateSystem" short-alias="coordSystem"/>
         <relationship type="one" related="moqui.math.Transformation" short-alias="transformation"/>
         <relationship type="one" related="moqui.math.Trajectory" short-alias="trajectory"/>
@@ -312,11 +314,6 @@ along with this software (see the LICENSE.md file). If not, see
         <index name="DEVSTAT_DEVICE" unique="true">
             <index-field name="deviceId"/></index>
     </entity>
-    <extend-entity entity-name="Parameter" package="moqui.math" enable-audit-log="update" use="configuration" cache="true" short-alias="parameters">
-        <description>For device parameters.</description>
-        <field name="deviceId" type="id"/>
-        <relationship type="one" related="moqui.device.Device" short-alias="device"/>    
-    </extend-entity>
 
     <!-- ========== Device Log ========== -->
     <entity entity-name="DeviceLog" package="moqui.device" cache="never" sequence-bank-size="1000" short-alias="deviceLog">
@@ -747,10 +744,19 @@ along with this software (see the LICENSE.md file). If not, see
 
     <!-- ========== Device Configuration ========== -->
     <entity entity-name="DeviceConfig" package="moqui.device" use="configuration" cache="true" enable-audit-log="true" short-alias="deviceConfigs">
-        <description>A device configuration is a set of device settings and parameters applicable to a type of device.
+        <description>An atomic reusable device configuration is a set of device settings and parameters applicable to a type of device.
+            In the industrial automation sector, for example, it is equivalent to a PLC/drive recipe or configuration macro.
+            A DeviceConfig is not the live state of a device (physical or group). It is a declarative reference configuration containing
+            Parameter rows through Parameter.deviceConfigId. These Parameter rows represent expected, suggested, or loadable values.
+            The live/materialized state of a device is represented by Parameter rows bound to Device through Parameter.deviceId.
+            A Device may initially receive values from a DeviceConfig through a load/apply operation, but its live Parameter values
+            may later diverge because of manual tuning, maintenance, commissioning changes, automatic control, or emergency intervention.
             It can be used to override the default device configuration (diff on parameters) or to perform checks and comparisons,
             such as in validation rules, of the current device configuration against a reference configuration.
-            They can be used as a pattern or template describing a desired set of values or a set of rules/conditions.</description>
+            They can be used as a pattern or template describing a desired set of values or a set of rules/conditions.
+            A DeviceConfig may also bind a ControlMethod and/or a Trajectory. For this reason it is more general than a scalar PLC recipe:
+            it may configure parameters, the control logic/method, and the motion/process trajectory to be used by compatible devices or systems.
+        </description>
         <field name="deviceConfigId" type="id" is-pk="true"/>
         <field name="parentConfigId" type="id">
             <description>For composing configs. Each configuration could reference to the default configuration as a parent.</description></field>
@@ -810,7 +816,19 @@ along with this software (see the LICENSE.md file). If not, see
         </seed-data>
     </entity>
     <entity entity-name="DeviceConfigSet" package="moqui.device" use="configuration" cache="true" enable-audit-log="true" short-alias="deviceConfigSets">
-        <description>A set of device configs for a device group.</description>
+        <description>
+            Static composition of DeviceConfig rows.
+            A DeviceConfigSet represents a reusable configuration package, macro set, commissioning package, recipe bundle,
+            or system-level configuration baseline. It answers the question: "which configurations belong together
+            as one declared configuration package?"
+            It does not by itself define an execution plan over the plant hierarchy.
+            Execution, validation, sequencing over systems/subsystems, and application to target devices or device groups
+            is modeled by DeviceRuleSet and DeviceRule.
+            In system engineering terms, a DeviceConfigSet belongs to the declarative configuration layer:
+            it composes atomic configurations into a larger configuration artifact.
+            The target structure on which this package is applied may be a physical device, logical device, device group, subsystem,
+            machine module, production cell, or full plant represented by the Device hierarchy.
+        </description>
         <field name="deviceConfigId" type="id" is-pk="true"/>
         <field name="configSetName" type="text-medium"/>
 
@@ -819,7 +837,18 @@ along with this software (see the LICENSE.md file). If not, see
             <key-map field-name="deviceConfigId"/></relationship>
     </entity>
     <entity entity-name="DeviceConfigSetMember" package="moqui.device" use="configuration" cache="true" enable-audit-log="true">
-        <description>Member entry that binds a device config to a set.</description>
+        <description>
+            Member entry of a static DeviceConfigSet.
+            sequenceNum defines the static composition order inside the configuration package.
+            It is not the same as DeviceRule.priority.
+            DeviceConfigSetMember.sequenceNum answers:
+                "in which order are the configurations composed inside this package?"
+            DeviceRule.priority answers:
+                "at which logical system-engineering step is an operation applied to
+                a target device, group, subsystem, or plant?"
+            When a DeviceRule applies a DeviceConfigSet, the execution engine may use DeviceConfigSetMember.sequenceNum
+            to apply/check the member configurations in a deterministic order inside that single rule step.
+        </description>
         <field name="deviceConfigId" type="id" is-pk="true"/>
         <field name="memberConfigId" type="id" is-pk="true"/>
         <field name="description" type="text-medium"/>
@@ -833,9 +862,24 @@ along with this software (see the LICENSE.md file). If not, see
         <index name="DEVCONF_SEQ"><index-field name="deviceConfigId"/><index-field name="sequenceNum"/></index>
     </entity>
     <extend-entity entity-name="Parameter" package="moqui.math" enable-audit-log="update" use="configuration" cache="true" short-alias="parameters">
-        <description>The parameter set that will be applied by the device configuration or used to check validation rules (patterns). 
-            In the latter case, parameter values ​​represent the value expected by the validation rule.</description>
+        <description>
+            Device-side Parameter scope extension.
+            A Parameter row bound to deviceConfigId is a declared recipe/configuration value.
+            It belongs to the reference configuration layer.
+            A Parameter row bound to deviceId is a live, materialized, current, factory,
+            or locally tuned value of a specific physical/logical device or device group.
+            Loading a DeviceConfig into a Device copies, maps, writes, or otherwise materializes Parameter values
+            from the configuration scope into the device scope.
+            After that load, device-bound Parameter values may diverge because of manual modifications,
+            automatic tuning, maintenance activities, PLC/HMI changes, service operations, or emergency interventions.
+            Compliance checks compare configuration-bound Parameter values against device-bound Parameter values
+            using DeviceRule tolerance fields and ParameterDef metadata.
+            In other words, the parameter set that will be applied by the device configuration or used to check validation rules (patterns). 
+            In the latter case, parameter values ​​represent the value expected by the validation rule.
+        </description>
+        <field name="deviceId" type="id"/>
         <field name="deviceConfigId" type="id"/>
+        <relationship type="one" related="moqui.device.Device" short-alias="device"/>    
         <relationship type="one" related="moqui.device.DeviceConfig" short-alias="config"/>
     </extend-entity>
 
@@ -869,9 +913,39 @@ along with this software (see the LICENSE.md file). If not, see
         </seed-data>
     </entity>
     <entity entity-name="DeviceRule" package="moqui.device" use="configuration" cache="true" enable-audit-log="true">
-        <description>Represents a rule for devices used to execute a process, usually a production cycle.
-            The rule can be used to apply a configuration to devices and modify their operation,
-            or to validate the current device configuration. A rule can belong to a single rule set.</description>
+        <description>
+            Represents a rule for a device used to execute a process, usually an operation of a pruduction cycle
+            applied to a target Device in a system-engineering hierarchy.
+            A rule can belong to a single rule set.
+            The target Device may be:
+            - a physical device, such as an ABB ACH580 drive;
+            - a logical device;
+            - a device group;
+            - a subsystem;
+            - a machine module;
+            - a production cell;
+            - a complete plant or line.
+
+            DeviceRule can apply, check, assert, suggest, or validate either:
+            - one atomic DeviceConfig, through deviceConfigId; or
+            - one composed DeviceConfigSet, through deviceConfigSetId.
+
+            deviceConfigId and deviceConfigSetId are mutually exclusive.
+
+            When the target Device is a group/system, the execution engine expands the rule over its child devices
+            or child groups using the Device hierarchy, DeviceGroupMember relationships, device type compatibility,
+            group purpose, or explicit system-engineering mapping rules.
+
+            DeviceRule.priority is the logical execution step inside a DeviceRuleSet.
+            Rules with the same priority belong to the same logical phase and may be executed together
+            or considered simultaneous at the system-engineering level.
+            Rules with increasing priority represent progression through commissioning, configuration loading,
+            subsystem activation, validation, or plant-level orchestration.
+
+            DeviceRule.priority must not be confused with DeviceConfigSetMember.sequenceNum:
+             - Priority belongs to the operational plan over the system hierarchy;
+             - sequenceNum belongs to the staticcomposition of a configuration package.
+        </description>
         <field name="deviceRuleId" type="id" is-pk="true"/>
         <field name="parentRuleId" type="id">
             <description>For hierarchical rules.</description></field>
@@ -879,10 +953,27 @@ along with this software (see the LICENSE.md file). If not, see
             <description>Indicates if the rule applies, checks or dynamically collect a configuration.</description></field>
         <field name="deviceRuleSetId" type="id" not-null="true">
             <description>Used to group rules in sets.</description></field>
-
-        <field name="deviceConfigId" type="id" not-null="true"/>
+        <field name="deviceConfigId" type="id">
+            <description>Atomic DeviceConfig operated on by this rule. Mutually exclusive with deviceConfigSetId.
+                Use this field when the rule applies, checks, asserts, suggests, or validates one reusable atomic
+                configuration/recipe against the target device or system node.
+            </description></field>
+            <field name="deviceConfigSetId" type="id">
+                <description>Composed DeviceConfigSet operated on by this rule.
+                    Mutually exclusive with deviceConfigId. Use this field when the rule applies, checks, asserts,
+                    suggests, or validates a static configuration package against the target
+                    device, device group, subsystem, machine module, production cell, or plant
+                    node represented in the Device hierarchy.
+                </description></field>
         <field name="deviceId" type="id" not-null="true">
-            <description>The device to which this rule can be applied.</description></field>
+            <description>Target Device for this rule.
+                In this context Device is the system-engineering target node, not necessarily only a physical leaf device.
+                It may represent a physical device, logical device, device group, subsystem, machine module,
+                production cell, line, or plant node in the Device hierarchy.
+                When the target is a group or higher-level system node, the rule execution expands over child devices
+                or child groups according to the Device hierarchy, DeviceGroupMember relationships, device type compatibility,
+                group purpose, or explicit system-engineering mapping rules.
+            </description></field>
         <field name="statusId" type="id">
             <description>The status to which this rule can be applied.</description></field>
         <field name="statusFlowId" type="id">
@@ -891,7 +982,14 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="ruleName" type="text-short" not-null="true"/>
         <field name="description" type="text-medium"/>
         <field name="priority" type="number-integer" not-null="true">
-            <description>Priority that expresses the order in which the rule will be processed in the set.</description></field>
+            <description>Logical execution priority within the DeviceRuleSet.
+                Rules with the same priority belong to the same logical phase and may be applied, checked,
+                asserted, suggested, or validated together at the same system-engineering level.
+                Increasing priority values represent progression through commissioning, startup, subsystem configuration,
+                plant-level coordination, validation, compliance checking, or recovery procedures.
+                This priority is not the same as DeviceConfigSetMember.sequenceNum.
+                DeviceRule.priority orders operations over target devices, groups, and systems.
+                DeviceConfigSetMember.sequenceNum orders the static composition of DeviceConfig rows inside a DeviceConfigSet.</description></field>
         <field name="serviceName" type="text-medium"/>
         <field name="isEnabled" type="text-indicator" default="Y"/>
 		<field name="fromDate" type="date-time" default="ec.user.nowTimestamp"/>
@@ -911,6 +1009,7 @@ along with this software (see the LICENSE.md file). If not, see
             <key-map field-name="ruleTypeEnumId"/></relationship>
 	    <relationship type="one" related="moqui.device.DeviceRuleSet" short-alias="ruleSet"/>
         <relationship type="one" related="moqui.device.DeviceConfig" short-alias="config"/>
+        <relationship type="one" related="moqui.device.DeviceConfigSet" short-alias="configSet"/>
         <relationship type="one" related="moqui.device.Device" short-alias="device"/>
         <relationship type="one" related="moqui.basic.StatusItem" short-alias="status"/>
         <relationship type="one" related="moqui.basic.StatusFlow" short-alias="statusFlow"/>
@@ -933,15 +1032,14 @@ along with this software (see the LICENSE.md file). If not, see
     </entity>
 
     <!-- ========== Device Dashboard ========== -->
-    <!--
     <entity entity-name="DeviceDashboard" package="moqui.device" cache="true">
         <field name="dashboardId" type="id" is-pk="true"/>
         <field name="deviceId" type="id" is-pk="true"/>
+        <field name="dashboardPath" type="text-medium"/>
         <field name="purposeEnumId" type="id"/>
         <field name="sequenceNum" type="number-integer"/>
 
         <relationship type="one" related="moqui.device.Device" short-alias="device"/>
-        <relationship type="one" related="moqui.screen.dashboard.Dashboard" short-alias="dashboard"/>
         <relationship type="one" title="DeviceDashboardPurpose" related="moqui.basic.Enumeration" short-alias="purpose">
             <key-map field-name="purposeEnumId"/></relationship>
         <seed-data>
@@ -953,7 +1051,6 @@ along with this software (see the LICENSE.md file). If not, see
             <moqui.basic.Enumeration description="Tracing Dashboard" enumId="DdpTracing" enumTypeId="DeviceDashboardPurpose"/>
         </seed-data>
     </entity>
-    -->
 
     <!-- ========== Device Trajectory ========== -->
     <extend-entity entity-name="TrajectoryPointRun" package="moqui.math" use="nontransactional" cache="never" sequence-bank-size="100">
