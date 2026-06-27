@@ -26,9 +26,9 @@ along with this software (see the LICENSE.md file). If not, see
         regardless of which screen, service, import, loader, API, or integration
         creates or updates DeviceRule rows.
     -->
-    <eeca id="DeviceRuleMutuallyExclConfig" entity="moqui.device.DeviceRule"
-        on-create="true" on-update="true" run-before="true" run-on-error="false" get-entire-entity="true">
-    <condition><expression>(deviceConfigId &amp;&amp; deviceConfigSetId) || (!deviceConfigId &amp;&amp; !deviceConfigSetId)</expression></condition>
-    <actions><return error="true" message="A DeviceRule must operate on exactly one configuration reference: deviceConfigId or deviceConfigSetId."/></actions>
-</eeca>
+    <eeca id="DeviceRuleMutuallyExclConfig" entity="moqui.device.DeviceRule" on-create="true"
+            on-update="true" run-before="true" run-on-error="false" get-entire-entity="true">
+        <condition><expression>(!deviceConfigId &amp;&amp; !deviceConfigSetId) || (deviceConfigId &amp;&amp; deviceConfigSetId)</expression></condition>
+        <actions><return error="true" message="A DeviceRule must operate on exactly one configuration reference: deviceConfigId or deviceConfigSetId."/></actions>
+    </eeca>
 </entity-eca-rules>

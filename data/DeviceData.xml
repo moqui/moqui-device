@@ -18,9 +18,12 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- Device Type -->
     <moqui.basic.EnumerationType description="Device Type" enumTypeId="DeviceType"/>
 
+    <!-- Physical Device Type --> 
+    <moqui.basic.Enumeration description="Physical Device" enumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+
     <!-- Moqui PLC Device Type -->
-    <!-- Virtual device types for PLCs implmented with the moqui-plc framework -->
-    <moqui.basic.Enumeration description="Moqui PLC" enumId="DtMoquiPlc" enumTypeId="DeviceType"/>
+    <!-- Virtual device types for PLCs implemented with the moqui-plc framework -->
+    <moqui.basic.Enumeration description="Moqui PLC" enumId="DtMoquiPlc" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Moqui PLC Actuator" enumId="DtMoquiPlcActuator" parentEnumId="DtMoquiPlc" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Moqui PLC ActuatorGroup" enumId="DtMoquiPlcActuatorGroup" parentEnumId="DtMoquiPlc" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Moqui PLC Process PID" enumId="DtMoquiPlcProcessPID" parentEnumId="DtMoquiPlc" enumTypeId="DeviceType"/>
@@ -28,8 +31,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Moqui PLC Axis Group" enumId="DtMoquiPlcAxisGroup" parentEnumId="DtMoquiPlc" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Moqui PLC Signal Management" enumId="DtMoquiPlcSignalMgmt" parentEnumId="DtMoquiPlc" enumTypeId="DeviceType"/>
 
-    <!-- Physical Device Type --> 
-    <moqui.basic.Enumeration description="Physical Device" enumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <!-- Physical device types for devices not implemented with the moqui-plc framework -->
     <moqui.basic.Enumeration description="Computer" enumId="DtComputer" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Mobile Computer" enumId="DtMobileComputer" parentEnumId="DtComputer" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="HandHeld Computer" enumId="DtHandHeldComputer" parentEnumId="DtMobileComputer" enumTypeId="DeviceType"/>
@@ -42,7 +44,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Rugged Mobile Phone" enumId="DtRuggedMobilePhone" parentEnumId="DtMobileComputer" enumTypeId="DeviceType"/>
 
     <moqui.basic.Enumeration description="Server" enumId="DtServer" parentEnumId="DtComputer" enumTypeId="DeviceType"/>
-    <moqui.basic.Enumeration description="Computing Server" enumId="DtComputingServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Computing Server" enumId="DtComputingServer" parentEnumId="DtServer" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Rack Server" enumId="DtRackServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Tower Server" enumId="DtTowerServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Blade Server" enumId="DtBladeServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
@@ -605,30 +607,30 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Boot Event" enumId="DetBootEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
     <moqui.basic.Enumeration description="Reboot Event" enumId="DeviceRebootEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
     <moqui.basic.Enumeration description="Prepare Shutdown Event" enumId="DevicePrepareShutdownEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Shutdown Event" enumId="DeviceShutdownEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Prepare Setup or Upgrade Event" enumId="DevicePrepareSetupEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Setup or Upgrade Event" enumId="DeviceSetupEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Prepare Reset Event" enumId="DevicePrepareResetEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Reset Event" enumId="DeviceResetEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Device Entity Update Event" enumId="DeviceEntityUpdateEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Status Flow Entity Update Event" enumId="DeviceStatusFlowEntityUpdateEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Parameter Entity Update Event" enumId="DeviceParameterEntityUpdateEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Content Update Event" enumId="DeviceContentUpdateEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Measurement Collection Toggle Event" enumId="DeviceMeasurementCollectionEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Notification Message Collection Toggle Event" enumId="DeviceNotificationMessageCollectionEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Log Collection Toggle Event" enumId="DeviceLogEventCollectionEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>           
-    <moqui.basic.Enumeration description="After Reading Inputs Event" enumId="DeviceAfterReadingInputsEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="After Writing Outputs Event" enumId="DeviceAfterWritingOutputsEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Before Reading Inputs Event" enumId="DeviceBeforeReadingInputsEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Before Writing Outputs Event" enumId="DeviceBeforeWritingOutputsEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Prepare Download Data Event" enumId="DevicePrepareDownloadDataEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Download Data Event" enumId="DeviceDownloadDataEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Login Event" enumId="DeviceLoginEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Logout Event" enumId="DeviceLogoutEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Prepare Stop Event" enumId="DevicePrepareStopEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Stop Event" enumId="DeviceStopEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Prepare Start Event" enumId="DevicePrepareStartEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
-    <moqui.basic.Enumeration description="Start Event" enumId="DeviceStartEvent" parentEnumId="DeviceLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Shutdown Event" enumId="DeviceShutdownEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Prepare Setup or Upgrade Event" enumId="DevicePrepareSetupEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Setup or Upgrade Event" enumId="DeviceSetupEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Prepare Reset Event" enumId="DevicePrepareResetEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Reset Event" enumId="DeviceResetEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Device Entity Update Event" enumId="DeviceEntityUpdateEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Status Flow Entity Update Event" enumId="DeviceStatusFlowEntityUpdateEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Parameter Entity Update Event" enumId="DeviceParameterEntityUpdateEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Content Update Event" enumId="DeviceContentUpdateEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Measurement Collection Toggle Event" enumId="DeviceMeasurementCollectionEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Notification Message Collection Toggle Event" enumId="DeviceNotificationMessageCollectionEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Log Collection Toggle Event" enumId="DeviceLogEventCollectionEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>           
+    <moqui.basic.Enumeration description="After Reading Inputs Event" enumId="DeviceAfterReadingInputsEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="After Writing Outputs Event" enumId="DeviceAfterWritingOutputsEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Before Reading Inputs Event" enumId="DeviceBeforeReadingInputsEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Before Writing Outputs Event" enumId="DeviceBeforeWritingOutputsEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Prepare Download Data Event" enumId="DevicePrepareDownloadDataEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Download Data Event" enumId="DeviceDownloadDataEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Login Event" enumId="DeviceLoginEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Logout Event" enumId="DeviceLogoutEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Prepare Stop Event" enumId="DevicePrepareStopEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Stop Event" enumId="DeviceStopEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Prepare Start Event" enumId="DevicePrepareStartEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
+    <moqui.basic.Enumeration description="Start Event" enumId="DeviceStartEvent" parentEnumId="DetLifecycleEvent" enumTypeId="DeviceEventType"/>
     <moqui.basic.Enumeration description="Device Failure Event" enumId="DetFailure" parentEnumId="DetPhysicalDeviceEvent" enumTypeId="DeviceEventType"/>
     <moqui.basic.Enumeration description="Device Membership Event" enumId="DetMembership" parentEnumId="DetPhysicalDeviceEvent" enumTypeId="DeviceEventType"/>
     <!-- Device Group Event Type -->
