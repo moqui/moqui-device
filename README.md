@@ -3,7 +3,9 @@
 [![license](http://img.shields.io/badge/license-CC0%201.0%20Universal-blue.svg)](https://github.com/moqui/moqui-device/blob/master/LICENSE.md)
 
 Moqui Device is a Moqui Framework component that provides a **complete, universal
-data model for physical devices (PLC, Drive/Inverter, remote IO, IoT devices, etc.)** — the dual of [moqui-math](https://github.com/moqui/moqui-math).
+data model for industrial device nodes and digital twins** — physical devices,
+logical devices, device groups, subsystems, production cells, lines, and plant
+nodes — as the dual of [moqui-math](https://github.com/moqui/moqui-math).
 It models devices as digital twins, defines how to communicate with them
 (fieldbus protocols, message brokers, REST gateways), and governs their behaviour
 over time through a rule and configuration engine.
@@ -38,8 +40,8 @@ model, command, log, and audit both how a device *moves* and how it *switches*.
 | Math Binding | `DeviceMathModel` — binds a `Device` to a `moqui.math.MathModel` for training, inference, simulation, or monitoring |
 | Connectivity | `DeviceConnection` — Modbus TCP, OPC UA, EtherNet/IP, CANopen, PROFINET, BACnet/IP, KNXnet/IP, MTConnect, Logix CIP/EIP |
 | Requests | `DeviceRequest`, `DeviceRequestItem` — Read, Write, ConfigWrite, Subscribe (Event / StateChange / Cyclic), Unsubscribe, ContentTransfer, Browse, Discovery |
-| Configuration | `DeviceConfig`, `DeviceConfigSet`, `DeviceConfigSetMember` — reusable recipes, drive macros, and static configuration packages. `DeviceConfigSet` is reserved for device groups and system/subsystem configuration baselines, modelled along ISA-88 / IEC 61512 lines |
-| Rules | `DeviceRuleSet`, `DeviceRule` — apply, assert, validate, and orchestrate `DeviceConfig` over devices or compatible groups, and `DeviceConfigSet` over device groups, subsystems, production cells, or plants; priority models the logical system-engineering phase |
+| Configuration | `DeviceConfig` + `Parameter` — reusable atomic recipes, drive macros, tuning profiles, startup profiles, safety baselines, and configuration artifacts |
+| Rules | `DeviceRuleSet`, `DeviceRule` — ordered production cycles, batch procedures, commissioning plans, validation sequences, and recovery procedures scoped to a root `Device` |
 | FSM definition (moqui-framework `BasicEntities.xml`) | `StatusType`, `StatusItem`, `StatusFlow`, `StatusFlowItem`, `StatusFlowTransition` — data-driven definition of the finite state machines that govern device behaviour |
 | Trajectory Binding | `TrajectoryAxisBinding` — maps `moqui.math.Trajectory` axes to device parameters (position, velocity, acceleration, jerk, snap) |
 | Dashboards | `DeviceDashboard` |
@@ -93,27 +95,34 @@ manufacturing cells, HVAC, and conveyor systems.
 
 ## Recipes, batch management, and system engineering
 
-Industrial configuration is not only a list of parameters on one device. In a
-real plant, the same recipe or drive macro may be loaded into many compatible
-controllers, drives, instruments, or machine modules. A commissioning procedure
-may apply different configuration packages to different subsystems in a precise
-logical order. After commissioning, operators or service technicians may still
-change some values manually. The model therefore separates **declared recipes**
-from the **live state** of each device, and separates **static configuration
-packages** from **operational/system-engineering rule sets**.
+Industrial configuration is not just a list of editable values. In a real plant,
+some information is part of the machine model and must be authored only by
+trusted seed data, engineers, administrators, or AI-assisted technical tools:
+physical devices, device groups, group membership, parameter definitions, register
+metadata, serial numbers, UUIDs, hashes, hardware mappings, and safety limits.
+
+The operator-facing layer is different. Operators and production engineers work
+with recipes, cycles, phases, checks, and parameter values. `moqui-device`
+therefore separates the **technical definition** of a machine from the
+**operational rule set** that applies recipes to that machine.
 
 The key entities are:
 
 | Entity | Plain meaning | Typical industrial analogy |
 |---|---|---|
-| `ParameterDef` | Definition of one parameter: name, type, unit, bounds, meaning | One field in a PLC recipe definition or drive parameter list |
-| `DeviceConfig` + `Parameter` | Reusable atomic recipe/configuration/macro | One Codesys recipe, one ABB drive macro, one tuning profile |
-| `DeviceConfigSet` + `DeviceConfigSetMember` | Static package made of multiple `DeviceConfig` rows and applied only to a device group/system node | HVAC package combining compressor, condenser, and AHU fan configurations |
+| `ParameterDef` | Definition of one parameter: name, type, unit, bounds, meaning, register semantics | One field in a PLC recipe definition or drive parameter/register list |
+| `DeviceConfig` + `Parameter` | Reusable atomic recipe/configuration/macro | One Codesys recipe, one ABB drive macro, one tuning profile, one startup/safety baseline |
+| `DeviceRule` | One operation that applies, checks, asserts, suggests, or validates one `DeviceConfig` against one target device | Load one recipe into one device; compare expected values; detect drift |
+| `DeviceRuleSet` | Ordered production/batch/system-engineering plan anchored to one root `Device` | Production cycle, batch procedure, commissioning sequence, startup plan, validation procedure |
 | `Device` + `Parameter` | Live/materialized values on one device or system node | PLC global variables after recipe load; actual drive parameters after tuning |
-| `DeviceRule` | One operation against a target: apply, check, assert, suggest, or validate | Load recipe, compare expected values, detect configuration drift |
-| `DeviceRuleSet` | Ordered system-engineering plan made of rules | Commissioning sequence, plant startup plan, batch configuration procedure |
+| `PhysicalDevice` | Hardware identity attached to a `Device` | Real drive, PLC, instrument, gateway, serial-numbered machine |
+| `DeviceGroup` + `DeviceGroupMember` | System-engineering grouping of devices | HVAC subsystem, compressor rack, cell, line, plant area |
 
-### `DeviceConfig` is the recipe; `Device + Parameter` is the live state
+This model intentionally has no separate configuration-set layer. Multi-step and
+multi-device composition is modeled only through `DeviceRuleSet` and
+`DeviceRule.priority`.
+
+### `DeviceConfig` is the atomic recipe; `Device + Parameter` is the live state
 
 A `DeviceConfig` is a reusable configuration artifact. It may contain parameter
 values through `Parameter.deviceConfigId`, and it may also refer to a control
@@ -125,9 +134,8 @@ A `Device` has its own `Parameter` rows through `Parameter.deviceId`. Those rows
 represent the values that are actually present, loaded, measured, materialized,
 or maintained for that specific device or system node. A device may initially
 receive its values from a `DeviceConfig`, but the two are not the same thing.
-After the load operation, the device values may diverge because of manual HMI
-changes, service tuning, emergency intervention, automatic adaptation, or local
-maintenance.
+After the load operation, device values may diverge because of manual HMI changes,
+service tuning, emergency intervention, automatic adaptation, or maintenance.
 
 For example, an ABB ACH580 drive macro may declare:
 
@@ -158,168 +166,134 @@ The original `DeviceConfig` still says `50 Hz`; the live `Device` state now says
 `45 Hz`. This difference is intentional and useful: a later `DeviceRule` can
 check compliance, report drift, or suggest restoring the expected value.
 
-### Applying the same recipe to many compatible devices
+### `PhysicalDevice` contains hardware identity
 
-A recipe is normally reusable. For example, a plant may have 30 compressors, each
-with an ABB ACH580 drive configured in the same way. The standard macro is stored
-once as a `DeviceConfig`, not copied manually as 30 separate recipe definitions:
+`Device` is the operational digital-twin node. It may represent a physical device,
+a logical device, a device group, a subsystem, a cell, a line, or a plant node.
+For this reason hardware identity fields do not belong to `Device`.
+
+Serial number, UUID, hardware hash, firmware version, vendor, model and similar
+nameplate data belong to `PhysicalDevice`, because they identify the real
+hardware asset. A `DeviceGroup` does not have one physical serial number; it has
+members that may each have their own `PhysicalDevice` identity.
+
+### `DeviceRuleSet.deviceId` defines the root scope
+
+`DeviceRuleSet` is the main composition mechanism for batch management and system
+engineering. It replaces the need for a separate static configuration-set layer.
+
+Every `DeviceRuleSet` is anchored to one root `Device` through
+`DeviceRuleSet.deviceId`:
 
 ```text
-DeviceConfig: ACH580_COMPRESSOR_MACRO_V1
-  compatible with: ABB_ACH580 compressor drives
+DeviceRuleSet: COMP01_DRIVE_PRODUCTION_CYCLE
+  root deviceId = COMP01_ACH580_DRIVE
 ```
 
-The 30 physical drives are represented as `Device` rows, often under a device
-group or subsystem node:
+or:
 
 ```text
-Device: COMPRESSOR_DRIVES_GROUP
-  Device: COMP_01_DRIVE
-  Device: COMP_02_DRIVE
-  ...
-  Device: COMP_30_DRIVE
+DeviceRuleSet: CELL01_HVAC_PRODUCTION_CYCLE
+  root deviceId = CELL01_HVAC_GROUP
 ```
 
-A `DeviceRule` can then apply the same `DeviceConfig` to the whole group. At
-execution time the implementation expands the target group and applies the
-configuration to the compatible member devices. The resulting live values are
-stored or compared on each individual `Device`.
+The root controls what the rules inside the set are allowed to target.
 
-### `DeviceConfigSet`: static composition for device groups
-
-A `DeviceConfigSet` is a static configuration package for a device group or
-system node. It answers the question: **which configurations belong together as
-one declared package for this subsystem, machine module, production cell, or
-plant area?**
-
-A `DeviceConfigSet` is intentionally not the normal way to configure one single
-leaf device. For a single PLC, drive, instrument, or actuator use `DeviceConfig`
-directly. Use `DeviceConfigSet` when the target is a `DeviceGroup` or another
-group/system node represented in the `Device` hierarchy.
-
-For example, an HVAC refrigeration subsystem may need a coordinated
-configuration for a compressor drive, a condenser, and an AHU fan. Each machine
-part has its own atomic `DeviceConfig`, but the system baseline is the set of
-those configurations together:
+If the root is a physical/logical device, every `DeviceRule.deviceId` in the set
+must target that same device:
 
 ```text
-DeviceConfig: ACH580_COMPRESSOR_DRIVE_MACRO_V1
-DeviceConfig: CONDENSER_FAN_STAGE_PROFILE_V1
-DeviceConfig: AHU_FAN_AIRFLOW_PROFILE_V1
-
-DeviceConfigSet: HVAC_REFRIGERATION_SYSTEM_BASELINE_V1
-  sequence 10 -> ACH580_COMPRESSOR_DRIVE_MACRO_V1
-  sequence 20 -> CONDENSER_FAN_STAGE_PROFILE_V1
-  sequence 30 -> AHU_FAN_AIRFLOW_PROFILE_V1
-```
-
-This package is applied to an HVAC device group or subsystem, not to a single
-leaf device:
-
-```text
-DeviceGroup/System node: HVAC_REFRIGERATION_SYSTEM
-  COMPRESSOR_DRIVES_GROUP
-  CONDENSER_GROUP
-  AHU_FANS_GROUP
-```
-
-At execution time, the implementation expands the target group and maps each
-member `DeviceConfig` to the compatible child device or child group using device
-type compatibility, group purpose, hierarchy, or explicit mapping rules.
-
-`DeviceConfigSetMember.sequenceNum` defines the deterministic order inside that
-static package. It is the order of composition of the configuration package
-itself. This is different from `DeviceRule.priority`, which orders operations
-over the plant or system hierarchy.
-
-### `DeviceRule` and `DeviceRuleSet`: operational and system-engineering layer
-
-A `DeviceRule` performs one operation against a target `Device`. The target may
-be a physical drive, a PLC, a logical device, a device group, a subsystem, a
-machine module, a production cell, a line, or a plant node represented in the
-`Device` hierarchy. When the rule references `deviceConfigSetId`, the target must
-be a device group or a higher-level group/system node; this is enforced by model
-validation, not only by convention.
-
-A rule can operate on exactly one configuration reference:
-
-```text
-deviceConfigId     -> operate on one atomic DeviceConfig
-deviceConfigSetId  -> operate on one composed DeviceConfigSet; target must be a DeviceGroup/system node
-```
-
-The two fields are mutually exclusive: one and only one must be present.
-
-When `deviceConfigSetId` is present, the target `deviceId` must identify a group
-or system node. A typical validation checks the target device type and accepts it
-only if its `deviceTypeEnumId` is the device-group type or inherits from that
-parent type. This prevents using a composed configuration package where a single
-atomic `DeviceConfig` should be used instead.
-
-A `DeviceRuleSet` is the operational plan. It answers the question: **which
-configuration operations must be performed on which system targets, and in which
-logical phase?**
-
-For example, a commissioning plan for an HVAC refrigeration plant may look like
-this:
-
-```text
-DeviceRuleSet: COMMISSIONING_HVAC_REFRIGERATION_PLANT_A
+DeviceRuleSet: COMP01_DRIVE_PRODUCTION_CYCLE
+  root deviceId = COMP01_ACH580_DRIVE
 
 priority 10:
-  target = SAFETY_SYSTEM
-  apply  = SAFETY_BASELINE_SET
+  target deviceId = COMP01_ACH580_DRIVE
+  apply          = ACH580_SAFE_LIMITS
 
 priority 20:
-  target = HVAC_REFRIGERATION_SYSTEM
-  apply  = HVAC_REFRIGERATION_SYSTEM_BASELINE_V1
+  target deviceId = COMP01_ACH580_DRIVE
+  apply          = ACH580_STARTUP
 
 priority 30:
-  target = COMPRESSOR_DRIVES_GROUP
-  apply  = ACH580_COMPRESSOR_DRIVE_MACRO_V1
-
-priority 30:
-  target = AHU_FANS_GROUP
-  apply  = AHU_FAN_AIRFLOW_PROFILE_V1
-
-priority 40:
-  target = HVAC_REFRIGERATION_SYSTEM
-  check  = HVAC_REFRIGERATION_EXPECTED_STATE_SET
+  target deviceId = COMP01_ACH580_DRIVE
+  apply          = ACH580_RUN
 ```
 
-In this example `HVAC_REFRIGERATION_SYSTEM_BASELINE_V1` is a `DeviceConfigSet`
-because it is applied to the HVAC subsystem group. `ACH580_COMPRESSOR_DRIVE_MACRO_V1`
-and `AHU_FAN_AIRFLOW_PROFILE_V1` are individual `DeviceConfig` records and may be
-applied directly to compatible device groups or leaf devices.
-
-Rules with the same priority belong to the same logical phase. Increasing
-priority values represent progression through commissioning, startup, subsystem
-configuration, plant-level coordination, validation, compliance checking, or
-recovery procedures.
-
-This is the system-engineering distinction:
+If the root is a device group or system node, each `DeviceRule.deviceId` must
+target the root itself or a member device within that group, including nested
+members where recursive group expansion is implemented:
 
 ```text
-DeviceConfigSetMember.sequenceNum
-  = order inside a static recipe/configuration package
+DeviceRuleSet: CELL01_HVAC_PRODUCTION_CYCLE
+  root deviceId = CELL01_HVAC_GROUP
 
-DeviceRule.priority
-  = logical phase of an operation over devices, groups, subsystems, or plants
+priority 10:
+  target deviceId = COMPRESSOR_DRIVE_01
+  apply          = COMPRESSOR_SAFE_LIMITS
+
+priority 10:
+  target deviceId = CONDENSER_FAN_01
+  apply          = CONDENSER_SAFE_LIMITS
+
+priority 10:
+  target deviceId = AHU_FAN_01
+  apply          = AHU_SAFE_LIMITS
+
+priority 20:
+  target deviceId = COMPRESSOR_DRIVE_01
+  apply          = COMPRESSOR_STARTUP
+
+priority 20:
+  target deviceId = AHU_FAN_01
+  apply          = AHU_STARTUP
+
+priority 30:
+  target deviceId = COMPRESSOR_DRIVE_01
+  apply          = COMPRESSOR_RUN
+
+priority 30:
+  target deviceId = AHU_FAN_01
+  apply          = AHU_RUN
 ```
 
-The model therefore supports both ways of composing industrial configuration:
+This prevents a cycle for one machine, cell or plant area from accidentally
+operating on devices outside its root scope.
 
-1. **Static composition for groups** with `DeviceConfigSet`: define a reusable
-   package of recipes/macros/configurations for a device group, subsystem, cell,
-   or plant area.
-2. **Operational composition** with `DeviceRuleSet` and `DeviceRule.priority`:
-   apply, check, or validate those configurations across a system hierarchy.
+### `DeviceRule.priority` is the system-engineering phase
 
-This is useful for batch management because recipe logic remains separate from
-equipment control, while still making the execution plan explicit and auditable.
-It is also useful for system engineering because the same model can represent a
-single device, a group of devices, a subsystem made of groups, or a complete
-plant-level configuration and validation procedure.
+A `DeviceRule` always operates on one `DeviceConfig`. Multiple rules inside a
+`DeviceRuleSet` compose a production cycle, commissioning sequence, validation
+procedure, or recovery procedure.
+
+Rules with the same priority belong to the same logical phase. Increasing
+priority values represent progression through commissioning, startup, production
+phases, batch phases, subsystem configuration, validation, compliance checking,
+recovery, or shutdown.
+
+```text
+priority 10 = safety baseline
+priority 20 = startup
+priority 30 = production run
+priority 40 = compliance check
+```
+
+This is the central batch-management distinction:
+
+```text
+DeviceConfig
+  = one reusable atomic recipe/macro/profile
+
+DeviceRule
+  = one operation applying/checking that recipe against one target
+
+DeviceRuleSet
+  = ordered plan that composes many operations under one root device/group
+```
+
+The model therefore keeps recipe logic separate from equipment control while
+still making the execution plan explicit, scoped, auditable and suitable for
+system engineering.
+
 
 ## Math–Device duality
 

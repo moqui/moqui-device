@@ -68,12 +68,4 @@ along with this software (see the LICENSE.md file). If not, see
         <alias name="status" entity-alias="DL" function="payload->>'status'"/>
     </view-entity>
     -->
-
-    <!-- ========== Device Configuration ========== -->
-    <view-entity entity-name="DeviceConfigSetAndMember" package="moqui.device">
-        <member-entity entity-alias="DCSM" entity-name="moqui.device.DeviceConfigSetMember"/>
-        <member-relationship entity-alias="DCS" join-from-alias="DCSM" relationship="configSet"/>
-        <alias-all entity-alias="DCSM"><exclude field="description"/></alias-all>
-        <alias-all entity-alias="DCS"><exclude field="deviceConfigId"/></alias-all>
-    </view-entity>
 </entities>

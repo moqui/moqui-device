@@ -25,7 +25,7 @@ along with this software (see the LICENSE.md file). If not, see
             Each moqui-device-gateway instance is modelled as a Device in its own right:
 
             Device.deviceId = moqui-device-gateway1 (one per gateway process)
-            Device.deviceName = "Moqui Device Gateway 1"
+            PhysicalDevice.deviceName = "Moqui Device Gateway 1"
 
             The Moqui-side dispatch DeviceRequest (deviceId = gateway device) is a routing
             record only. It is distinct from the gateway-side DeviceRequest (different

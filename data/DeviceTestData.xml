@@ -103,6 +103,28 @@ Grant of Patent License.
             description="Heartbeat interval for the test cell group"/>
 
     <!-- ========================================================= -->
+    <!-- Test Measurement Types                                    -->
+    <!-- ========================================================= -->
+
+    <mantle.work.measurement.MeasurementType
+            measurementTypeId="Latency"
+            description="Latency"
+            hasValue="Y"
+            uomTypeEnumId="UT_TIME_FREQ_MEASURE"/>
+
+    <mantle.work.measurement.MeasurementType
+            measurementTypeId="Power"
+            description="Power"
+            hasValue="Y"
+            uomTypeEnumId="UT_POWER_MEASURE"/>
+
+    <mantle.work.measurement.MeasurementType
+            measurementTypeId="Vibration"
+            description="Vibration"
+            hasValue="Y"
+            uomTypeEnumId=""/>
+
+    <!-- ========================================================= -->
     <!-- Test Device Group + Devices                               -->
     <!-- ========================================================= -->
 
@@ -117,6 +139,97 @@ Grant of Patent License.
     <moqui.device.DeviceGroup
             deviceId="test-cell-group-1"
             groupName="Test Cell Group 1"/>
+
+    <moqui.device.Device
+            deviceId="test-plc-1"
+            parentDeviceId="test-cell-group-1"
+            deviceTypeEnumId="DtPLC"
+            statusTypeId="DeviceBasicStatus"
+            statusFlowId="DeviceBasicStatusFlow"
+            statusId="DbsStandstill"
+            description="Test PLC controller for SimpleScreens device scenarios"
+            fromDate="2026-06-26 00:00:00"/>
+    <moqui.device.PhysicalDevice
+            deviceId="test-plc-1"
+            deviceName="Test PLC 1"
+            vendorName="OpenPLC"
+            modelName="Soft PLC"
+            version="1.0"
+            hardwareVersion="virtual"
+            firmwareVersion="v1"
+            operatingSystem="Linux"
+            softwareApplication="OpenPLC Runtime"
+            cycleTime="20"
+            isMulticore="N"/>
+
+    <moqui.device.Device
+            deviceId="test-gateway-1"
+            parentDeviceId="test-cell-group-1"
+            deviceTypeEnumId="DtServer"
+            statusTypeId="DeviceBasicStatus"
+            statusFlowId="DeviceBasicStatusFlow"
+            statusId="DbsStandstill"
+            description="Test edge gateway for SimpleScreens device scenarios"
+            fromDate="2026-06-26 00:00:00"/>
+    <moqui.device.PhysicalDevice
+            deviceId="test-gateway-1"
+            deviceName="Test Gateway 1"
+            vendorName="Moqui"
+            modelName="Edge Gateway"
+            version="1.0"
+            hardwareVersion="virtual"
+            firmwareVersion="v1"
+            operatingSystem="Linux"
+            softwareApplication="Moqui Device Gateway"
+            cycleTime="100"
+            isMulticore="Y"/>
+
+    <moqui.device.DeviceGroupMember
+            deviceId="test-cell-group-1"
+            memberDeviceId="test-plc-1"
+            purposeEnumId="DgmpProcessPLC"
+            sequenceNum="10"
+            statusId="DgmsAlive"
+            statusFlowId="ClusterMembership"
+            description="PLC controller member for the test cell"/>
+
+    <moqui.device.DeviceGroupMember
+            deviceId="test-cell-group-1"
+            memberDeviceId="test-gateway-1"
+            purposeEnumId="DgmpEdgeGateway"
+            sequenceNum="20"
+            statusId="DgmsAlive"
+            statusFlowId="ClusterMembership"
+            description="Gateway member for the test cell"/>
+
+    <!-- ========================================================= -->
+    <!-- Test Dashboards                                           -->
+    <!-- ========================================================= -->
+
+    <moqui.device.DeviceDashboard
+            dashboardId="device-telemetry"
+            deviceId="test-gateway-1"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-gateway-1"
+            purposeEnumId="DdpSummary"
+            sequenceNum="1"/>
+
+    <moqui.device.DeviceDashboard
+            dashboardId="device-telemetry"
+            deviceId="test-plc-1"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-plc-1"
+            purposeEnumId="DdpSummary"
+            sequenceNum="1"/>
+
+    <moqui.device.DeviceDashboard
+            dashboardId="device-telemetry"
+            deviceId="test-cell-group-1"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-cell-group-1"
+            purposeEnumId="DdpSummary"
+            sequenceNum="1"/>
+
+    <!-- ========================================================= -->
+    <!-- Test Device Parameters                                    -->
+    <!-- ========================================================= -->
 
     <moqui.math.Parameter
             parameterId="TestCellGroupModeParam"
@@ -181,68 +294,6 @@ Grant of Patent License.
             parameterAlias="PLC_PROGRAM"
             sequenceNum="20"
             symbolicValue="TEST_PROGRAM_V1"/>
-
-    <moqui.device.Device
-            deviceId="test-plc-1"
-            parentDeviceId="test-cell-group-1"
-            deviceTypeEnumId="DtPLC"
-            statusTypeId="DeviceBasicStatus"
-            statusFlowId="DeviceBasicStatusFlow"
-            statusId="DbsStandstill"
-            description="Test PLC controller for SimpleScreens device scenarios"
-            fromDate="2026-06-26 00:00:00"/>
-    <moqui.device.PhysicalDevice
-            deviceId="test-plc-1"
-            deviceName="Test PLC 1"
-            vendorName="OpenPLC"
-            modelName="Soft PLC"
-            version="1.0"
-            hardwareVersion="virtual"
-            firmwareVersion="v1"
-            operatingSystem="Linux"
-            softwareApplication="OpenPLC Runtime"
-            cycleTime="20"
-            isMulticore="N"/>
-
-    <moqui.device.Device
-            deviceId="test-gateway-1"
-            parentDeviceId="test-cell-group-1"
-            deviceTypeEnumId="DtServer"
-            statusTypeId="DeviceBasicStatus"
-            statusFlowId="DeviceBasicStatusFlow"
-            statusId="DbsStandstill"
-            description="Test edge gateway for SimpleScreens device scenarios"
-            fromDate="2026-06-26 00:00:00"/>
-    <moqui.device.PhysicalDevice
-            deviceId="test-gateway-1"
-            deviceName="Test Gateway 1"
-            vendorName="Moqui"
-            modelName="Edge Gateway"
-            version="1.0"
-            hardwareVersion="virtual"
-            firmwareVersion="v1"
-            operatingSystem="Linux"
-            softwareApplication="Moqui Device Gateway"
-            cycleTime="100"
-            isMulticore="Y"/>
-
-    <moqui.device.DeviceGroupMember
-            deviceId="test-cell-group-1"
-            memberDeviceId="test-plc-1"
-            purposeEnumId="DgmpProcessPLC"
-            sequenceNum="10"
-            statusId="DgmsAlive"
-            statusFlowId="ClusterMembership"
-            description="PLC controller member for the test cell"/>
-
-    <moqui.device.DeviceGroupMember
-            deviceId="test-cell-group-1"
-            memberDeviceId="test-gateway-1"
-            purposeEnumId="DgmpEdgeGateway"
-            sequenceNum="20"
-            statusId="DgmsAlive"
-            statusFlowId="ClusterMembership"
-            description="Gateway member for the test cell"/>
 
     <!-- ========================================================= -->
     <!-- Test Work Efforts for Measurement telemetry               -->

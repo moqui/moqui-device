@@ -704,8 +704,8 @@ along with this software (see the LICENSE.md file). If not, see
             typeString="${typeString}" showAlert="Y" persistOnSend="Y" receiveNotifications="Y" isPrivate="N" emailTemplateId="NOTIFICATION"
             titleTemplate="Device ${device.deviceName?:''} [${device.deviceId?:''}] ${typeString} - ${message?:'N/A'}"
             linkTemplate="/qapps/system/Device/Devices/DeviceDetail?deviceId=${device.deviceId}"/>
-    <moqui.security.user.NotificationTopic topic="DeviceGroup-${deviceGroup.groupName?:''}-${deviceGroup.deviceGroupId}-${typeString}" description="Device Group ${deviceGroup.groupName?:''} [${deviceGroup.deviceGroupId}] ${typeString}"
+    <moqui.security.user.NotificationTopic topic="DeviceGroup-${deviceGroup.groupName?:''}-${deviceGroup.deviceId}-${typeString}" description="Device Group ${deviceGroup.groupName?:''} [${deviceGroup.deviceId}] ${typeString}"
             typeString="${typeString}" showAlert="Y" persistOnSend="Y" receiveNotifications="Y" isPrivate="N" emailTemplateId="NOTIFICATION"
-            titleTemplate="Device Group ${deviceGroup.groupName?:''} [${deviceGroup.deviceGroupId}] ${typeString} - ${message?:'N/A'}"
-            linkTemplate="/qapps/system/Device/DeviceGroups/DeviceGroupDetail?deviceGroupId=${deviceGroup.deviceGroupId}"/>
+            titleTemplate="Device Group ${deviceGroup.groupName?:''} [${deviceGroup.deviceId}] ${typeString} - ${message?:'N/A'}"
+            linkTemplate="/qapps/system/Device/DeviceGroups/DeviceGroupDetail?deviceId=${deviceGroup.deviceId}"/>
 </entity-facade-xml>

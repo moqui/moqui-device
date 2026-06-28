@@ -45,8 +45,12 @@ along with this software (see the LICENSE.md file). If not, see
         on the PLC side (JsonToParametersMapper expected keys: "J1"…"J6").
     -->
     <moqui.device.Device deviceId="moqui-device-gateway1"
-        deviceName="Moqui Device Gateway 1"
         deviceTypeEnumId="DtServer"/>
+    <moqui.device.PhysicalDevice deviceId="moqui-device-gateway1"
+        deviceName="Moqui Device Gateway 1"
+        vendorName="Moqui"
+        modelName="Trajectory Gateway"
+        softwareApplication="Moqui Device Gateway"/>
 
     <moqui.device.DeviceRequest requestName="ROBOT_ARM_TRAJECTORY_EXPORT"
         deviceId="moqui-device-gateway1"
