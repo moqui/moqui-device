@@ -988,8 +988,7 @@ along with this software (see the LICENSE.md file). If not, see
             progression through commissioning, startup, production phases, batch phases, validation, compliance checking,
             recovery or shutdown.
 
-            DeviceRuleSet + DeviceRule.priority is the model's composition mechanism for system-level and batch-level
-            configuration.
+            DeviceRuleSet is the composition mechanism for applying multiple DeviceConfig records over one device or over a system hierarchy.
         </description>
         <field name="deviceRuleId" type="id" is-pk="true"/>
         <field name="parentRuleId" type="id">

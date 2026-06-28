@@ -53,6 +53,17 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Twin Server" enumId="DtTwinServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Rugged Server" enumId="DtRuggedServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Industrial Server" enumId="DtIndustrialServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
+
+    <!-- AI / HPC physical and logical compute device types -->
+    <moqui.basic.Enumeration description="Training Server" enumId="DtTrainingServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Inference Server" enumId="DtInferenceServer" parentEnumId="DtComputingServer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Compute Accelerator" enumId="DtComputeAccelerator" parentEnumId="DtPhysicalDevice" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="GPU" enumId="DtGPU" parentEnumId="DtComputeAccelerator" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="TPU" enumId="DtTPU" parentEnumId="DtComputeAccelerator" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="NPU" enumId="DtNPU" parentEnumId="DtComputeAccelerator" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="FPGA Accelerator" enumId="DtFPGAAccelerator" parentEnumId="DtComputeAccelerator" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="ASIC Accelerator" enumId="DtASICAccelerator" parentEnumId="DtComputeAccelerator" enumTypeId="DeviceType"/>
+
     
     <moqui.basic.Enumeration description="Storage Server" enumId="DtStorageServer" parentEnumId="DtServer" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Primary Data Storage Server" enumId="DtPrimaryDataStorageServer" parentEnumId="DtStorageServer" enumTypeId="DeviceType"/>
@@ -65,6 +76,16 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="IoT" enumId="DtIoT" parentEnumId="DtComputer" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="IoT Gateway" enumId="DtIoTGateway" parentEnumId="DtIoT" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Edge Gateway" enumId="DtEdgeGateway" parentEnumId="DtIoTGateway" enumTypeId="DeviceType"/>
+
+    <!-- AI / HPC software/runtime device types represented as controllable Device nodes -->
+    <moqui.basic.Enumeration description="AI Runtime" enumId="DtAIRuntime" parentEnumId="DtComputer" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Model Serving Runtime" enumId="DtModelServingRuntime" parentEnumId="DtAIRuntime" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Embedding Runtime" enumId="DtEmbeddingRuntime" parentEnumId="DtAIRuntime" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="RAG Runtime" enumId="DtRagRuntime" parentEnumId="DtAIRuntime" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Vector Database Node" enumId="DtVectorDatabaseNode" parentEnumId="DtAIRuntime" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Kubernetes Node" enumId="DtKubernetesNode" parentEnumId="DtAIRuntime" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Container Runtime" enumId="DtContainerRuntime" parentEnumId="DtAIRuntime" enumTypeId="DeviceType"/>
+
     
     <!-- NOTE: Device that provides regulation or management of a system or component (ISO 16484-5:2017).	
             Typical types of controllers for a piece of equipment include CNC (Computer Numerical Control),
@@ -206,6 +227,18 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="Master/Slave Group" enumId="DgtMasterSlave" parentEnumId="DgtCluster" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Primary/Secondary Hot-Standby Group" enumId="DgtPrimarySecondary" parentEnumId="DgtMasterSlave" enumTypeId="DeviceType"/>
 
+    <!-- AI / HPC group/system engineering device group types -->
+    <moqui.basic.Enumeration description="Compute Cluster" enumId="DgtComputeCluster" parentEnumId="DgtCluster" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="GPU Cluster" enumId="DgtGpuCluster" parentEnumId="DgtComputeCluster" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="TPU Pod" enumId="DgtTpuPod" parentEnumId="DgtComputeCluster" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Accelerator Pod" enumId="DgtAcceleratorPod" parentEnumId="DgtComputeCluster" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Training Cluster" enumId="DgtTrainingCluster" parentEnumId="DgtComputeCluster" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Inference Cluster" enumId="DgtInferenceCluster" parentEnumId="DgtComputeCluster" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="RAG Cluster" enumId="DgtRagCluster" parentEnumId="DgtComputeCluster" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Vector Index Cluster" enumId="DgtVectorIndexCluster" parentEnumId="DgtComputeCluster" enumTypeId="DeviceType"/>
+    <moqui.basic.Enumeration description="Kubernetes Cluster" enumId="DgtKubernetesCluster" parentEnumId="DgtComputeCluster" enumTypeId="DeviceType"/>
+
+
     <moqui.basic.Enumeration description="Networking Group" enumId="DgtNetworking" parentEnumId="DtDeviceGroup" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Access Layer Group" enumId="DgtAccessLayer" parentEnumId="DgtNetworking" enumTypeId="DeviceType"/>
     <moqui.basic.Enumeration description="Distribution Layer Group" enumId="DgtDistributionLayer" parentEnumId="DgtNetworking" enumTypeId="DeviceType"/>
@@ -248,6 +281,17 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration description="HPC Computing" enumId="DepHPCComputing" enumTypeId="DevicePurpose"/>
     <moqui.basic.Enumeration description="GPU Based Computing" enumId="DepGPUBasedComputing" enumTypeId="DevicePurpose"/>
     <moqui.basic.Enumeration description="Stream Processing Computing" enumId="DepStreamProcessingComputing" enumTypeId="DevicePurpose"/>
+
+    <!-- AI / HPC device purposes -->
+    <moqui.basic.Enumeration description="AI Training" enumId="DepAITraining" parentEnumId="DepHPCComputing" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="AI Inference" enumId="DepAIInference" parentEnumId="DepGPUBasedComputing" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Model Serving" enumId="DepModelServing" parentEnumId="DepAIInference" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Embedding Generation" enumId="DepEmbeddingGeneration" parentEnumId="DepAIInference" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="RAG Retrieval" enumId="DepRagRetrieval" parentEnumId="DepAIInference" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="Vector Search" enumId="DepVectorSearch" parentEnumId="DepAIInference" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="GPU Acceleration" enumId="DepGpuAcceleration" parentEnumId="DepGPUBasedComputing" enumTypeId="DevicePurpose"/>
+    <moqui.basic.Enumeration description="TPU Acceleration" enumId="DepTpuAcceleration" parentEnumId="DepHPCComputing" enumTypeId="DevicePurpose"/>
+
     <moqui.basic.Enumeration description="Storage" enumId="DepStorage" enumTypeId="DevicePurpose"/>
     <moqui.basic.Enumeration description="Servo Motor Control" enumId="DepServoMotorControl" enumTypeId="DevicePurpose"/>
     <moqui.basic.Enumeration description="Motor Control" enumId="DepMotorControl" enumTypeId="DevicePurpose"/>
@@ -658,6 +702,19 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.Enumeration enumId="DgmpClusterMember" description="Cluster Member" enumTypeId="DeviceGroupMemberPurpose"/>
     <moqui.basic.Enumeration enumId="DgmpClusterMemberPrimary" description="Cluster Member Primary" parentEnumId="DgmpClusterMember" enumTypeId="DeviceGroupMemberPurpose"/>
     <moqui.basic.Enumeration enumId="DgmpClusterMemberSecondary" description="Cluster Member Secondary" parentEnumId="DgmpClusterMember" enumTypeId="DeviceGroupMemberPurpose"/>
+
+    <!-- AI / HPC device group member purposes -->
+    <moqui.basic.Enumeration enumId="DgmpControlPlane" description="Control Plane" parentEnumId="DgmpClusterManager" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpDataPlane" description="Data Plane" parentEnumId="DgmpClusterMember" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpTrainingWorker" description="Training Worker" parentEnumId="DgmpClusterMember" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpInferenceReplica" description="Inference Replica" parentEnumId="DgmpClusterMember" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpAccelerator" description="Compute Accelerator" parentEnumId="DgmpClusterMember" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpGpuWorker" description="GPU Worker" parentEnumId="DgmpAccelerator" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpTpuWorker" description="TPU Worker" parentEnumId="DgmpAccelerator" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpVectorIndexNode" description="Vector Index Node" parentEnumId="DgmpDataPlane" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpEmbeddingProvider" description="Embedding Provider" parentEnumId="DgmpDataPlane" enumTypeId="DeviceGroupMemberPurpose"/>
+    <moqui.basic.Enumeration enumId="DgmpRagRuntime" description="RAG Runtime" parentEnumId="DgmpDataPlane" enumTypeId="DeviceGroupMemberPurpose"/>
+
     <moqui.basic.Enumeration enumId="DgmpController" description="Controller" enumTypeId="DeviceGroupMemberPurpose"/>
     <moqui.basic.Enumeration enumId="DgmpSubsystem" description="Subsystem" enumTypeId="DeviceGroupMemberPurpose"/>
     <moqui.basic.Enumeration enumId="DgmpControlledDevice" description="Controlled Device" enumTypeId="DeviceGroupMemberPurpose"/>

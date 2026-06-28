@@ -10,34 +10,6 @@ Grant of Patent License.
     <!-- ========================================================= -->
 
     <moqui.math.ParameterDef
-            parameterDefId="TestGatewayModeDef"
-            parameterTypeEnumId="PtTextShort"
-            purposeEnumId="PpDeviceConfiguration"
-            groupEnumId="PgControl"
-            classEnumId="PcMain"
-            permissionEnumId="PpeReadWrite"
-            isRequired="N"
-            hasValue="Y"
-            priority="1"
-            parameterCode="TestGatewayMode"
-            parameterName="Test Gateway Mode"
-            description="Gateway operating mode for UI/device configuration tests"/>
-
-    <moqui.math.ParameterDef
-            parameterDefId="TestGatewayTopicDef"
-            parameterTypeEnumId="PtTextShort"
-            purposeEnumId="PpDeviceConfiguration"
-            groupEnumId="PgControl"
-            classEnumId="PcMain"
-            permissionEnumId="PpeReadWrite"
-            isRequired="N"
-            hasValue="Y"
-            priority="2"
-            parameterCode="TestGatewayTopic"
-            parameterName="Test Gateway Topic"
-            description="MQTT or routing topic used by the test gateway"/>
-
-    <moqui.math.ParameterDef
             parameterDefId="TestPlcCycleTimeDef"
             parameterTypeEnumId="PtNumberInteger"
             purposeEnumId="PpDeviceConfiguration"
@@ -69,6 +41,54 @@ Grant of Patent License.
             description="Program profile name loaded on the test PLC"/>
 
     <moqui.math.ParameterDef
+            parameterDefId="TestDriveSpeedSetpointDef"
+            parameterTypeEnumId="PtNumberInteger"
+            purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="1"
+            minValue="0"
+            maxValue="6000"
+            defaultValue="1500"
+            parameterCode="TestDriveSpeedSetpoint"
+            parameterName="Test Drive Speed Setpoint"
+            description="Speed setpoint in rpm for the test drive"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="TestDriveTorqueLimitDef"
+            parameterTypeEnumId="PtNumberInteger"
+            purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="2"
+            minValue="0"
+            maxValue="300"
+            defaultValue="180"
+            parameterCode="TestDriveTorqueLimit"
+            parameterName="Test Drive Torque Limit"
+            description="Torque limit percentage for the test drive"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="TestGatewayModeDef"
+            parameterTypeEnumId="PtTextShort"
+            purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="1"
+            parameterCode="TestGatewayMode"
+            parameterName="Test Gateway Mode"
+            description="Gateway operating mode for UI and gateway tests"/>
+
+    <moqui.math.ParameterDef
             parameterDefId="TestGatewayPollIntervalDef"
             parameterTypeEnumId="PtNumberInteger"
             purposeEnumId="PpDeviceConfiguration"
@@ -77,7 +97,7 @@ Grant of Patent License.
             permissionEnumId="PpeReadWrite"
             isRequired="N"
             hasValue="Y"
-            priority="3"
+            priority="2"
             minValue="10"
             maxValue="5000"
             defaultValue="250"
@@ -94,13 +114,13 @@ Grant of Patent License.
             permissionEnumId="PpeReadWrite"
             isRequired="N"
             hasValue="Y"
-            priority="3"
+            priority="1"
             minValue="100"
             maxValue="10000"
             defaultValue="1000"
             parameterCode="TestCellHeartbeat"
             parameterName="Test Cell Heartbeat"
-            description="Heartbeat interval for the test cell group"/>
+            description="Heartbeat interval in milliseconds for the test device group"/>
 
     <!-- ========================================================= -->
     <!-- Test Measurement Types                                    -->
@@ -125,7 +145,7 @@ Grant of Patent License.
             uomTypeEnumId=""/>
 
     <!-- ========================================================= -->
-    <!-- Test Device Group + Devices                               -->
+    <!-- Test Devices                                              -->
     <!-- ========================================================= -->
 
     <moqui.device.Device
@@ -134,8 +154,8 @@ Grant of Patent License.
             statusTypeId="DeviceGroupBasicStatus"
             statusFlowId="DeviceGroupBasicStatusFlow"
             statusId="DgbsStandstill"
-            description="Test control cell composed by one PLC and one gateway"
-            fromDate="2026-06-26 00:00:00"/>
+            description="Minimal test control cell grouping one PLC, one drive and one gateway"
+            fromDate="2026-06-28 00:00:00"/>
     <moqui.device.DeviceGroup
             deviceId="test-cell-group-1"
             groupName="Test Cell Group 1"/>
@@ -147,8 +167,8 @@ Grant of Patent License.
             statusTypeId="DeviceBasicStatus"
             statusFlowId="DeviceBasicStatusFlow"
             statusId="DbsStandstill"
-            description="Test PLC controller for SimpleScreens device scenarios"
-            fromDate="2026-06-26 00:00:00"/>
+            description="Minimal test PLC for SimpleScreens and telemetry scenarios"
+            fromDate="2026-06-28 00:00:00"/>
     <moqui.device.PhysicalDevice
             deviceId="test-plc-1"
             deviceName="Test PLC 1"
@@ -163,14 +183,36 @@ Grant of Patent License.
             isMulticore="N"/>
 
     <moqui.device.Device
+            deviceId="test-drive-1"
+            parentDeviceId="test-cell-group-1"
+            deviceTypeEnumId="DtDrive"
+            statusTypeId="DeviceBasicStatus"
+            statusFlowId="DeviceBasicStatusFlow"
+            statusId="DbsStandstill"
+            description="Minimal test drive for SimpleScreens and telemetry scenarios"
+            fromDate="2026-06-28 00:00:00"/>
+    <moqui.device.PhysicalDevice
+            deviceId="test-drive-1"
+            deviceName="Test Drive 1"
+            vendorName="Generic Drive Vendor"
+            modelName="Servo Drive"
+            version="1.0"
+            hardwareVersion="virtual"
+            firmwareVersion="v1"
+            operatingSystem="RTOS"
+            softwareApplication="Drive Runtime"
+            cycleTime="5"
+            isMulticore="N"/>
+
+    <moqui.device.Device
             deviceId="test-gateway-1"
             parentDeviceId="test-cell-group-1"
             deviceTypeEnumId="DtServer"
             statusTypeId="DeviceBasicStatus"
             statusFlowId="DeviceBasicStatusFlow"
             statusId="DbsStandstill"
-            description="Test edge gateway for SimpleScreens device scenarios"
-            fromDate="2026-06-26 00:00:00"/>
+            description="Minimal test edge gateway for SimpleScreens and telemetry scenarios"
+            fromDate="2026-06-28 00:00:00"/>
     <moqui.device.PhysicalDevice
             deviceId="test-gateway-1"
             deviceName="Test Gateway 1"
@@ -191,16 +233,25 @@ Grant of Patent License.
             sequenceNum="10"
             statusId="DgmsAlive"
             statusFlowId="ClusterMembership"
-            description="PLC controller member for the test cell"/>
+            description="PLC member for the minimal test cell"/>
+
+    <moqui.device.DeviceGroupMember
+            deviceId="test-cell-group-1"
+            memberDeviceId="test-drive-1"
+            purposeEnumId="DgmpDrive"
+            sequenceNum="20"
+            statusId="DgmsAlive"
+            statusFlowId="ClusterMembership"
+            description="Drive member for the minimal test cell"/>
 
     <moqui.device.DeviceGroupMember
             deviceId="test-cell-group-1"
             memberDeviceId="test-gateway-1"
             purposeEnumId="DgmpEdgeGateway"
-            sequenceNum="20"
+            sequenceNum="30"
             statusId="DgmsAlive"
             statusFlowId="ClusterMembership"
-            description="Gateway member for the test cell"/>
+            description="Gateway member for the minimal test cell"/>
 
     <!-- ========================================================= -->
     <!-- Test Dashboards                                           -->
@@ -208,8 +259,8 @@ Grant of Patent License.
 
     <moqui.device.DeviceDashboard
             dashboardId="device-telemetry"
-            deviceId="test-gateway-1"
-            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-gateway-1"
+            deviceId="test-cell-group-1"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-cell-group-1"
             purposeEnumId="DdpSummary"
             sequenceNum="1"/>
 
@@ -222,8 +273,15 @@ Grant of Patent License.
 
     <moqui.device.DeviceDashboard
             dashboardId="device-telemetry"
-            deviceId="test-cell-group-1"
-            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-cell-group-1"
+            deviceId="test-drive-1"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-drive-1"
+            purposeEnumId="DdpSummary"
+            sequenceNum="1"/>
+
+    <moqui.device.DeviceDashboard
+            dashboardId="device-telemetry"
+            deviceId="test-gateway-1"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-gateway-1"
             purposeEnumId="DdpSummary"
             sequenceNum="1"/>
 
@@ -232,52 +290,12 @@ Grant of Patent License.
     <!-- ========================================================= -->
 
     <moqui.math.Parameter
-            parameterId="TestCellGroupModeParam"
-            deviceId="test-cell-group-1"
-            parameterDefId="TestGatewayModeDef"
-            parameterAlias="CELL_MODE"
-            sequenceNum="10"
-            symbolicValue="LINE_AUTO"/>
-
-    <moqui.math.Parameter
-            parameterId="TestCellGroupTopicParam"
-            deviceId="test-cell-group-1"
-            parameterDefId="TestGatewayTopicDef"
-            parameterAlias="CELL_TOPIC"
-            sequenceNum="20"
-            symbolicValue="factory/test/cell/1"/>
-
-    <moqui.math.Parameter
             parameterId="TestCellHeartbeatParam"
             deviceId="test-cell-group-1"
             parameterDefId="TestCellHeartbeatDef"
-            parameterAlias="CELL_HEARTBEAT"
-            sequenceNum="30"
-            numericValue="1000"/>
-
-    <moqui.math.Parameter
-            parameterId="TestGatewayModeParam"
-            deviceId="test-gateway-1"
-            parameterDefId="TestGatewayModeDef"
-            parameterAlias="GW_MODE"
+            parameterAlias="CELL_HEARTBEAT_MS"
             sequenceNum="10"
-            symbolicValue="AUTO"/>
-
-    <moqui.math.Parameter
-            parameterId="TestGatewayTopicParam"
-            deviceId="test-gateway-1"
-            parameterDefId="TestGatewayTopicDef"
-            parameterAlias="GW_TOPIC"
-            sequenceNum="20"
-            symbolicValue="factory/runtime/gateway"/>
-
-    <moqui.math.Parameter
-            parameterId="TestGatewayPollIntervalParam"
-            deviceId="test-gateway-1"
-            parameterDefId="TestGatewayPollIntervalDef"
-            parameterAlias="GW_POLL_MS"
-            sequenceNum="30"
-            numericValue="250"/>
+            numericValue="1000"/>
 
     <moqui.math.Parameter
             parameterId="TestPlcCycleTimeParam"
@@ -293,17 +311,49 @@ Grant of Patent License.
             parameterDefId="TestPlcProgramDef"
             parameterAlias="PLC_PROGRAM"
             sequenceNum="20"
-            symbolicValue="TEST_PROGRAM_V1"/>
+            symbolicValue="MIXING_PROFILE_A"/>
+
+    <moqui.math.Parameter
+            parameterId="TestDriveSpeedParam"
+            deviceId="test-drive-1"
+            parameterDefId="TestDriveSpeedSetpointDef"
+            parameterAlias="DRV_SPEED_RPM"
+            sequenceNum="10"
+            numericValue="1500"/>
+
+    <moqui.math.Parameter
+            parameterId="TestDriveTorqueParam"
+            deviceId="test-drive-1"
+            parameterDefId="TestDriveTorqueLimitDef"
+            parameterAlias="DRV_TORQUE_PCT"
+            sequenceNum="20"
+            numericValue="180"/>
+
+    <moqui.math.Parameter
+            parameterId="TestGatewayModeParam"
+            deviceId="test-gateway-1"
+            parameterDefId="TestGatewayModeDef"
+            parameterAlias="GW_MODE"
+            sequenceNum="10"
+            symbolicValue="AUTO"/>
+
+    <moqui.math.Parameter
+            parameterId="TestGatewayPollIntervalParam"
+            deviceId="test-gateway-1"
+            parameterDefId="TestGatewayPollIntervalDef"
+            parameterAlias="GW_POLL_MS"
+            sequenceNum="20"
+            numericValue="250"/>
 
     <!-- ========================================================= -->
     <!-- Test Work Efforts for Measurement telemetry               -->
     <!-- ========================================================= -->
 
     <mantle.work.effort.WorkEffort
-            workEffortId="test-gateway-1"
+            workEffortId="test-cell-group-1"
             workEffortTypeEnumId="WetEvent"
-            workEffortName="Gateway Telemetry Stream"
-            description="Synthetic work effort used to attach telemetry measurements to test-gateway-1"/>
+            workEffortName="Cell Group Telemetry Stream"
+            description="Synthetic work effort used to attach telemetry measurements to test-cell-group-1"/>
 
     <mantle.work.effort.WorkEffort
             workEffortId="test-plc-1"
@@ -312,355 +362,285 @@ Grant of Patent License.
             description="Synthetic work effort used to attach telemetry measurements to test-plc-1"/>
 
     <mantle.work.effort.WorkEffort
-            workEffortId="test-cell-group-1"
+            workEffortId="test-drive-1"
             workEffortTypeEnumId="WetEvent"
-            workEffortName="Cell Group Telemetry Stream"
-            description="Synthetic work effort used to attach telemetry measurements to test-cell-group-1"/>
+            workEffortName="Drive Telemetry Stream"
+            description="Synthetic work effort used to attach telemetry measurements to test-drive-1"/>
+
+    <mantle.work.effort.WorkEffort
+            workEffortId="test-gateway-1"
+            workEffortTypeEnumId="WetEvent"
+            workEffortName="Gateway Telemetry Stream"
+            description="Synthetic work effort used to attach telemetry measurements to test-gateway-1"/>
 
     <!-- ========================================================= -->
     <!-- Test Device Configs + Config Parameters                   -->
     <!-- ========================================================= -->
 
     <moqui.device.DeviceConfig
-            deviceConfigId="TestGatewayRunConfig1"
+            deviceConfigId="TestCellFactoryConfig1"
+            deviceTypeEnumId="DgtControl"
+            configTypeEnumId="DctApplyConfig"
+            purposeEnumId="DcpRunConfig"
+            controlMethodEnumId="DcmNone"
+            configName="Test Cell Factory Defaults"
+            description="Factory defaults for the minimal test device group"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceConfig
+            deviceConfigId="TestGatewayFactoryConfig1"
             deviceTypeEnumId="DtServer"
             configTypeEnumId="DctApplyConfig"
             purposeEnumId="DcpRunConfig"
             controlMethodEnumId="DcmNone"
-            configName="Test Gateway Run Config 1"
-            description="Standalone device configuration for the test gateway"
-            fromDate="2026-06-26 00:00:00"/>
+            configName="Test Gateway Factory Defaults"
+            description="Factory defaults for the minimal test gateway"
+            fromDate="2026-06-28 00:00:00"/>
 
-    <moqui.device.DeviceConfig
-            deviceConfigId="TestPlcRunConfig1"
-            deviceTypeEnumId="DtPLC"
-            configTypeEnumId="DctApplyConfig"
-            purposeEnumId="DcpRunConfig"
-            controlMethodEnumId="DcmNone"
-            configName="Test PLC Run Config 1"
-            description="Standalone device configuration for the test PLC"
-            fromDate="2026-06-26 00:00:00"/>
+    <moqui.math.Parameter
+            parameterId="TestCellHeartbeatCfgParam"
+            deviceConfigId="TestCellFactoryConfig1"
+            parameterDefId="TestCellHeartbeatDef"
+            parameterAlias="CELL_HEARTBEAT_MS"
+            sequenceNum="10"
+            numericValue="1000"/>
 
-    <!-- DeviceConfig parameters: deviceId intentionally null -->
     <moqui.math.Parameter
             parameterId="TestGatewayModeCfgParam"
-            deviceConfigId="TestGatewayRunConfig1"
+            deviceConfigId="TestGatewayFactoryConfig1"
             parameterDefId="TestGatewayModeDef"
             parameterAlias="GW_MODE"
-            sequenceNum="10"
+            sequenceNum="20"
             symbolicValue="AUTO"/>
 
     <moqui.math.Parameter
-            parameterId="TestGatewayTopicCfgParam"
-            deviceConfigId="TestGatewayRunConfig1"
-            parameterDefId="TestGatewayTopicDef"
-            parameterAlias="GW_TOPIC"
-            sequenceNum="20"
-            symbolicValue="factory/test/gateway"/>
-
-    <moqui.math.Parameter
             parameterId="TestGatewayPollIntervalCfgParam"
-            deviceConfigId="TestGatewayRunConfig1"
+            deviceConfigId="TestGatewayFactoryConfig1"
             parameterDefId="TestGatewayPollIntervalDef"
             parameterAlias="GW_POLL_MS"
             sequenceNum="30"
             numericValue="250"/>
 
-    <moqui.math.Parameter
-            parameterId="TestPlcCycleTimeCfgParam"
-            deviceConfigId="TestPlcRunConfig1"
-            parameterDefId="TestPlcCycleTimeDef"
-            parameterAlias="PLC_CYCLE"
-            sequenceNum="10"
-            numericValue="20"/>
+    <!-- ========================================================= -->
+    <!-- Test Rule Set + Rules (factory defaults)                  -->
+    <!-- ========================================================= -->
 
-    <moqui.math.Parameter
-            parameterId="TestPlcProgramCfgParam"
-            deviceConfigId="TestPlcRunConfig1"
-            parameterDefId="TestPlcProgramDef"
-            parameterAlias="PLC_PROGRAM"
-            sequenceNum="20"
-            symbolicValue="TEST_PROGRAM_V1"/>
+    <moqui.device.DeviceRuleSet
+            deviceRuleSetId="TestCellFactoryRuleSet1"
+            purposeEnumId="DrspConfiguration"
+            deviceId="test-cell-group-1"
+            sequenceNum="10"
+            ruleSetName="Test Cell Factory Defaults"
+            description="Minimal factory-default rule set for the test cell group"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRule
+            deviceRuleId="TestCellFactoryRule010"
+            deviceRuleSetId="TestCellFactoryRuleSet1"
+            deviceConfigId="TestCellFactoryConfig1"
+            deviceId="test-cell-group-1"
+            ruleTypeEnumId="DrtApplyConfig"
+            ruleName="Apply cell factory defaults"
+            description="Apply group-level factory defaults to the test cell"
+            priority="10"
+            isEnabled="Y"
+            runDevice="N"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRule
+            deviceRuleId="TestCellFactoryRule020"
+            deviceRuleSetId="TestCellFactoryRuleSet1"
+            deviceConfigId="TestGatewayFactoryConfig1"
+            deviceId="test-gateway-1"
+            ruleTypeEnumId="DrtApplyConfig"
+            ruleName="Apply gateway factory defaults"
+            description="Apply gateway factory defaults inside the test cell"
+            priority="20"
+            isEnabled="Y"
+            runDevice="N"
+            fromDate="2026-06-28 00:00:00"/>
 
     <!-- ========================================================= -->
     <!-- Test Telemetry Logs                                       -->
     <!-- ========================================================= -->
 
     <moqui.math.ParameterLog
+            parameterLogId="TestCellHeartbeatLog001"
+            parameterId="TestCellHeartbeatParam"
+            sequenceNum="1"
+            observedDate="2026-06-28 10:00:00"
+            numericValue="1000"/>
+
+    <moqui.math.ParameterLog
             parameterLogId="TestPlcCycleLog001"
             parameterId="TestPlcCycleTimeParam"
             sequenceNum="1"
-            observedDate="2026-06-26 10:00:00"
+            observedDate="2026-06-28 10:00:00"
             numericValue="20"/>
 
     <moqui.math.ParameterLog
             parameterLogId="TestPlcCycleLog002"
             parameterId="TestPlcCycleTimeParam"
             sequenceNum="2"
-            observedDate="2026-06-26 10:05:00"
+            observedDate="2026-06-28 10:05:00"
             numericValue="24"/>
 
     <moqui.math.ParameterLog
-            parameterLogId="TestPlcCycleLog003"
-            parameterId="TestPlcCycleTimeParam"
-            sequenceNum="3"
-            observedDate="2026-06-26 10:10:00"
-            numericValue="22"/>
+            parameterLogId="TestPlcProgramLog001"
+            parameterId="TestPlcProgramParam"
+            sequenceNum="1"
+            observedDate="2026-06-28 10:02:00"
+            symbolicValue="MIXING_PROFILE_A"/>
+
+    <moqui.math.ParameterLog
+            parameterLogId="TestDriveSpeedLog001"
+            parameterId="TestDriveSpeedParam"
+            sequenceNum="1"
+            observedDate="2026-06-28 10:00:00"
+            numericValue="1500"/>
+
+    <moqui.math.ParameterLog
+            parameterLogId="TestDriveSpeedLog002"
+            parameterId="TestDriveSpeedParam"
+            sequenceNum="2"
+            observedDate="2026-06-28 10:06:00"
+            numericValue="1625"/>
+
+    <moqui.math.ParameterLog
+            parameterLogId="TestDriveTorqueLog001"
+            parameterId="TestDriveTorqueParam"
+            sequenceNum="1"
+            observedDate="2026-06-28 10:03:00"
+            numericValue="180"/>
 
     <moqui.math.ParameterLog
             parameterLogId="TestGatewayModeLog001"
             parameterId="TestGatewayModeParam"
             sequenceNum="1"
-            observedDate="2026-06-26 10:00:00"
+            observedDate="2026-06-28 10:00:00"
             symbolicValue="AUTO"/>
 
     <moqui.math.ParameterLog
             parameterLogId="TestGatewayModeLog002"
             parameterId="TestGatewayModeParam"
             sequenceNum="2"
-            observedDate="2026-06-26 10:08:00"
+            observedDate="2026-06-28 10:08:00"
             symbolicValue="MANUAL"/>
-
-    <moqui.math.ParameterLog
-            parameterLogId="TestGatewayTopicLog001"
-            parameterId="TestGatewayTopicParam"
-            sequenceNum="1"
-            observedDate="2026-06-26 10:01:00"
-            symbolicValue="factory/runtime/gateway"/>
-
-    <moqui.math.ParameterLog
-            parameterLogId="TestGatewayTopicLog002"
-            parameterId="TestGatewayTopicParam"
-            sequenceNum="2"
-            observedDate="2026-06-26 10:09:00"
-            symbolicValue="factory/runtime/gateway/line-1"/>
 
     <moqui.math.ParameterLog
             parameterLogId="TestGatewayPollLog001"
             parameterId="TestGatewayPollIntervalParam"
             sequenceNum="1"
-            observedDate="2026-06-26 10:00:00"
+            observedDate="2026-06-28 10:01:00"
             numericValue="250"/>
 
     <moqui.math.ParameterLog
             parameterLogId="TestGatewayPollLog002"
             parameterId="TestGatewayPollIntervalParam"
             sequenceNum="2"
-            observedDate="2026-06-26 10:06:00"
+            observedDate="2026-06-28 10:07:00"
             numericValue="300"/>
 
-    <moqui.math.ParameterLog
-            parameterLogId="TestGatewayPollLog003"
-            parameterId="TestGatewayPollIntervalParam"
-            sequenceNum="3"
-            observedDate="2026-06-26 10:12:00"
-            numericValue="275"/>
-
-    <moqui.math.ParameterLog
-            parameterLogId="TestCellGroupModeLog001"
-            parameterId="TestCellGroupModeParam"
-            sequenceNum="1"
-            observedDate="2026-06-26 10:00:00"
-            symbolicValue="LINE_AUTO"/>
-
-    <moqui.math.ParameterLog
-            parameterLogId="TestCellGroupTopicLog001"
-            parameterId="TestCellGroupTopicParam"
-            sequenceNum="1"
-            observedDate="2026-06-26 10:03:00"
-            symbolicValue="factory/test/cell/1"/>
-
-    <moqui.math.ParameterLog
-            parameterLogId="TestCellGroupTopicLog002"
-            parameterId="TestCellGroupTopicParam"
-            sequenceNum="2"
-            observedDate="2026-06-26 10:11:00"
-            symbolicValue="factory/test/cell/1/alarm"/>
-
-    <moqui.math.ParameterLog
-            parameterLogId="TestCellHeartbeatLog001"
-            parameterId="TestCellHeartbeatParam"
-            sequenceNum="1"
-            observedDate="2026-06-26 10:02:00"
-            numericValue="1000"/>
-
-    <moqui.math.ParameterLog
-            parameterLogId="TestCellHeartbeatLog002"
-            parameterId="TestCellHeartbeatParam"
-            sequenceNum="2"
-            observedDate="2026-06-26 10:08:00"
-            numericValue="900"/>
-
-    <moqui.math.ParameterLog
-            parameterLogId="TestCellHeartbeatLog003"
-            parameterId="TestCellHeartbeatParam"
-            sequenceNum="3"
-            observedDate="2026-06-26 10:14:00"
-            numericValue="950"/>
-
     <moqui.device.DeviceLog
-            deviceLogId="TestGatewayDeviceLog001"
-            deviceId="test-gateway-1"
+            deviceLogId="TestCellDeviceLog001"
+            deviceId="test-cell-group-1"
             sequenceNum="1"
-            observedDate="2026-06-26 10:00:00"
-            payload="{&quot;status&quot;:&quot;online&quot;,&quot;cpu&quot;:22.1,&quot;message&quot;:&quot;gateway boot completed&quot;}"/>
-
-    <moqui.device.DeviceLog
-            deviceLogId="TestGatewayDeviceLog002"
-            deviceId="test-gateway-1"
-            sequenceNum="2"
-            observedDate="2026-06-26 10:07:00"
-            payload="{&quot;status&quot;:&quot;online&quot;,&quot;cpu&quot;:24.7,&quot;message&quot;:&quot;modbus bridge polling active&quot;}"/>
-
-    <moqui.device.DeviceLog
-            deviceLogId="TestGatewayDeviceLog003"
-            deviceId="test-gateway-1"
-            sequenceNum="3"
-            observedDate="2026-06-26 10:12:00"
-            payload="{&quot;status&quot;:&quot;warning&quot;,&quot;cpu&quot;:31.2,&quot;latencyMs&quot;:142,&quot;message&quot;:&quot;northbound broker reconnect&quot;}"/>
+            observedDate="2026-06-28 10:00:00"
+            payload="{&quot;status&quot;:&quot;online&quot;,&quot;membersAlive&quot;:3,&quot;message&quot;:&quot;factory default cycle available&quot;}"/>
 
     <moqui.device.DeviceLog
             deviceLogId="TestPlcDeviceLog001"
             deviceId="test-plc-1"
             sequenceNum="1"
-            observedDate="2026-06-26 10:02:00"
+            observedDate="2026-06-28 10:01:00"
             payload="{&quot;status&quot;:&quot;standstill&quot;,&quot;task&quot;:&quot;program loaded&quot;,&quot;scanTimeMs&quot;:20}"/>
 
     <moqui.device.DeviceLog
             deviceLogId="TestPlcDeviceLog002"
             deviceId="test-plc-1"
             sequenceNum="2"
-            observedDate="2026-06-26 10:06:00"
+            observedDate="2026-06-28 10:06:00"
             payload="{&quot;status&quot;:&quot;running&quot;,&quot;task&quot;:&quot;automatic cycle active&quot;,&quot;scanTimeMs&quot;:24}"/>
 
     <moqui.device.DeviceLog
-            deviceLogId="TestCellGroupDeviceLog001"
-            deviceId="test-cell-group-1"
+            deviceLogId="TestDriveDeviceLog001"
+            deviceId="test-drive-1"
             sequenceNum="1"
-            observedDate="2026-06-26 10:04:00"
-            payload="{&quot;status&quot;:&quot;online&quot;,&quot;membersAlive&quot;:2,&quot;message&quot;:&quot;cell supervision started&quot;}"/>
+            observedDate="2026-06-28 10:02:00"
+            payload="{&quot;status&quot;:&quot;standstill&quot;,&quot;message&quot;:&quot;drive enabled&quot;,&quot;speedRpm&quot;:0}"/>
+
+    <moqui.device.DeviceLog
+            deviceLogId="TestDriveDeviceLog002"
+            deviceId="test-drive-1"
+            sequenceNum="2"
+            observedDate="2026-06-28 10:08:00"
+            payload="{&quot;status&quot;:&quot;running&quot;,&quot;message&quot;:&quot;speed reference updated&quot;,&quot;speedRpm&quot;:1625}"/>
+
+    <moqui.device.DeviceLog
+            deviceLogId="TestGatewayDeviceLog001"
+            deviceId="test-gateway-1"
+            sequenceNum="1"
+            observedDate="2026-06-28 10:00:00"
+            payload="{&quot;status&quot;:&quot;online&quot;,&quot;cpu&quot;:22.1,&quot;message&quot;:&quot;gateway boot completed&quot;}"/>
+
+    <moqui.device.DeviceLog
+            deviceLogId="TestGatewayDeviceLog002"
+            deviceId="test-gateway-1"
+            sequenceNum="2"
+            observedDate="2026-06-28 10:09:00"
+            payload="{&quot;status&quot;:&quot;warning&quot;,&quot;cpu&quot;:31.2,&quot;latencyMs&quot;:142,&quot;message&quot;:&quot;broker reconnect&quot;}"/>
 
     <!-- ========================================================= -->
     <!-- Test Measurements                                         -->
     <!-- ========================================================= -->
 
     <mantle.work.measurement.Measurement
-            measurementId="TestGatewayTemp001"
-            measurementTypeId="Temperature"
-            measurementDate="2026-06-26 10:00:00"
-            measurementValue="41.3"
-            workEffortId="test-gateway-1"/>
-
-    <mantle.work.measurement.Measurement
-            measurementId="TestGatewayTemp002"
-            measurementTypeId="Temperature"
-            measurementDate="2026-06-26 10:06:00"
-            measurementValue="43.8"
-            workEffortId="test-gateway-1"/>
-
-    <mantle.work.measurement.Measurement
-            measurementId="TestGatewayHumidity001"
-            measurementTypeId="Humidity"
-            measurementDate="2026-06-26 10:02:00"
-            measurementValue="55"
-            workEffortId="test-gateway-1"/>
-
-    <mantle.work.measurement.Measurement
-            measurementId="TestGatewayHumidity002"
-            measurementTypeId="Humidity"
-            measurementDate="2026-06-26 10:10:00"
-            measurementValue="58"
-            workEffortId="test-gateway-1"/>
-
-    <mantle.work.measurement.Measurement
-            measurementId="TestGatewayLatency001"
-            measurementTypeId="Latency"
-            measurementDate="2026-06-26 10:04:00"
-            measurementValue="120"
-            workEffortId="test-gateway-1"/>
-
-    <mantle.work.measurement.Measurement
-            measurementId="TestGatewayLatency002"
-            measurementTypeId="Latency"
-            measurementDate="2026-06-26 10:11:00"
-            measurementValue="142"
-            workEffortId="test-gateway-1"/>
+            measurementId="TestCellPower001"
+            measurementTypeId="Power"
+            measurementDate="2026-06-28 10:02:00"
+            measurementValue="8.4"
+            workEffortId="test-cell-group-1"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestPlcTemp001"
             measurementTypeId="Temperature"
-            measurementDate="2026-06-26 10:01:00"
+            measurementDate="2026-06-28 10:01:00"
             measurementValue="37.1"
-            workEffortId="test-plc-1"/>
-
-    <mantle.work.measurement.Measurement
-            measurementId="TestPlcTemp002"
-            measurementTypeId="Temperature"
-            measurementDate="2026-06-26 10:07:00"
-            measurementValue="38.4"
-            workEffortId="test-plc-1"/>
-
-    <mantle.work.measurement.Measurement
-            measurementId="TestPlcPressure001"
-            measurementTypeId="AtmosphericPressure"
-            measurementDate="2026-06-26 10:09:00"
-            measurementValue="1.02"
-            workEffortId="test-plc-1"/>
-
-    <mantle.work.measurement.Measurement
-            measurementId="TestPlcPressure002"
-            measurementTypeId="AtmosphericPressure"
-            measurementDate="2026-06-26 10:13:00"
-            measurementValue="1.05"
             workEffortId="test-plc-1"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestPlcVibration001"
             measurementTypeId="Vibration"
-            measurementDate="2026-06-26 10:05:00"
-            measurementValue="0.40"
-            workEffortId="test-plc-1"/>
-
-    <mantle.work.measurement.Measurement
-            measurementId="TestPlcVibration002"
-            measurementTypeId="Vibration"
-            measurementDate="2026-06-26 10:11:00"
+            measurementDate="2026-06-28 10:07:00"
             measurementValue="0.55"
             workEffortId="test-plc-1"/>
 
     <mantle.work.measurement.Measurement
-            measurementId="TestCellHumidity001"
+            measurementId="TestDrivePower001"
+            measurementTypeId="Power"
+            measurementDate="2026-06-28 10:03:00"
+            measurementValue="4.2"
+            workEffortId="test-drive-1"/>
+
+    <mantle.work.measurement.Measurement
+            measurementId="TestDriveTemp001"
+            measurementTypeId="Temperature"
+            measurementDate="2026-06-28 10:09:00"
+            measurementValue="44.6"
+            workEffortId="test-drive-1"/>
+
+    <mantle.work.measurement.Measurement
+            measurementId="TestGatewayHumidity001"
             measurementTypeId="Humidity"
-            measurementDate="2026-06-26 10:03:00"
-            measurementValue="52"
-            workEffortId="test-cell-group-1"/>
+            measurementDate="2026-06-28 10:04:00"
+            measurementValue="55"
+            workEffortId="test-gateway-1"/>
 
     <mantle.work.measurement.Measurement
-            measurementId="TestCellTemp001"
-            measurementTypeId="Temperature"
-            measurementDate="2026-06-26 10:08:00"
-            measurementValue="39.6"
-            workEffortId="test-cell-group-1"/>
-
-    <mantle.work.measurement.Measurement
-            measurementId="TestCellTemp002"
-            measurementTypeId="Temperature"
-            measurementDate="2026-06-26 10:14:00"
-            measurementValue="40.2"
-            workEffortId="test-cell-group-1"/>
-
-    <mantle.work.measurement.Measurement
-            measurementId="TestCellPower001"
-            measurementTypeId="Power"
-            measurementDate="2026-06-26 10:06:00"
-            measurementValue="12.4"
-            workEffortId="test-cell-group-1"/>
-
-    <mantle.work.measurement.Measurement
-            measurementId="TestCellPower002"
-            measurementTypeId="Power"
-            measurementDate="2026-06-26 10:12:00"
-            measurementValue="13.1"
-            workEffortId="test-cell-group-1"/>
+            measurementId="TestGatewayLatency001"
+            measurementTypeId="Latency"
+            measurementDate="2026-06-28 10:10:00"
+            measurementValue="142"
+            workEffortId="test-gateway-1"/>
 
 </entity-facade-xml>

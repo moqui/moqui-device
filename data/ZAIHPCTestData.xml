@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+This software is in the public domain under CC0 1.0 Universal plus a
+Grant of Patent License.
+
+AI/HPC smoke-test seed data for moqui-device. Load after DeviceData.xml so that
+AI/HPC DeviceType, DevicePurpose and DeviceGroupMemberPurpose enumerations exist.
+-->
+<entity-facade-xml type="seed">
+
+    <!-- ========================================================= -->
+    <!-- AI/HPC Parameter Definitions                              -->
+    <!-- ========================================================= -->
+
+    <moqui.math.ParameterDef parameterDefId="AIHpcModelNameDef"
+            parameterTypeEnumId="PtTextShort" purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
+            isRequired="N" hasValue="Y" priority="10"
+            parameterCode="AIHpcModelName" parameterName="AI/HPC Model Name"
+            description="Model or runtime artifact name used by AI/HPC serving or training profiles"/>
+
+    <moqui.math.ParameterDef parameterDefId="AIHpcPrecisionDef"
+            parameterTypeEnumId="PtTextShort" purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
+            isRequired="N" hasValue="Y" priority="20"
+            parameterCode="AIHpcPrecision" parameterName="AI/HPC Numeric Precision"
+            description="Numeric precision profile such as fp32, tf32, fp16, bf16, int8"/>
+
+    <moqui.math.ParameterDef parameterDefId="AIHpcMaxPowerWDef"
+            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
+            isRequired="N" hasValue="Y" priority="30" minValue="50" maxValue="1000" defaultValue="650"
+            parameterCode="AIHpcMaxPowerW" parameterName="AI/HPC Max Power W"
+            description="Maximum accelerator power limit in watts"/>
+
+    <moqui.math.ParameterDef parameterDefId="AIHpcMigModeDef"
+            parameterTypeEnumId="PtTextShort" purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
+            isRequired="N" hasValue="Y" priority="40"
+            parameterCode="AIHpcMigMode" parameterName="AI/HPC MIG Mode"
+            description="GPU multi-instance mode flag or profile name"/>
+
+    <moqui.math.ParameterDef parameterDefId="AIHpcBatchSizeDef"
+            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
+            isRequired="N" hasValue="Y" priority="50" minValue="1" maxValue="8192" defaultValue="32"
+            parameterCode="AIHpcBatchSize" parameterName="AI/HPC Batch Size"
+            description="Training or inference batch size"/>
+
+    <moqui.math.ParameterDef parameterDefId="AIHpcTensorParallelSizeDef"
+            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
+            isRequired="N" hasValue="Y" priority="60" minValue="1" maxValue="1024" defaultValue="2"
+            parameterCode="AIHpcTensorParallelSize" parameterName="AI/HPC Tensor Parallel Size"
+            description="Tensor-parallel degree for distributed model execution"/>
+
+    <moqui.math.ParameterDef parameterDefId="AIHpcEmbeddingDimensionsDef"
+            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
+            isRequired="N" hasValue="Y" priority="70" minValue="1" maxValue="32768" defaultValue="1536"
+            parameterCode="AIHpcEmbeddingDimensions" parameterName="AI/HPC Embedding Dimensions"
+            description="Embedding vector dimensionality for vector search and RAG pipelines"/>
+
+    <moqui.math.ParameterDef parameterDefId="AIHpcSimilarityMetricDef"
+            parameterTypeEnumId="PtTextShort" purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
+            isRequired="N" hasValue="Y" priority="80"
+            parameterCode="AIHpcSimilarityMetric" parameterName="AI/HPC Similarity Metric"
+            description="Vector similarity metric, for example cosine, dot_product, or l2"/>
+
+    <moqui.math.ParameterDef parameterDefId="AIHpcHnswMDef"
+            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
+            isRequired="N" hasValue="Y" priority="90" minValue="1" maxValue="1024" defaultValue="32"
+            parameterCode="AIHpcHnswM" parameterName="AI/HPC HNSW M"
+            description="HNSW graph out-degree parameter for vector indexing"/>
+
+    <moqui.math.ParameterDef parameterDefId="AIHpcEfSearchDef"
+            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
+            isRequired="N" hasValue="Y" priority="100" minValue="1" maxValue="4096" defaultValue="128"
+            parameterCode="AIHpcEfSearch" parameterName="AI/HPC HNSW EF Search"
+            description="HNSW ef_search parameter for query-time vector search"/>
+
+    <moqui.math.ParameterDef parameterDefId="AIHpcMaxLatencyMsDef"
+            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
+            isRequired="N" hasValue="Y" priority="110" minValue="1" maxValue="60000" defaultValue="250"
+            parameterCode="AIHpcMaxLatencyMs" parameterName="AI/HPC Max Latency ms"
+            description="Maximum target latency in milliseconds for inference serving"/>
+
+    <!-- ========================================================= -->
+    <!-- AI/HPC Devices                                            -->
+    <!-- ========================================================= -->
+
+    <moqui.device.Device deviceId="AIHPCCluster01" deviceTypeEnumId="DgtGpuCluster"
+            purposeEnumId="DepAITraining" statusTypeId="DeviceGroupBasicStatus"
+            statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsStandstill"
+            description="Example AI/HPC GPU cluster root device for training, inference, vector search and RAG tests"/>
+    <moqui.device.DeviceGroup deviceId="AIHPCCluster01" groupName="AI/HPC GPU Cluster 01"/>
+
+    <moqui.device.Device deviceId="AIHPCGpuServer01" parentDeviceId="AIHPCCluster01"
+            deviceTypeEnumId="DtTrainingServer" purposeEnumId="DepAITraining"
+            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
+            description="Example GPU training server"/>
+    <moqui.device.PhysicalDevice deviceId="AIHPCGpuServer01" deviceName="AI/HPC GPU Server 01"
+            vendorName="Example Vendor" modelName="8xH100 Training Server" version="1"
+            hardwareVersion="rev-a" firmwareVersion="1.0.0" operatingSystem="Ubuntu 24.04"
+            softwareApplication="vLLM/NCCL/CUDA stack" serialNumber="AIHPC-SRV-0001"
+            uuid="00000000-0000-4000-8000-aihpcsrv0001" hash="sha256:aihpc-gpu-server-01"
+            location="lab/rack-a/u01" cycleTime="1000" isMulticore="Y"/>
+
+    <moqui.device.Device deviceId="AIHPCGpuServer01Gpu0" parentDeviceId="AIHPCGpuServer01"
+            deviceTypeEnumId="DtGPU" purposeEnumId="DepGpuAcceleration"
+            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
+            description="Example GPU accelerator 0"/>
+    <moqui.device.PhysicalDevice deviceId="AIHPCGpuServer01Gpu0" deviceName="AI/HPC GPU 0"
+            vendorName="NVIDIA" modelName="H100 SXM" hardwareVersion="h100" firmwareVersion="535.xx"
+            serialNumber="GPU-H100-0000" uuid="GPU-00000000-0000-0000-0000-000000000000"
+            hash="sha256:aihpc-gpu-0" location="lab/rack-a/u01/gpu0" cycleTime="1000"/>
+
+    <moqui.device.Device deviceId="AIHPCGpuServer01Gpu1" parentDeviceId="AIHPCGpuServer01"
+            deviceTypeEnumId="DtGPU" purposeEnumId="DepGpuAcceleration"
+            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
+            description="Example GPU accelerator 1"/>
+    <moqui.device.PhysicalDevice deviceId="AIHPCGpuServer01Gpu1" deviceName="AI/HPC GPU 1"
+            vendorName="NVIDIA" modelName="H100 SXM" hardwareVersion="h100" firmwareVersion="535.xx"
+            serialNumber="GPU-H100-0001" uuid="GPU-00000000-0000-0000-0000-000000000001"
+            hash="sha256:aihpc-gpu-1" location="lab/rack-a/u01/gpu1" cycleTime="1000"/>
+
+    <moqui.device.Device deviceId="AIHPCVectorIndex01" parentDeviceId="AIHPCCluster01"
+            deviceTypeEnumId="DtVectorDatabaseNode" purposeEnumId="DepVectorSearch"
+            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
+            description="Example OpenSearch/Elastic vector index runtime"/>
+
+    <moqui.device.Device deviceId="AIHPCEmbeddingRuntime01" parentDeviceId="AIHPCCluster01"
+            deviceTypeEnumId="DtEmbeddingRuntime" purposeEnumId="DepEmbeddingGeneration"
+            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
+            description="Example embedding runtime"/>
+
+    <moqui.device.Device deviceId="AIHPCModelServing01" parentDeviceId="AIHPCCluster01"
+            deviceTypeEnumId="DtModelServingRuntime" purposeEnumId="DepModelServing"
+            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
+            description="Example model serving runtime"/>
+
+    <moqui.device.Device deviceId="AIHPCRagRuntime01" parentDeviceId="AIHPCCluster01"
+            deviceTypeEnumId="DtRagRuntime" purposeEnumId="DepRagRetrieval"
+            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
+            description="Example RAG orchestration runtime"/>
+
+    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCGpuServer01"
+            purposeEnumId="DgmpTrainingWorker" sequenceNum="10" description="Training server member"/>
+    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCGpuServer01Gpu0"
+            purposeEnumId="DgmpGpuWorker" sequenceNum="20" description="GPU accelerator member 0"/>
+    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCGpuServer01Gpu1"
+            purposeEnumId="DgmpGpuWorker" sequenceNum="30" description="GPU accelerator member 1"/>
+    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCVectorIndex01"
+            purposeEnumId="DgmpVectorIndexNode" sequenceNum="40" description="Vector index data-plane member"/>
+    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCEmbeddingRuntime01"
+            purposeEnumId="DgmpEmbeddingProvider" sequenceNum="50" description="Embedding provider member"/>
+    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCModelServing01"
+            purposeEnumId="DgmpInferenceReplica" sequenceNum="60" description="Inference replica member"/>
+    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCRagRuntime01"
+            purposeEnumId="DgmpRagRuntime" sequenceNum="70" description="RAG runtime member"/>
+
+    <!-- ========================================================= -->
+    <!-- AI/HPC Device Configs                                     -->
+    <!-- ========================================================= -->
+
+    <moqui.device.DeviceConfig deviceConfigId="AIHPCClusterNCCLConfig"
+            deviceTypeEnumId="DgtGpuCluster" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
+            controlMethodEnumId="DcmNone" configName="AI/HPC Cluster NCCL Runtime Config"
+            description="Cluster-level distributed runtime profile" fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceConfig deviceConfigId="AIHPCGpuServerTrainingBaseline"
+            deviceTypeEnumId="DtTrainingServer" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
+            controlMethodEnumId="DcmNone" configName="AI/HPC GPU Server Training Baseline"
+            description="Server-level training runtime baseline" fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceConfig deviceConfigId="AIHPCH100Bf16TrainingConfig"
+            deviceTypeEnumId="DtGPU" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
+            controlMethodEnumId="DcmNone" configName="H100 BF16 Training Profile"
+            description="Per-GPU training profile for H100 accelerators" fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceConfig deviceConfigId="AIHPCVectorIndexHnswConfig"
+            deviceTypeEnumId="DtVectorDatabaseNode" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
+            controlMethodEnumId="DcmNone" configName="Vector Index HNSW Profile"
+            description="Vector database HNSW configuration" fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceConfig deviceConfigId="AIHPCEmbeddingRuntimeConfig"
+            deviceTypeEnumId="DtEmbeddingRuntime" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
+            controlMethodEnumId="DcmNone" configName="Embedding Runtime Profile"
+            description="Embedding generation runtime configuration" fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceConfig deviceConfigId="AIHPCModelServingLowLatencyConfig"
+            deviceTypeEnumId="DtModelServingRuntime" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
+            controlMethodEnumId="DcmNone" configName="Low Latency Model Serving Profile"
+            description="Low-latency LLM serving profile" fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceConfig deviceConfigId="AIHPCRagRuntimeConfig"
+            deviceTypeEnumId="DtRagRuntime" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
+            controlMethodEnumId="DcmNone" configName="RAG Runtime Profile"
+            description="RAG orchestration profile" fromDate="2026-06-28 00:00:00"/>
+
+    <!-- DeviceConfig parameter values: deviceId intentionally null. -->
+    <moqui.math.Parameter parameterId="AIHPCClusterTensorParallelCfgParam"
+            deviceConfigId="AIHPCClusterNCCLConfig" parameterDefId="AIHpcTensorParallelSizeDef"
+            parameterAlias="TENSOR_PARALLEL_SIZE" sequenceNum="10" numericValue="2"/>
+    <moqui.math.Parameter parameterId="AIHPCClusterPrecisionCfgParam"
+            deviceConfigId="AIHPCClusterNCCLConfig" parameterDefId="AIHpcPrecisionDef"
+            parameterAlias="CLUSTER_PRECISION" sequenceNum="20" symbolicValue="bf16"/>
+
+    <moqui.math.Parameter parameterId="AIHPCServerModelNameCfgParam"
+            deviceConfigId="AIHPCGpuServerTrainingBaseline" parameterDefId="AIHpcModelNameDef"
+            parameterAlias="MODEL_NAME" sequenceNum="10" symbolicValue="example-transformer-small"/>
+    <moqui.math.Parameter parameterId="AIHPCServerBatchSizeCfgParam"
+            deviceConfigId="AIHPCGpuServerTrainingBaseline" parameterDefId="AIHpcBatchSizeDef"
+            parameterAlias="TRAIN_BATCH_SIZE" sequenceNum="20" numericValue="64"/>
+
+    <moqui.math.Parameter parameterId="AIHPCGpuPrecisionCfgParam"
+            deviceConfigId="AIHPCH100Bf16TrainingConfig" parameterDefId="AIHpcPrecisionDef"
+            parameterAlias="GPU_PRECISION" sequenceNum="10" symbolicValue="bf16"/>
+    <moqui.math.Parameter parameterId="AIHPCGpuPowerCfgParam"
+            deviceConfigId="AIHPCH100Bf16TrainingConfig" parameterDefId="AIHpcMaxPowerWDef"
+            parameterAlias="GPU_MAX_POWER_W" sequenceNum="20" numericValue="650"/>
+    <moqui.math.Parameter parameterId="AIHPCGpuMigCfgParam"
+            deviceConfigId="AIHPCH100Bf16TrainingConfig" parameterDefId="AIHpcMigModeDef"
+            parameterAlias="GPU_MIG_MODE" sequenceNum="30" symbolicValue="disabled"/>
+
+    <moqui.math.Parameter parameterId="AIHPCVectorDimsCfgParam"
+            deviceConfigId="AIHPCVectorIndexHnswConfig" parameterDefId="AIHpcEmbeddingDimensionsDef"
+            parameterAlias="VECTOR_DIMENSIONS" sequenceNum="10" numericValue="1536"/>
+    <moqui.math.Parameter parameterId="AIHPCVectorMetricCfgParam"
+            deviceConfigId="AIHPCVectorIndexHnswConfig" parameterDefId="AIHpcSimilarityMetricDef"
+            parameterAlias="SIMILARITY_METRIC" sequenceNum="20" symbolicValue="cosine"/>
+    <moqui.math.Parameter parameterId="AIHPCVectorHnswMCfgParam"
+            deviceConfigId="AIHPCVectorIndexHnswConfig" parameterDefId="AIHpcHnswMDef"
+            parameterAlias="HNSW_M" sequenceNum="30" numericValue="32"/>
+    <moqui.math.Parameter parameterId="AIHPCVectorEfSearchCfgParam"
+            deviceConfigId="AIHPCVectorIndexHnswConfig" parameterDefId="AIHpcEfSearchDef"
+            parameterAlias="HNSW_EF_SEARCH" sequenceNum="40" numericValue="128"/>
+
+    <moqui.math.Parameter parameterId="AIHPCEmbeddingModelCfgParam"
+            deviceConfigId="AIHPCEmbeddingRuntimeConfig" parameterDefId="AIHpcModelNameDef"
+            parameterAlias="EMBEDDING_MODEL" sequenceNum="10" symbolicValue="example-embedding-model"/>
+    <moqui.math.Parameter parameterId="AIHPCServingLatencyCfgParam"
+            deviceConfigId="AIHPCModelServingLowLatencyConfig" parameterDefId="AIHpcMaxLatencyMsDef"
+            parameterAlias="MAX_LATENCY_MS" sequenceNum="10" numericValue="250"/>
+    <moqui.math.Parameter parameterId="AIHPCRagModelCfgParam"
+            deviceConfigId="AIHPCRagRuntimeConfig" parameterDefId="AIHpcModelNameDef"
+            parameterAlias="RAG_MODEL" sequenceNum="10" symbolicValue="example-rag-pipeline"/>
+
+    <!-- ========================================================= -->
+    <!-- Live/materialized Device Parameters                       -->
+    <!-- ========================================================= -->
+
+    <moqui.math.Parameter parameterId="AIHPCGpu0PowerParam" deviceId="AIHPCGpuServer01Gpu0"
+            parameterDefId="AIHpcMaxPowerWDef" parameterAlias="GPU0_MAX_POWER_W" sequenceNum="10" numericValue="650"/>
+    <moqui.math.Parameter parameterId="AIHPCGpu1PowerParam" deviceId="AIHPCGpuServer01Gpu1"
+            parameterDefId="AIHpcMaxPowerWDef" parameterAlias="GPU1_MAX_POWER_W" sequenceNum="10" numericValue="650"/>
+    <moqui.math.Parameter parameterId="AIHPCVectorDimsParam" deviceId="AIHPCVectorIndex01"
+            parameterDefId="AIHpcEmbeddingDimensionsDef" parameterAlias="VECTOR_DIMENSIONS" sequenceNum="10" numericValue="1536"/>
+    <moqui.math.Parameter parameterId="AIHPCServingLatencyParam" deviceId="AIHPCModelServing01"
+            parameterDefId="AIHpcMaxLatencyMsDef" parameterAlias="MAX_LATENCY_MS" sequenceNum="10" numericValue="250"/>
+
+    <!-- ========================================================= -->
+    <!-- AI/HPC Rule Set and Rules                                 -->
+    <!-- ========================================================= -->
+
+    <moqui.device.DeviceRuleSet deviceRuleSetId="AIHPCClusterProductionCycle01"
+            purposeEnumId="DrspProcess" deviceId="AIHPCCluster01" sequenceNum="10"
+            ruleSetName="AI/HPC Cluster Production Cycle 01"
+            description="Example multi-device AI/HPC production cycle scoped to AIHPCCluster01"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule010"
+            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCClusterNCCLConfig"
+            deviceId="AIHPCCluster01" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply cluster distributed runtime profile"
+            priority="10" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
+    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule020"
+            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCGpuServerTrainingBaseline"
+            deviceId="AIHPCGpuServer01" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply GPU server training baseline"
+            priority="20" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
+    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule030Gpu0"
+            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCH100Bf16TrainingConfig"
+            deviceId="AIHPCGpuServer01Gpu0" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply H100 BF16 training profile to GPU 0"
+            priority="30" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
+    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule030Gpu1"
+            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCH100Bf16TrainingConfig"
+            deviceId="AIHPCGpuServer01Gpu1" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply H100 BF16 training profile to GPU 1"
+            priority="30" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
+    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule040Vector"
+            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCVectorIndexHnswConfig"
+            deviceId="AIHPCVectorIndex01" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply vector index HNSW profile"
+            priority="40" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
+    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule050Embedding"
+            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCEmbeddingRuntimeConfig"
+            deviceId="AIHPCEmbeddingRuntime01" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply embedding runtime profile"
+            priority="50" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
+    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule060Serving"
+            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCModelServingLowLatencyConfig"
+            deviceId="AIHPCModelServing01" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply low-latency model serving profile"
+            priority="60" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
+    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule070Rag"
+            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCRagRuntimeConfig"
+            deviceId="AIHPCRagRuntime01" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply RAG runtime profile"
+            priority="70" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
+
+    <!-- ========================================================= -->
+    <!-- Optional MathModel + DeviceMathModel binding              -->
+    <!-- ========================================================= -->
+
+    <moqui.math.MathModelDef mathModelDefId="AIHpcSmokeInferenceModelDef"
+            modelTypeEnumId="MmtDlFeedforward" usageContextEnumId="MmucInference"
+            domainEnumId="MmdEngineering" serviceName="moqui.device.AIHPCTestServices.run#SmokeInference"
+            modelName="AI/HPC Smoke Inference Model" versionNumber="1"
+            releaseStatusId="MathModelProduction"
+            description="Small synthetic model definition used only to exercise DeviceMathModel binding on AI/HPC devices"/>
+
+    <moqui.math.MathModel mathModelId="AIHpcSmokeInferenceModelV1"
+            mathModelDefId="AIHpcSmokeInferenceModelDef" sourceEnumId="MmsSimulated"
+            modelAlias="aihpc-smoke-inference-v1"
+            description="Synthetic production model instance for AI/HPC device binding tests"
+            statusId="MathModelProduction" statusFlowId="MathModelStatusFlow"/>
+
+    <moqui.device.DeviceMathModel deviceId="AIHPCModelServing01"
+            mathModelId="AIHpcSmokeInferenceModelV1" bindingPurposeEnumId="MmbpClosedLoopControl"
+            sequenceNum="10" description="Model serving runtime executes the smoke inference model"
+            fromDate="2026-06-28 00:00:00"/>
+    <moqui.device.DeviceMathModel deviceId="AIHPCCluster01"
+            mathModelId="AIHpcSmokeInferenceModelV1" bindingPurposeEnumId="MmbpMonitoring"
+            sequenceNum="20" description="Cluster-level binding for monitoring the synthetic model deployment"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <!-- ========================================================= -->
+    <!-- Dashboard and mock telemetry request                      -->
+    <!-- ========================================================= -->
+
+    <moqui.device.DeviceDashboard dashboardId="ai-hpc-cluster-summary" deviceId="AIHPCCluster01"
+            dashboardPath="/d/ai-hpc-cluster/ai-hpc-cluster?orgId=1&amp;kiosk&amp;var-device_id=AIHPCCluster01"
+            purposeEnumId="DdpSummary" sequenceNum="10"/>
+
+    <moqui.device.DeviceConnection connectionName="AIHPCGpuServer01MockConnection"
+            deviceId="AIHPCGpuServer01" connectionTypeEnumId="DctDirectConnection" purposeEnumId="DcpDiagnostics"
+            description="Mock connection for AI/HPC GPU server telemetry" driverEnumId="DcdMockDriver"
+            transportEnumId="DctrMoquiMock" transportConfig="mock://aihpc/gpu-server-01"/>
+
+    <moqui.device.DeviceRequest requestName="AIHPCGpuTelemetryRead"
+            deviceId="AIHPCGpuServer01" requestTypeEnumId="DrtRead" purposeEnumId="DrpMonitoring"
+            requestGroup="AIHPC_TELEMETRY" priority="10" sequenceNum="10"
+            description="Mock read request for GPU power and serving latency parameters"
+            routerEnumId="DrrDirect" connectionName="AIHPCGpuServer01MockConnection" timeout="1000"/>
+
+    <moqui.device.DeviceRequestItem requestName="AIHPCGpuTelemetryRead" requestItemName="GPU0_MAX_POWER_W"
+            parameterId="AIHPCGpu0PowerParam" sequenceNum="10" query="gpu/0/powerLimitW"
+            itemTypeEnumId="DritInt" minItemValue="50" maxItemValue="1000" defaultItemValue="650"
+            itemUomId="WT" allowDuplicate="N" tolerance="1.0" scalingFactor="1.0" offsetValue="0.0"
+            significantDigits="0"/>
+    <moqui.device.DeviceRequestItem requestName="AIHPCGpuTelemetryRead" requestItemName="GPU1_MAX_POWER_W"
+            parameterId="AIHPCGpu1PowerParam" sequenceNum="20" query="gpu/1/powerLimitW"
+            itemTypeEnumId="DritInt" minItemValue="50" maxItemValue="1000" defaultItemValue="650"
+            itemUomId="WT" allowDuplicate="N" tolerance="1.0" scalingFactor="1.0" offsetValue="0.0"
+            significantDigits="0"/>
+
+</entity-facade-xml>

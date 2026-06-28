@@ -118,9 +118,7 @@ The key entities are:
 | `PhysicalDevice` | Hardware identity attached to a `Device` | Real drive, PLC, instrument, gateway, serial-numbered machine |
 | `DeviceGroup` + `DeviceGroupMember` | System-engineering grouping of devices | HVAC subsystem, compressor rack, cell, line, plant area |
 
-This model intentionally has no separate configuration-set layer. Multi-step and
-multi-device composition is modeled only through `DeviceRuleSet` and
-`DeviceRule.priority`.
+Multi-step and multi-device composition is modeled through `DeviceRuleSet` and `DeviceRule.priority`.
 
 ### `DeviceConfig` is the atomic recipe; `Device + Parameter` is the live state
 
