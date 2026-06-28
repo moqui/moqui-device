@@ -397,6 +397,26 @@ Grant of Patent License.
             description="Factory defaults for the minimal test gateway"
             fromDate="2026-06-28 00:00:00"/>
 
+    <moqui.device.DeviceConfig
+            deviceConfigId="TestPlcFactoryConfig1"
+            deviceTypeEnumId="DtPLC"
+            configTypeEnumId="DctApplyConfig"
+            purposeEnumId="DcpRunConfig"
+            controlMethodEnumId="DcmNone"
+            configName="Test PLC Factory Defaults"
+            description="Factory defaults for the minimal test PLC"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceConfig
+            deviceConfigId="TestPlcProductionConfig1"
+            deviceTypeEnumId="DtPLC"
+            configTypeEnumId="DctApplyConfig"
+            purposeEnumId="DcpRunConfig"
+            controlMethodEnumId="DcmNone"
+            configName="Test PLC Production Profile"
+            description="Production profile for the minimal test PLC"
+            fromDate="2026-06-28 00:00:00"/>
+
     <moqui.math.Parameter
             parameterId="TestCellHeartbeatCfgParam"
             deviceConfigId="TestCellFactoryConfig1"
@@ -420,6 +440,38 @@ Grant of Patent License.
             parameterAlias="GW_POLL_MS"
             sequenceNum="30"
             numericValue="250"/>
+
+    <moqui.math.Parameter
+            parameterId="TestPlcCycleTimeCfgParam"
+            deviceConfigId="TestPlcFactoryConfig1"
+            parameterDefId="TestPlcCycleTimeDef"
+            parameterAlias="PLC_CYCLE"
+            sequenceNum="10"
+            numericValue="20"/>
+
+    <moqui.math.Parameter
+            parameterId="TestPlcProgramCfgParam"
+            deviceConfigId="TestPlcFactoryConfig1"
+            parameterDefId="TestPlcProgramDef"
+            parameterAlias="PLC_PROGRAM"
+            sequenceNum="20"
+            symbolicValue="MIXING_PROFILE_A"/>
+
+    <moqui.math.Parameter
+            parameterId="TestPlcCycleTimeProdCfgParam"
+            deviceConfigId="TestPlcProductionConfig1"
+            parameterDefId="TestPlcCycleTimeDef"
+            parameterAlias="PLC_CYCLE"
+            sequenceNum="10"
+            numericValue="24"/>
+
+    <moqui.math.Parameter
+            parameterId="TestPlcProgramProdCfgParam"
+            deviceConfigId="TestPlcProductionConfig1"
+            parameterDefId="TestPlcProgramDef"
+            parameterAlias="PLC_PROGRAM"
+            sequenceNum="20"
+            symbolicValue="MIXING_PROFILE_B"/>
 
     <!-- ========================================================= -->
     <!-- Test Rule Set + Rules (factory defaults)                  -->
@@ -459,6 +511,46 @@ Grant of Patent License.
             isEnabled="Y"
             runDevice="N"
             fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRuleSet
+            deviceRuleSetId="TestPlcRunRuleSet1"
+            purposeEnumId="DrspProcess"
+            deviceId="test-plc-1"
+            sequenceNum="10"
+            ruleSetName="Test PLC Run Cycle"
+            description="Minimal PLC rule set used to exercise apply#DeviceConfig from the UI"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRule
+            deviceRuleId="TestPlcRunRule010"
+            deviceRuleSetId="TestPlcRunRuleSet1"
+            deviceConfigId="TestPlcFactoryConfig1"
+            deviceId="test-plc-1"
+            ruleTypeEnumId="DrtApplyConfig"
+            ruleName="Apply PLC factory defaults"
+            description="Apply the factory PLC profile to the test PLC"
+            priority="10"
+            isEnabled="Y"
+            runDevice="N"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRule
+            deviceRuleId="TestPlcRunRule020"
+            deviceRuleSetId="TestPlcRunRuleSet1"
+            deviceConfigId="TestPlcProductionConfig1"
+            deviceId="test-plc-1"
+            ruleTypeEnumId="DrtApplyConfig"
+            ruleName="Apply PLC production profile"
+            description="Apply the production PLC profile to the test PLC"
+            priority="20"
+            isEnabled="Y"
+            runDevice="N"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.Device
+            deviceId="test-plc-1"
+            deviceRuleSetId="TestPlcRunRuleSet1"
+            deviceRuleId="TestPlcRunRule010"/>
 
     <!-- ========================================================= -->
     <!-- Test Telemetry Logs                                       -->

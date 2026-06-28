@@ -47,6 +47,188 @@ along with this software (see the LICENSE.md file). If not, see
             ]]></script>
         </actions>
     </service>
+    <service verb="apply" noun="DeviceConfig">
+        <description>
+            Apply a DeviceConfig to a Device.
+
+            This service materializes the declared configuration values of a DeviceConfig onto an existing Device.
+            It copies compatible DeviceConfig-level fields to the target Device and updates only existing
+            device-bound Parameter rows that match source configuration parameters by parameterDefId and
+            parameterAlias.
+
+            The service does not create ParameterDef rows, does not create missing Parameter(deviceId) rows,
+            and does not write to the real physical device. It updates only Moqui-side Device and Parameter state.
+        </description>
+        <in-parameters>
+            <parameter name="deviceConfigId" required="true"/>
+            <parameter name="deviceId" required="true"/>
+            <parameter name="validateDeviceType" type="Boolean" default="true"/>
+            <parameter name="copyDeviceFields" type="Boolean" default="true"/>
+            <parameter name="copySequenceNum" type="Boolean" default="false"/>
+            <parameter name="dryRun" type="Boolean" default="false"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="sourceParameterCount" type="Integer"/>
+            <parameter name="targetParameterCount" type="Integer"/>
+            <parameter name="commonParameterCount" type="Integer"/>
+            <parameter name="updatedParameterCount" type="Integer"/>
+            <parameter name="skippedParameterKeySet" type="Set"/>
+            <parameter name="updatedParameterIdList" type="List"/>
+            <parameter name="updatedDeviceFieldList" type="List"/>
+        </out-parameters>
+        <actions>
+            <script><![CDATA[
+                import org.moqui.entity.EntityList
+                import org.moqui.entity.EntityValue
+
+                EntityValue deviceConfig = ec.entity.find("moqui.device.DeviceConfig")
+                        .condition("deviceConfigId", deviceConfigId)
+                        .useCache(true)
+                        .one()
+                if (!deviceConfig) {
+                    ec.message.addError("DeviceConfig not found for deviceConfigId [${deviceConfigId}].")
+                    return
+                }
+
+                EntityValue device = ec.entity.find("moqui.device.Device")
+                        .condition("deviceId", deviceId)
+                        .useCache(false)
+                        .one()
+                if (!device) {
+                    ec.message.addError("Device not found for deviceId [${deviceId}].")
+                    return
+                }
+
+                if (validateDeviceType && deviceConfig.deviceTypeEnumId) {
+                    Map enumResult = ec.service.sync().name("org.moqui.impl.BasicServices.find#EnumerationByParent")
+                            .parameters([
+                                    parentEnumId : deviceConfig.deviceTypeEnumId,
+                                    includeParent: true,
+                                    includeNested: true,
+                                    orderByField : "description"
+                            ]).call()
+
+                    Set enumIdSet = (Set) enumResult.enumIdSet
+                    if (!enumIdSet?.contains(device.deviceTypeEnumId)) {
+                        ec.message.addError("Device [${deviceId}] with type [${device.deviceTypeEnumId}] is not compatible with DeviceConfig [${deviceConfigId}] type [${deviceConfig.deviceTypeEnumId}].")
+                        return
+                    }
+                }
+
+                sourceParameterCount = 0
+                targetParameterCount = 0
+                commonParameterCount = 0
+                updatedParameterCount = 0
+                skippedParameterKeySet = new TreeSet()
+                updatedParameterIdList = []
+                updatedDeviceFieldList = []
+
+                if (copyDeviceFields) {
+                    boolean deviceChanged = false
+
+                    if (deviceConfig.controlMethodEnumId && device.controlMethodEnumId != deviceConfig.controlMethodEnumId) {
+                        updatedDeviceFieldList.add("controlMethodEnumId")
+                        if (!dryRun) {
+                            device.controlMethodEnumId = deviceConfig.controlMethodEnumId
+                            deviceChanged = true
+                        }
+                    }
+
+                    if (deviceConfig.approximatedFunctionId && device.approximatedFunctionId != deviceConfig.approximatedFunctionId) {
+                        updatedDeviceFieldList.add("approximatedFunctionId")
+                        if (!dryRun) {
+                            device.approximatedFunctionId = deviceConfig.approximatedFunctionId
+                            deviceChanged = true
+                        }
+                    }
+
+                    if (deviceChanged && !dryRun) device.update()
+                }
+
+                EntityList sourceParameterList = ec.entity.find("moqui.math.Parameter")
+                        .condition("deviceConfigId", deviceConfigId)
+                        .useCache(true)
+                        .list()
+
+                EntityList targetParameterList = ec.entity.find("moqui.math.Parameter")
+                        .condition("deviceId", deviceId)
+                        .useCache(false)
+                        .list()
+
+                sourceParameterCount = sourceParameterList.size()
+                targetParameterCount = targetParameterList.size()
+
+                Closure<String> makeParameterKey = { EntityValue parameter ->
+                    String parameterDefId = parameter.parameterDefId ? parameter.parameterDefId.toString() : ""
+                    String parameterAlias = parameter.parameterAlias ? parameter.parameterAlias.toString() : ""
+                    return parameterDefId + "|" + parameterAlias
+                }
+
+                Map<String, EntityValue> sourceByKey = [:]
+                Set<String> duplicateSourceKeySet = new TreeSet()
+                for (EntityValue sourceParam : sourceParameterList) {
+                    if (!sourceParam.parameterDefId) continue
+                    String key = makeParameterKey(sourceParam)
+                    if (sourceByKey.containsKey(key)) duplicateSourceKeySet.add(key)
+                    else sourceByKey[key] = sourceParam
+                }
+                if (!duplicateSourceKeySet.isEmpty()) {
+                    ec.message.addError("DeviceConfig [${deviceConfigId}] has duplicate Parameters for parameterDefId|parameterAlias key(s): ${duplicateSourceKeySet}. Cannot apply DeviceConfig safely.")
+                    return
+                }
+
+                Map<String, EntityValue> targetByKey = [:]
+                Set<String> duplicateTargetKeySet = new TreeSet()
+                for (EntityValue targetParam : targetParameterList) {
+                    if (!targetParam.parameterDefId) continue
+                    String key = makeParameterKey(targetParam)
+                    if (targetByKey.containsKey(key)) duplicateTargetKeySet.add(key)
+                    else targetByKey[key] = targetParam
+                }
+                if (!duplicateTargetKeySet.isEmpty()) {
+                    ec.message.addError("Device [${deviceId}] has duplicate Parameters for parameterDefId|parameterAlias key(s): ${duplicateTargetKeySet}. Cannot apply DeviceConfig safely.")
+                    return
+                }
+
+                for (Map.Entry<String, EntityValue> sourceEntry : sourceByKey.entrySet()) {
+                    String key = sourceEntry.key
+                    EntityValue sourceParam = sourceEntry.value
+                    EntityValue targetParam = targetByKey[key]
+
+                    if (!targetParam) {
+                        skippedParameterKeySet.add(key)
+                        continue
+                    }
+
+                    commonParameterCount++
+                    boolean parameterChanged = false
+
+                    if (targetParam.numericValue != sourceParam.numericValue) {
+                        parameterChanged = true
+                        if (!dryRun) targetParam.numericValue = sourceParam.numericValue
+                    }
+                    if (targetParam.symbolicValue != sourceParam.symbolicValue) {
+                        parameterChanged = true
+                        if (!dryRun) targetParam.symbolicValue = sourceParam.symbolicValue
+                    }
+                    if (targetParam.parameterEnumId != sourceParam.parameterEnumId) {
+                        parameterChanged = true
+                        if (!dryRun) targetParam.parameterEnumId = sourceParam.parameterEnumId
+                    }
+                    if (copySequenceNum && targetParam.sequenceNum != sourceParam.sequenceNum) {
+                        parameterChanged = true
+                        if (!dryRun) targetParam.sequenceNum = sourceParam.sequenceNum
+                    }
+
+                    if (parameterChanged) {
+                        updatedParameterCount++
+                        updatedParameterIdList.add(targetParam.parameterId)
+                        if (!dryRun) targetParam.update()
+                    }
+                }
+            ]]></script>
+        </actions>
+    </service>
 
     <!-- ========== Device Request Services ========== -->
 
