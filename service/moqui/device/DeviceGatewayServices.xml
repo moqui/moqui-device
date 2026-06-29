@@ -228,6 +228,21 @@ along with this software (see the LICENSE.md file). If not, see
             RestClient.RestResponse resp = rc.call()
             resp.checkError()
 
+            def responseMap = [:]
+            try { responseMap = (Map) resp.jsonObject() } catch (Throwable ignored) { }
+
+            ec.service.sync().name("moqui.device.DeviceServices.receive#GatewayRequestCallback")
+                .parameters([
+                    eventType: "exportCompleted",
+                    requestName: requestName,
+                    status: "completed",
+                    protocol: "Gateway Export",
+                    routeId: "run-device-config-export",
+                    rowCount: (responseMap?.files instanceof List ? responseMap.files.collect { it.rowCount ?: 0 }.sum() : null),
+                    message: "Device configuration export completed for rule set ${deviceRuleSetId}."
+                ])
+                .disableAuthz().call()
+
             ec.logger.info("DeviceConfig export completed for ruleSet ${deviceRuleSetId}: ${resp.text()}")
         ]]></script></actions>
     </service>

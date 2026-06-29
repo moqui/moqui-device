@@ -40,11 +40,72 @@ along with this software (see the LICENSE.md file). If not, see
 
                 NotificationMessage nm = ec.makeNotificationMessage().topic(notificationTopic).title(notificationTitle?:"")
                 nm.message(msgMap)
-                String currentUserId = ec.user.userId
-                if (currentUserId) nm.userId(currentUserId)
                 nm.type(notificationType)
-                nm.send()
+                nm.showAlert(true).persistOnSend(true).send()
             ]]></script>
+        </actions>
+    </service>
+
+    <service verb="receive" noun="GatewayRequestCallback" authenticate="false" allow-remote="true" transaction="ignore">
+        <description>
+            Receives gateway-side success or failure callbacks for device request execution
+            and translates them into user-facing Moqui notifications.
+        </description>
+        <in-parameters>
+            <parameter name="eventType" required="true"/>
+            <parameter name="requestName" required="true"/>
+            <parameter name="deviceId"/>
+            <parameter name="status"/>
+            <parameter name="protocol"/>
+            <parameter name="routeId"/>
+            <parameter name="rowCount" type="Integer"/>
+            <parameter name="message"/>
+            <parameter name="publishUriList" type="List"/>
+        </in-parameters>
+        <actions>
+            <entity-find-one entity-name="moqui.device.DeviceRequest" value-field="request">
+                <field-map field-name="requestName"/>
+            </entity-find-one>
+            <if condition="request == null">
+                <return error="true" message="DeviceRequest not found for requestName ${requestName}."/>
+            </if>
+
+            <entity-find-one entity-name="moqui.device.DeviceDetail" value-field="device">
+                <field-map field-name="deviceId" from="request.deviceId"/>
+            </entity-find-one>
+            <if condition="device == null">
+                <return error="true" message="Device not found for request ${requestName}."/>
+            </if>
+
+            <set field="notificationTopic" value="DeviceGatewayRequest"/>
+            <set field="notificationType" value="info"/>
+            <set field="notificationTitle" from="'Gateway callback for ' + (device.deviceName ?: device.deviceId)"/>
+            <set field="notificationMessage" from="message ?: ('Gateway event ' + eventType + ' completed for request ' + requestName + '.')"/>
+
+            <if condition="eventType == 'writeCompleted'">
+                <set field="notificationType" value="success"/>
+                <set field="notificationTitle" from="'Sync Parameters completed for ' + (device.deviceName ?: device.deviceId)"/>
+                <set field="notificationMessage"
+                        from="message ?: ('Synchronized ' + (rowCount ?: 0) + ' parameter value(s) to device ' + (device.deviceName ?: device.deviceId) + (protocol ? ' via ' + protocol : '') + '.')"/>
+            </if>
+            <if condition="eventType == 'exportCompleted'">
+                <set field="notificationType" value="success"/>
+                <set field="notificationTitle" from="'Download Process completed for ' + (device.deviceName ?: device.deviceId)"/>
+                <set field="notificationMessage"
+                        from="message ?: ('Device configuration export completed for device ' + (device.deviceName ?: device.deviceId) + '.')"/>
+            </if>
+            <if condition="eventType == 'writeFailed' || status == 'error'">
+                <set field="notificationType" value="danger"/>
+                <set field="notificationTitle" from="'Gateway request failed for ' + (device.deviceName ?: device.deviceId)"/>
+                <set field="notificationMessage"
+                        from="message ?: ('Gateway request ' + requestName + ' failed for device ' + (device.deviceName ?: device.deviceId) + (protocol ? ' via ' + protocol : '') + '.')"/>
+            </if>
+
+            <service-call name="moqui.device.DeviceServices.send#DeviceNotification"
+                    in-map="[deviceId:device.deviceId, notificationTopic:notificationTopic,
+                            notificationType:notificationType, notificationTitle:notificationTitle,
+                            message:notificationMessage]"/>
+            <log level="info" message="Processed gateway request callback ${eventType} for request ${requestName}, device ${device.deviceId}."/>
         </actions>
     </service>
     <service verb="apply" noun="DeviceConfig">
@@ -280,10 +341,6 @@ along with this software (see the LICENSE.md file). If not, see
                 </if>
             </if>
 
-            <entity-find-one entity-name="moqui.security.UserAccount" value-field="userAccount" cache="true">
-                <field-map field-name="userId" from="connection?.userId"/>
-            </entity-find-one>
-  
             <entity-find entity-name="moqui.device.DeviceRequestItem" list="bulkRequestItemList" cache="true">
                 <econdition field-name="requestName" from="requestName"/>
                 <econdition field-name="query" operator="is-null"/>
@@ -310,13 +367,13 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="changedIds" from="changedRows*.pkPrimaryValue"/>
                 <set field="requestItemList" from="requestItemList.findAll { it.parameterId in changedIds }"/>
             </if>
-            <if condition="!bulkRequestItemList &amp;&amp; !requestItemList">
+            <if condition="!bulkRequestItemList &amp;&amp; !requestItemList &amp;&amp; !request.query">
                 <return message="The device request with name ${requestName} has no items to process."/>
             </if>
             <log level="info" message="Running device request with name ${request.requestName}."/>
             <!-- Call the configured service. -->
             <service-call name="${request.runServiceName}" in-map="[device:device, request:request,
-                connection:connection, userAccount:userAccount,
+                connection:connection,
                 bulkRequestItemList:bulkRequestItemList, requestItemList:requestItemList]"
                 out-map="context" disable-authz="true" transaction="ignore"/>
         </actions>
@@ -328,9 +385,91 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="device" required="true" type="EntityValue"/>
             <parameter name="request" required="true" type="EntityValue"/>
             <parameter name="connection" type="EntityValue"/>
-            <parameter name="userAccount" type="EntityValue"/>
             <parameter name="requestItemList" type="List"/>
             <parameter name="bulkRequestItemList" type="List"/>
         </in-parameters>
+    </service>
+
+    <!-- ========== DeviceContent Services ========== -->
+
+    <service verb="get" noun="DeviceContentLocation">
+        <in-parameters>
+            <parameter name="deviceId" required="true"/>
+            <parameter name="contentTypeEnumIdList" type="List" required="true"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="contentLocation"/>
+            <parameter name="deviceContent"/>
+        </out-parameters>
+        <actions>
+            <iterate list="contentTypeEnumIdList" entry="contentTypeEnumId">
+                <entity-find entity-name="moqui.device.DeviceContent" list="deviceContentList">
+                    <econdition field-name="deviceId"/><econdition field-name="contentTypeEnumId"/>
+                    <order-by field-name="-contentDate"/></entity-find>
+                <if condition="deviceContentList">
+                    <set field="deviceContent" from="deviceContentList[0]"/>
+                    <break/>
+                </if>
+            </iterate>
+            <set field="contentLocation" from="deviceContent ? deviceContent.contentLocation : null"/>
+        </actions>
+    </service>
+
+    <service verb="create" noun="DeviceContent">
+        <in-parameters>
+            <auto-parameters entity-name="moqui.device.DeviceContent" include="nonpk">
+                <exclude field-name="contentLocation"/></auto-parameters>
+            <parameter name="deviceId" required="true"/>
+            <parameter name="contentFile" type="org.apache.commons.fileupload2.core.FileItem"/>
+        </in-parameters>
+        <out-parameters><parameter name="deviceContentId"/></out-parameters>
+        <actions>
+            <service-call name="create#moqui.device.DeviceContent" in-map="context" out-map="context"/>
+            <if condition="contentFile != null &amp;&amp; contentFile.size &gt; 0">
+                <service-call name="moqui.device.DeviceServices.save#DeviceContentFile" in-map="context"/></if>
+        </actions>
+    </service>
+    <service verb="update" noun="DeviceContent">
+        <in-parameters>
+            <parameter name="deviceContentId" required="true"/>
+            <auto-parameters entity-name="moqui.device.DeviceContent" include="nonpk">
+                <exclude field-name="contentLocation"/></auto-parameters>
+            <parameter name="contentFile" type="org.apache.commons.fileupload2.core.FileItem"/>
+        </in-parameters>
+        <actions>
+            <if condition="contentFile != null &amp;&amp; contentFile.size &gt; 0">
+                <entity-find-one entity-name="moqui.device.DeviceContent" value-field="deviceContent"/>
+                <service-call name="moqui.device.DeviceServices.save#DeviceContentFile" out-map="context"
+                        in-map="context + [deviceId:deviceContent.deviceId, saveContentLocation:false]"/>
+            </if>
+            <service-call name="update#moqui.device.DeviceContent" in-map="context"/>
+        </actions>
+    </service>
+    <service verb="save" noun="DeviceContentFile">
+        <in-parameters>
+            <parameter name="deviceContentId" required="true"/>
+            <parameter name="deviceId" required="true"/>
+            <parameter name="contentFile" type="org.apache.commons.fileupload2.core.FileItem" required="true"/>
+            <parameter name="saveContentLocation" type="Boolean" default="true"/>
+        </in-parameters>
+        <out-parameters><parameter name="contentLocation"/></out-parameters>
+        <actions>
+            <set field="filename" from="contentFile.getName()"/>
+            <if condition="org.moqui.resource.ResourceReference.isTextFilename(filename)"><then>
+                <set field="contentRoot" from="ec.user.getPreference('mantle.content.root') ?: 'dbresource://mantle/content'"/>
+            </then><else>
+                <set field="contentRoot" from="ec.user.getPreference('mantle.content.large.root') ?: 'dbresource://mantle/content'"/>
+            </else></if>
+            <set field="contentLocation" value="${contentRoot}/device/${deviceId}/content_${deviceContentId}/${filename}"/>
+
+            <set field="docRr" from="ec.resource.getLocationReference(contentLocation)"/>
+            <script>
+                fileStream = contentFile.getInputStream()
+                try { docRr.putStream(fileStream) } finally { fileStream.close() }
+            </script>
+
+            <if condition="saveContentLocation"><service-call name="update#moqui.device.DeviceContent"
+                    in-map="[deviceContentId:deviceContentId, contentLocation:contentLocation]"/></if>
+        </actions>
     </service>
 </services>
