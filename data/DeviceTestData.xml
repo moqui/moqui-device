@@ -1140,6 +1140,38 @@ Grant of Patent License.
             fromDate="2026-06-28 00:00:00"/>
 
     <moqui.device.DeviceRequest
+            requestName="VIRTUAL_PLC_01_TransferContent"
+            deviceId="GW_EDGE_01"
+            requestTypeEnumId="DrtContentTransfer"
+            purposeEnumId="DrpCommissioning"
+            requestGroup="TEST_GATEWAY_TRANSFER"
+            priority="10"
+            sequenceNum="25"
+            description="Dispatch DeviceContent transfer for the minimal test PLC via moqui-device-gateway"
+            runServiceName="moqui.device.DeviceGatewayServices.transfer#DeviceContent"
+            routerEnumId="DrrMoquiDeviceGateway"
+            brokerUri="http://localhost:8081?apiKey=change-me-in-production"
+            query="VIRTUAL_PLC_01_GatewayTransferContent"
+            timeout="30000"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRequest
+            requestName="DG_EDGE_01_TransferContent"
+            deviceId="GW_EDGE_01"
+            requestTypeEnumId="DrtContentTransfer"
+            purposeEnumId="DrpCommissioning"
+            requestGroup="TEST_GATEWAY_TRANSFER"
+            priority="10"
+            sequenceNum="26"
+            description="Dispatch DeviceContent transfer for the minimal test device group via moqui-device-gateway"
+            runServiceName="moqui.device.DeviceGatewayServices.transfer#DeviceContent"
+            routerEnumId="DrrMoquiDeviceGateway"
+            brokerUri="http://localhost:8081?apiKey=change-me-in-production"
+            query="DG_EDGE_01_GatewayTransferContent"
+            timeout="30000"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRequest
             requestName="VIRTUAL_PLC_01_GatewayWrite"
             deviceId="VIRTUAL_PLC_01"
             requestTypeEnumId="DrtWrite"
@@ -1152,6 +1184,34 @@ Grant of Patent License.
             routerEnumId="DrrMQTTBroker"
             brokerUri="paho-mqtt5:?brokerUrl=tcp://localhost:1883&amp;userName=artemis&amp;password=artemis"
             query="iot/parameters/out"
+            timeout="30000"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRequest
+            requestName="VIRTUAL_PLC_01_GatewayTransferContent"
+            deviceId="VIRTUAL_PLC_01"
+            requestTypeEnumId="DrtContentTransfer"
+            purposeEnumId="DrpCommissioning"
+            requestGroup="TEST_GATEWAY_TRANSFER"
+            priority="10"
+            sequenceNum="30"
+            description="Gateway-side file transfer request for the minimal test PLC"
+            routerEnumId="DrrDirect"
+            brokerUri="file:target/transferred-content/plc"
+            timeout="30000"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRequest
+            requestName="DG_EDGE_01_GatewayTransferContent"
+            deviceId="VIRTUAL_PLC_01"
+            requestTypeEnumId="DrtContentTransfer"
+            purposeEnumId="DrpCommissioning"
+            requestGroup="TEST_GATEWAY_TRANSFER"
+            priority="10"
+            sequenceNum="31"
+            description="Gateway-side file transfer request for the minimal test device group routed through its controller"
+            routerEnumId="DrrDirect"
+            brokerUri="file:target/transferred-content/device-group"
             timeout="30000"
             fromDate="2026-06-28 00:00:00"/>
 

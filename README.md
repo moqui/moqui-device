@@ -316,6 +316,73 @@ detail; here it is co-primary.
 | `moqui.device.DeviceGatewayServices.export#Trajectory` | Exports a computed trajectory as a structured JSON payload to the gateway for MQTT publishing (ephemeral bulk data) |
 | `moqui.device.DeviceGatewayServices.transfer#DeviceContent` | Streams a file (G-Code, firmware, recipe) to a device via the gateway SFTP/file endpoint |
 
+### Device content transfer destination
+
+`moqui.device.DeviceGatewayServices.transfer#DeviceContent` reads the source
+file from `DeviceContent.contentLocation`, but that is **not** the final
+destination path on the target side.
+
+The effective destination is the **gateway-side** `DeviceRequest.brokerUri`
+resolved by the `requestName` passed to the service.
+
+In practical terms:
+
+- Moqui reads the source file from `DeviceContent.contentLocation`
+- Moqui sends the file bytes to `moqui-device-gateway`
+- the gateway loads the gateway-side `DeviceRequest`
+- the gateway writes the file to the URI stored in `DeviceRequest.brokerUri`
+
+Typical destination examples are:
+
+- `file:/mnt/cnc-share/programs`
+- `file:/var/lib/plc/recipes`
+- `sftp:operator@cnc1.factory.local:22/programs`
+
+So, when an operator uses **Transfer Content**, the file is transferred to the
+path or endpoint declared in the gateway-side `DeviceRequest.brokerUri`.
+
+### Transfer content seed data in `DeviceTestData.xml`
+
+The industrial test suite ships two Moqui-side requests and two gateway-side
+requests so the **Transfer Content** button can be tested end to end.
+
+Moqui-side requests:
+
+- `VIRTUAL_PLC_01_TransferContent`
+- `DG_EDGE_01_TransferContent`
+
+These are the request names referenced by the SimpleScreens transitions. They
+call `moqui.device.DeviceGatewayServices.transfer#DeviceContent` and point to
+the gateway HTTP endpoint through `brokerUri`, for example:
+
+- `http://localhost:8081?apiKey=change-me-in-production`
+
+Their `query` field identifies the gateway-side request that performs the final
+write:
+
+- `VIRTUAL_PLC_01_GatewayTransferContent`
+- `DG_EDGE_01_GatewayTransferContent`
+
+Gateway-side requests:
+
+- `VIRTUAL_PLC_01_GatewayTransferContent`
+- `DG_EDGE_01_GatewayTransferContent`
+
+These are standard `DrtContentTransfer` requests executed locally by
+`moqui-device-gateway`. Their `brokerUri` is the real destination path, for
+example:
+
+- `file:target/transferred-content/plc`
+- `file:target/transferred-content/device-group`
+
+So the transfer chain is:
+
+1. operator clicks **Transfer Content** in Moqui
+2. Moqui resolves the Moqui-side `*_TransferContent` request
+3. Moqui posts the file bytes to `moqui-device-gateway`
+4. the gateway resolves the matching `*_GatewayTransferContent` request
+5. the gateway writes the file to the `brokerUri` target directory
+
 ## Service layer — Python ecosystem via moqui-jep
 
 `moqui.device` follows the same philosophy as `moqui.math`: it defines entities,
