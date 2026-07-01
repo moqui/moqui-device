@@ -5,6 +5,17 @@ Grant of Patent License.
 -->
 <entity-facade-xml type="seed">
 
+    <!--
+        Canonical generic industrial test suite.
+        ID conventions used in this seed:
+          - DG_EDGE_01      = test DeviceGroup (edge/control cell)
+          - VIRTUAL_PLC_01  = test PLC / controller
+          - DRV_EDGE_01     = test drive / inverter
+          - GW_EDGE_01      = test moqui-device-gateway instance
+        These IDs are mirrored as closely as possible by the SQL fixtures in
+        moqui-device-gateway/src/test/resources/device-gateway-seed.sql.
+    -->
+
     <!-- ========================================================= -->
     <!-- Test Parameter Definitions                                -->
     <!-- ========================================================= -->
@@ -122,6 +133,314 @@ Grant of Patent License.
             parameterName="Test Cell Heartbeat"
             description="Heartbeat interval in milliseconds for the test device group"/>
 
+    <moqui.math.ParameterDef
+            parameterDefId="TestPlcReferenceDef"
+            parameterTypeEnumId="PtNumberDecimal"
+            purposeEnumId="PpControl"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="10"
+            parameterCode="PLC-01-24.01"
+            parameterName="Reference"
+            description="Main numeric reference used by the generic gateway MQTT/OPCUA test flows"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="TestPlcFeedbackDef"
+            parameterTypeEnumId="PtNumberDecimal"
+            purposeEnumId="PpFeedback"
+            groupEnumId="PgMonitoring"
+            classEnumId="PcMain"
+            permissionEnumId="PpeRead"
+            isRequired="N"
+            hasValue="Y"
+            priority="20"
+            parameterCode="PLC-01-24.02"
+            parameterName="Feedback"
+            description="Feedback value published by the PLC in the generic gateway test flows"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="TestPlcMainControlWordDef"
+            parameterTypeEnumId="PtTextShort"
+            purposeEnumId="PpControl"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="30"
+            parameterCode="PLC-01-24.03"
+            parameterName="Main Control Word"
+            description="Primary PLC control word for the gateway write test"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="TestPlcMainStatusWordDef"
+            parameterTypeEnumId="PtTextShort"
+            purposeEnumId="PpStatus"
+            groupEnumId="PgMonitoring"
+            classEnumId="PcMain"
+            permissionEnumId="PpeRead"
+            isRequired="N"
+            hasValue="Y"
+            priority="40"
+            parameterCode="PLC-01-24.04"
+            parameterName="Main Status Word"
+            description="Primary PLC status word for the gateway read test"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="TestPlcFaultDef"
+            parameterTypeEnumId="PtTextIndicator"
+            purposeEnumId="PpStatus"
+            groupEnumId="PgMonitoring"
+            classEnumId="PcMain"
+            permissionEnumId="PpeRead"
+            isRequired="N"
+            hasValue="Y"
+            priority="50"
+            parameterCode="PLC-01-24.05"
+            parameterName="Fault"
+            description="PLC fault flag used by generic gateway tests"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="TestPlcRecipeReferenceDef"
+            parameterTypeEnumId="PtNumberDecimal"
+            purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="60"
+            parameterCode="PLC-01-24.11"
+            parameterName="Recipe Reference"
+            description="Reference value exported inside the generic PLC recipe file"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="TestPlcRecipeStateDef"
+            parameterTypeEnumId="PtTextShort"
+            purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="70"
+            parameterCode="PLC-01-24.12"
+            parameterName="Recipe State"
+            description="State value exported inside the generic PLC recipe file"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwEnableDef"
+            parameterTypeEnumId="PtTextIndicator"
+            purposeEnumId="PpControl"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="80"
+            parameterCode="FW-PLC-01.01"
+            parameterName="Enable"
+            description="Standard moqui-plc framework enable command from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwInitDef"
+            parameterTypeEnumId="PtTextIndicator"
+            purposeEnumId="PpControl"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="81"
+            parameterCode="FW-PLC-01.02"
+            parameterName="Init"
+            description="Standard moqui-plc framework init command from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwFaultDef"
+            parameterTypeEnumId="PtTextIndicator"
+            purposeEnumId="PpStatus"
+            groupEnumId="PgMonitoring"
+            classEnumId="PcMain"
+            permissionEnumId="PpeRead"
+            isRequired="N"
+            hasValue="Y"
+            priority="82"
+            parameterCode="FW-PLC-01.03"
+            parameterName="Fault"
+            description="Standard moqui-plc framework fault flag from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwErrorDef"
+            parameterTypeEnumId="PtTextIndicator"
+            purposeEnumId="PpStatus"
+            groupEnumId="PgMonitoring"
+            classEnumId="PcMain"
+            permissionEnumId="PpeRead"
+            isRequired="N"
+            hasValue="Y"
+            priority="83"
+            parameterCode="FW-PLC-01.04"
+            parameterName="Error"
+            description="Standard moqui-plc framework error flag from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwCommErrorDef"
+            parameterTypeEnumId="PtTextIndicator"
+            purposeEnumId="PpStatus"
+            groupEnumId="PgMonitoring"
+            classEnumId="PcMain"
+            permissionEnumId="PpeRead"
+            isRequired="N"
+            hasValue="Y"
+            priority="84"
+            parameterCode="FW-PLC-01.05"
+            parameterName="Comm Error"
+            description="Standard moqui-plc framework communication error flag from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwResetDef"
+            parameterTypeEnumId="PtTextIndicator"
+            purposeEnumId="PpControl"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="85"
+            parameterCode="FW-PLC-01.06"
+            parameterName="Reset"
+            description="Standard moqui-plc framework reset command from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwAutoResetDef"
+            parameterTypeEnumId="PtTextIndicator"
+            purposeEnumId="PpControl"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="86"
+            parameterCode="FW-PLC-01.07"
+            parameterName="Auto Reset"
+            description="Standard moqui-plc framework auto-reset command from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwAllConfigLoadedDef"
+            parameterTypeEnumId="PtTextIndicator"
+            purposeEnumId="PpStatus"
+            groupEnumId="PgMonitoring"
+            classEnumId="PcMain"
+            permissionEnumId="PpeRead"
+            isRequired="N"
+            hasValue="Y"
+            priority="87"
+            parameterCode="FW-PLC-01.08"
+            parameterName="All Config Loaded"
+            description="Standard moqui-plc framework all-config-loaded flag from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwRetryCountDef"
+            parameterTypeEnumId="PtNumberInteger"
+            purposeEnumId="PpStatus"
+            groupEnumId="PgMonitoring"
+            classEnumId="PcMain"
+            permissionEnumId="PpeRead"
+            isRequired="N"
+            hasValue="Y"
+            priority="88"
+            parameterCode="FW-PLC-01.09"
+            parameterName="Retry Count"
+            description="Standard moqui-plc framework retry counter from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwRetryTimeDef"
+            parameterTypeEnumId="PtNumberInteger"
+            purposeEnumId="PpDeviceConfiguration"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="89"
+            parameterCode="FW-PLC-01.10"
+            parameterName="Retry Time"
+            description="Standard moqui-plc framework retry time from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwIsPrimaryDef"
+            parameterTypeEnumId="PtTextIndicator"
+            purposeEnumId="PpStatus"
+            groupEnumId="PgMonitoring"
+            classEnumId="PcMain"
+            permissionEnumId="PpeRead"
+            isRequired="N"
+            hasValue="Y"
+            priority="90"
+            parameterCode="FW-PLC-01.11"
+            parameterName="Is Primary"
+            description="Standard moqui-plc framework primary-role flag from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwHeartbeatDef"
+            parameterTypeEnumId="PtNumberInteger"
+            purposeEnumId="PpStatus"
+            groupEnumId="PgMonitoring"
+            classEnumId="PcMain"
+            permissionEnumId="PpeRead"
+            isRequired="N"
+            hasValue="Y"
+            priority="91"
+            parameterCode="FW-PLC-01.12"
+            parameterName="Heartbeat"
+            description="Standard moqui-plc framework heartbeat counter from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwLogAppenderEnableDef"
+            parameterTypeEnumId="PtTextIndicator"
+            purposeEnumId="PpControl"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="92"
+            parameterCode="FW-PLC-01.13"
+            parameterName="Log Appender Enable"
+            description="Standard moqui-plc framework log appender enable flag from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwParamsPubEnableDef"
+            parameterTypeEnumId="PtTextIndicator"
+            purposeEnumId="PpControl"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="93"
+            parameterCode="FW-PLC-01.14"
+            parameterName="Parameters Publish Enable"
+            description="Standard moqui-plc framework parameter publish enable flag from ec.gvl"/>
+
+    <moqui.math.ParameterDef
+            parameterDefId="FwParamsSubEnableDef"
+            parameterTypeEnumId="PtTextIndicator"
+            purposeEnumId="PpControl"
+            groupEnumId="PgControl"
+            classEnumId="PcMain"
+            permissionEnumId="PpeReadWrite"
+            isRequired="N"
+            hasValue="Y"
+            priority="94"
+            parameterCode="FW-PLC-01.15"
+            parameterName="Parameters Subscribe Enable"
+            description="Standard moqui-plc framework parameter subscribe enable flag from ec.gvl"/>
+
     <!-- ========================================================= -->
     <!-- Test Measurement Types                                    -->
     <!-- ========================================================= -->
@@ -149,7 +468,7 @@ Grant of Patent License.
     <!-- ========================================================= -->
 
     <moqui.device.Device
-            deviceId="test-cell-group-1"
+            deviceId="DG_EDGE_01"
             deviceTypeEnumId="DgtControl"
             statusTypeId="DeviceGroupBasicStatus"
             statusFlowId="DeviceGroupBasicStatusFlow"
@@ -157,12 +476,12 @@ Grant of Patent License.
             description="Minimal test control cell grouping one PLC, one drive and one gateway"
             fromDate="2026-06-28 00:00:00"/>
     <moqui.device.DeviceGroup
-            deviceId="test-cell-group-1"
-            groupName="Test Cell Group 1"/>
+            deviceId="DG_EDGE_01"
+            groupName="Edge Gateway Group"/>
 
     <moqui.device.Device
-            deviceId="test-plc-1"
-            parentDeviceId="test-cell-group-1"
+            deviceId="VIRTUAL_PLC_01"
+            parentDeviceId="DG_EDGE_01"
             deviceTypeEnumId="DtPLC"
             statusTypeId="DeviceBasicStatus"
             statusFlowId="DeviceBasicStatusFlow"
@@ -170,8 +489,8 @@ Grant of Patent License.
             description="Minimal test PLC for SimpleScreens and telemetry scenarios"
             fromDate="2026-06-28 00:00:00"/>
     <moqui.device.PhysicalDevice
-            deviceId="test-plc-1"
-            deviceName="Test PLC 1"
+            deviceId="VIRTUAL_PLC_01"
+            deviceName="Virtual PLC 01"
             vendorName="OpenPLC"
             modelName="Soft PLC"
             version="1.0"
@@ -183,8 +502,8 @@ Grant of Patent License.
             isMulticore="N"/>
 
     <moqui.device.Device
-            deviceId="test-drive-1"
-            parentDeviceId="test-cell-group-1"
+            deviceId="DRV_EDGE_01"
+            parentDeviceId="DG_EDGE_01"
             deviceTypeEnumId="DtDrive"
             statusTypeId="DeviceBasicStatus"
             statusFlowId="DeviceBasicStatusFlow"
@@ -192,8 +511,8 @@ Grant of Patent License.
             description="Minimal test drive for SimpleScreens and telemetry scenarios"
             fromDate="2026-06-28 00:00:00"/>
     <moqui.device.PhysicalDevice
-            deviceId="test-drive-1"
-            deviceName="Test Drive 1"
+            deviceId="DRV_EDGE_01"
+            deviceName="Drive Edge 01"
             vendorName="Generic Drive Vendor"
             modelName="Servo Drive"
             version="1.0"
@@ -205,17 +524,17 @@ Grant of Patent License.
             isMulticore="N"/>
 
     <moqui.device.Device
-            deviceId="test-gateway-1"
-            parentDeviceId="test-cell-group-1"
-            deviceTypeEnumId="DtServer"
+            deviceId="GW_EDGE_01"
+            parentDeviceId="DG_EDGE_01"
+            deviceTypeEnumId="DtEdgeGateway"
             statusTypeId="DeviceBasicStatus"
             statusFlowId="DeviceBasicStatusFlow"
             statusId="DbsStandstill"
             description="Minimal test edge gateway for SimpleScreens and telemetry scenarios"
             fromDate="2026-06-28 00:00:00"/>
     <moqui.device.PhysicalDevice
-            deviceId="test-gateway-1"
-            deviceName="Test Gateway 1"
+            deviceId="GW_EDGE_01"
+            deviceName="Gateway Edge 01"
             vendorName="Moqui"
             modelName="Edge Gateway"
             version="1.0"
@@ -227,8 +546,8 @@ Grant of Patent License.
             isMulticore="Y"/>
 
     <moqui.device.DeviceGroupMember
-            deviceId="test-cell-group-1"
-            memberDeviceId="test-plc-1"
+            deviceId="DG_EDGE_01"
+            memberDeviceId="VIRTUAL_PLC_01"
             purposeEnumId="DgmpProcessPLC"
             sequenceNum="10"
             statusId="DgmsAlive"
@@ -236,8 +555,8 @@ Grant of Patent License.
             description="PLC member for the minimal test cell"/>
 
     <moqui.device.DeviceGroupMember
-            deviceId="test-cell-group-1"
-            memberDeviceId="test-drive-1"
+            deviceId="DG_EDGE_01"
+            memberDeviceId="DRV_EDGE_01"
             purposeEnumId="DgmpDrive"
             sequenceNum="20"
             statusId="DgmsAlive"
@@ -245,8 +564,8 @@ Grant of Patent License.
             description="Drive member for the minimal test cell"/>
 
     <moqui.device.DeviceGroupMember
-            deviceId="test-cell-group-1"
-            memberDeviceId="test-gateway-1"
+            deviceId="DG_EDGE_01"
+            memberDeviceId="GW_EDGE_01"
             purposeEnumId="DgmpEdgeGateway"
             sequenceNum="30"
             statusId="DgmsAlive"
@@ -258,54 +577,54 @@ Grant of Patent License.
     <!-- ========================================================= -->
 
     <moqui.device.DeviceDashboard
-            dashboardId="device-telemetry"
-            deviceId="test-cell-group-1"
-            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-cell-group-1"
+            dashboardId="device-telemetry-summary"
+            deviceId="DG_EDGE_01"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=DG_EDGE_01"
             purposeEnumId="DdpSummary"
             sequenceNum="1"/>
     <moqui.device.DeviceDashboard
-            dashboardId="device-telemetry"
-            deviceId="test-cell-group-1"
-            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-cell-group-1"
+            dashboardId="device-telemetry-metrics"
+            deviceId="DG_EDGE_01"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=DG_EDGE_01"
             purposeEnumId="DdpMetrics"
             sequenceNum="10"/>
 
     <moqui.device.DeviceDashboard
-            dashboardId="device-telemetry"
-            deviceId="test-plc-1"
-            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-plc-1"
+            dashboardId="device-telemetry-summary"
+            deviceId="VIRTUAL_PLC_01"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=VIRTUAL_PLC_01"
             purposeEnumId="DdpSummary"
             sequenceNum="1"/>
     <moqui.device.DeviceDashboard
-            dashboardId="device-telemetry"
-            deviceId="test-plc-1"
-            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-plc-1"
+            dashboardId="device-telemetry-metrics"
+            deviceId="VIRTUAL_PLC_01"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=VIRTUAL_PLC_01"
             purposeEnumId="DdpMetrics"
             sequenceNum="10"/>
 
     <moqui.device.DeviceDashboard
-            dashboardId="device-telemetry"
-            deviceId="test-drive-1"
-            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-drive-1"
+            dashboardId="device-telemetry-summary"
+            deviceId="DRV_EDGE_01"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=DRV_EDGE_01"
             purposeEnumId="DdpSummary"
             sequenceNum="1"/>
     <moqui.device.DeviceDashboard
-            dashboardId="device-telemetry"
-            deviceId="test-drive-1"
-            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-drive-1"
+            dashboardId="device-telemetry-metrics"
+            deviceId="DRV_EDGE_01"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=DRV_EDGE_01"
             purposeEnumId="DdpMetrics"
             sequenceNum="10"/>
 
     <moqui.device.DeviceDashboard
-            dashboardId="device-telemetry"
-            deviceId="test-gateway-1"
-            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-gateway-1"
+            dashboardId="device-telemetry-summary"
+            deviceId="GW_EDGE_01"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=GW_EDGE_01"
             purposeEnumId="DdpSummary"
             sequenceNum="1"/>
     <moqui.device.DeviceDashboard
-            dashboardId="device-telemetry"
-            deviceId="test-gateway-1"
-            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=test-gateway-1"
+            dashboardId="device-telemetry-metrics"
+            deviceId="GW_EDGE_01"
+            dashboardPath="/d/device-telemetry/device-telemetry?orgId=1&amp;kiosk&amp;var-device_id=GW_EDGE_01"
             purposeEnumId="DdpMetrics"
             sequenceNum="10"/>
 
@@ -315,7 +634,7 @@ Grant of Patent License.
 
     <moqui.math.Parameter
             parameterId="TestCellHeartbeatParam"
-            deviceId="test-cell-group-1"
+            deviceId="DG_EDGE_01"
             parameterDefId="TestCellHeartbeatDef"
             parameterAlias="CELL_HEARTBEAT_MS"
             sequenceNum="10"
@@ -323,7 +642,7 @@ Grant of Patent License.
 
     <moqui.math.Parameter
             parameterId="TestPlcCycleTimeParam"
-            deviceId="test-plc-1"
+            deviceId="VIRTUAL_PLC_01"
             parameterDefId="TestPlcCycleTimeDef"
             parameterAlias="PLC_CYCLE"
             sequenceNum="10"
@@ -331,15 +650,175 @@ Grant of Patent License.
 
     <moqui.math.Parameter
             parameterId="TestPlcProgramParam"
-            deviceId="test-plc-1"
+            deviceId="VIRTUAL_PLC_01"
             parameterDefId="TestPlcProgramDef"
             parameterAlias="PLC_PROGRAM"
             sequenceNum="20"
             symbolicValue="MIXING_PROFILE_A"/>
 
     <moqui.math.Parameter
+            parameterId="TestPlcReferenceParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="TestPlcReferenceDef"
+            parameterAlias="PLC_REFERENCE"
+            sequenceNum="30"
+            numericValue="300.00"/>
+
+    <moqui.math.Parameter
+            parameterId="TestPlcFeedbackParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="TestPlcFeedbackDef"
+            parameterAlias="PLC_FEEDBACK"
+            sequenceNum="40"
+            numericValue="300.03"/>
+
+    <moqui.math.Parameter
+            parameterId="TestPlcMainControlWordParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="TestPlcMainControlWordDef"
+            parameterAlias="PLC_MAIN_CONTROL_WORD"
+            sequenceNum="50"
+            symbolicValue="START"/>
+
+    <moqui.math.Parameter
+            parameterId="TestPlcMainStatusWordParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="TestPlcMainStatusWordDef"
+            parameterAlias="PLC_MAIN_STATUS_WORD"
+            sequenceNum="60"
+            symbolicValue="READY"/>
+
+    <moqui.math.Parameter
+            parameterId="TestPlcFaultParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="TestPlcFaultDef"
+            parameterAlias="PLC_FAULT"
+            sequenceNum="70"
+            symbolicValue="N"/>
+
+    <moqui.math.Parameter
+            parameterId="FwEnableParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwEnableDef"
+            parameterAlias="FW_ENABLE"
+            sequenceNum="80"
+            symbolicValue="Y"/>
+
+    <moqui.math.Parameter
+            parameterId="FwInitParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwInitDef"
+            parameterAlias="FW_INIT"
+            sequenceNum="90"
+            symbolicValue="Y"/>
+
+    <moqui.math.Parameter
+            parameterId="FwFaultParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwFaultDef"
+            parameterAlias="FW_FAULT"
+            sequenceNum="100"
+            symbolicValue="N"/>
+
+    <moqui.math.Parameter
+            parameterId="FwErrorParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwErrorDef"
+            parameterAlias="FW_ERROR"
+            sequenceNum="110"
+            symbolicValue="N"/>
+
+    <moqui.math.Parameter
+            parameterId="FwCommErrorParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwCommErrorDef"
+            parameterAlias="FW_COMM_ERROR"
+            sequenceNum="120"
+            symbolicValue="N"/>
+
+    <moqui.math.Parameter
+            parameterId="FwResetParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwResetDef"
+            parameterAlias="FW_RESET"
+            sequenceNum="130"
+            symbolicValue="N"/>
+
+    <moqui.math.Parameter
+            parameterId="FwAutoResetParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwAutoResetDef"
+            parameterAlias="FW_AUTO_RESET"
+            sequenceNum="140"
+            symbolicValue="N"/>
+
+    <moqui.math.Parameter
+            parameterId="FwAllConfigLoadedParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwAllConfigLoadedDef"
+            parameterAlias="FW_ALL_CONFIG_LOADED"
+            sequenceNum="150"
+            symbolicValue="N"/>
+
+    <moqui.math.Parameter
+            parameterId="FwRetryCountParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwRetryCountDef"
+            parameterAlias="FW_RETRY_COUNT"
+            sequenceNum="160"
+            numericValue="0"/>
+
+    <moqui.math.Parameter
+            parameterId="FwRetryTimeParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwRetryTimeDef"
+            parameterAlias="FW_RETRY_TIME"
+            sequenceNum="170"
+            numericValue="0"/>
+
+    <moqui.math.Parameter
+            parameterId="FwIsPrimaryParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwIsPrimaryDef"
+            parameterAlias="FW_IS_PRIMARY"
+            sequenceNum="180"
+            symbolicValue="N"/>
+
+    <moqui.math.Parameter
+            parameterId="FwHeartbeatParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwHeartbeatDef"
+            parameterAlias="FW_HEARTBEAT"
+            sequenceNum="190"
+            numericValue="0"/>
+
+    <moqui.math.Parameter
+            parameterId="FwLogAppenderEnableParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwLogAppenderEnableDef"
+            parameterAlias="FW_LOG_APPENDER_ENABLE"
+            sequenceNum="200"
+            symbolicValue="Y"/>
+
+    <moqui.math.Parameter
+            parameterId="FwParamsPubEnableParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwParamsPubEnableDef"
+            parameterAlias="FW_PARAMS_PUB_ENABLE"
+            sequenceNum="210"
+            symbolicValue="Y"/>
+
+    <moqui.math.Parameter
+            parameterId="FwParamsSubEnableParam"
+            deviceId="VIRTUAL_PLC_01"
+            parameterDefId="FwParamsSubEnableDef"
+            parameterAlias="FW_PARAMS_SUB_ENABLE"
+            sequenceNum="220"
+            symbolicValue="Y"/>
+
+    <moqui.math.Parameter
             parameterId="TestDriveSpeedParam"
-            deviceId="test-drive-1"
+            deviceId="DRV_EDGE_01"
             parameterDefId="TestDriveSpeedSetpointDef"
             parameterAlias="DRV_SPEED_RPM"
             sequenceNum="10"
@@ -347,7 +826,7 @@ Grant of Patent License.
 
     <moqui.math.Parameter
             parameterId="TestDriveTorqueParam"
-            deviceId="test-drive-1"
+            deviceId="DRV_EDGE_01"
             parameterDefId="TestDriveTorqueLimitDef"
             parameterAlias="DRV_TORQUE_PCT"
             sequenceNum="20"
@@ -355,7 +834,7 @@ Grant of Patent License.
 
     <moqui.math.Parameter
             parameterId="TestGatewayModeParam"
-            deviceId="test-gateway-1"
+            deviceId="GW_EDGE_01"
             parameterDefId="TestGatewayModeDef"
             parameterAlias="GW_MODE"
             sequenceNum="10"
@@ -363,7 +842,7 @@ Grant of Patent License.
 
     <moqui.math.Parameter
             parameterId="TestGatewayPollIntervalParam"
-            deviceId="test-gateway-1"
+            deviceId="GW_EDGE_01"
             parameterDefId="TestGatewayPollIntervalDef"
             parameterAlias="GW_POLL_MS"
             sequenceNum="20"
@@ -374,28 +853,28 @@ Grant of Patent License.
     <!-- ========================================================= -->
 
     <mantle.work.effort.WorkEffort
-            workEffortId="test-cell-group-1"
+            workEffortId="DG_EDGE_01"
             workEffortTypeEnumId="WetEvent"
             workEffortName="Cell Group Telemetry Stream"
-            description="Synthetic work effort used to attach telemetry measurements to test-cell-group-1"/>
+            description="Synthetic work effort used to attach telemetry measurements to DG_EDGE_01"/>
 
     <mantle.work.effort.WorkEffort
-            workEffortId="test-plc-1"
+            workEffortId="VIRTUAL_PLC_01"
             workEffortTypeEnumId="WetEvent"
             workEffortName="PLC Telemetry Stream"
-            description="Synthetic work effort used to attach telemetry measurements to test-plc-1"/>
+            description="Synthetic work effort used to attach telemetry measurements to VIRTUAL_PLC_01"/>
 
     <mantle.work.effort.WorkEffort
-            workEffortId="test-drive-1"
+            workEffortId="DRV_EDGE_01"
             workEffortTypeEnumId="WetEvent"
             workEffortName="Drive Telemetry Stream"
-            description="Synthetic work effort used to attach telemetry measurements to test-drive-1"/>
+            description="Synthetic work effort used to attach telemetry measurements to DRV_EDGE_01"/>
 
     <mantle.work.effort.WorkEffort
-            workEffortId="test-gateway-1"
+            workEffortId="GW_EDGE_01"
             workEffortTypeEnumId="WetEvent"
             workEffortName="Gateway Telemetry Stream"
-            description="Synthetic work effort used to attach telemetry measurements to test-gateway-1"/>
+            description="Synthetic work effort used to attach telemetry measurements to GW_EDGE_01"/>
 
     <!-- ========================================================= -->
     <!-- Test Device Configs + Config Parameters                   -->
@@ -439,6 +918,16 @@ Grant of Patent License.
             controlMethodEnumId="DcmNone"
             configName="Test PLC Production Profile"
             description="Production profile for the minimal test PLC"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceConfig
+            deviceConfigId="TestPlcGatewayConfig1"
+            deviceTypeEnumId="DtPLC"
+            configTypeEnumId="DctApplyConfig"
+            purposeEnumId="DcpRunConfig"
+            controlMethodEnumId="DcmNone"
+            configName="Test PLC Gateway Config"
+            description="Gateway recipe export profile for the minimal test PLC"
             fromDate="2026-06-28 00:00:00"/>
 
     <moqui.math.Parameter
@@ -497,6 +986,22 @@ Grant of Patent License.
             sequenceNum="20"
             symbolicValue="MIXING_PROFILE_B"/>
 
+    <moqui.math.Parameter
+            parameterId="TestPlcRecipeReferenceCfgParam"
+            deviceConfigId="TestPlcGatewayConfig1"
+            parameterDefId="TestPlcRecipeReferenceDef"
+            parameterAlias="PLC_RECIPE_REFERENCE"
+            sequenceNum="10"
+            numericValue="250"/>
+
+    <moqui.math.Parameter
+            parameterId="TestPlcRecipeStateCfgParam"
+            deviceConfigId="TestPlcGatewayConfig1"
+            parameterDefId="TestPlcRecipeStateDef"
+            parameterAlias="PLC_RECIPE_STATE"
+            sequenceNum="20"
+            symbolicValue="AUTO"/>
+
     <!-- ========================================================= -->
     <!-- Test Rule Set + Rules (factory defaults)                  -->
     <!-- ========================================================= -->
@@ -504,7 +1009,7 @@ Grant of Patent License.
     <moqui.device.DeviceRuleSet
             deviceRuleSetId="TestCellFactoryRuleSet1"
             purposeEnumId="DrspConfiguration"
-            deviceId="test-cell-group-1"
+            deviceId="DG_EDGE_01"
             sequenceNum="10"
             ruleSetName="Test Cell Factory Defaults"
             description="Minimal factory-default rule set for the test cell group"
@@ -514,7 +1019,7 @@ Grant of Patent License.
             deviceRuleId="TestCellFactoryRule010"
             deviceRuleSetId="TestCellFactoryRuleSet1"
             deviceConfigId="TestCellFactoryConfig1"
-            deviceId="test-cell-group-1"
+            deviceId="DG_EDGE_01"
             ruleTypeEnumId="DrtApplyConfig"
             ruleName="Apply cell factory defaults"
             description="Apply group-level factory defaults to the test cell"
@@ -527,7 +1032,7 @@ Grant of Patent License.
             deviceRuleId="TestCellFactoryRule020"
             deviceRuleSetId="TestCellFactoryRuleSet1"
             deviceConfigId="TestGatewayFactoryConfig1"
-            deviceId="test-gateway-1"
+            deviceId="GW_EDGE_01"
             ruleTypeEnumId="DrtApplyConfig"
             ruleName="Apply gateway factory defaults"
             description="Apply gateway factory defaults inside the test cell"
@@ -539,7 +1044,7 @@ Grant of Patent License.
     <moqui.device.DeviceRuleSet
             deviceRuleSetId="TestPlcRunRuleSet1"
             purposeEnumId="DrspProcess"
-            deviceId="test-plc-1"
+            deviceId="VIRTUAL_PLC_01"
             sequenceNum="10"
             ruleSetName="Test PLC Run Cycle"
             description="Minimal PLC rule set used to exercise apply#DeviceConfig from the UI"
@@ -549,7 +1054,7 @@ Grant of Patent License.
             deviceRuleId="TestPlcRunRule010"
             deviceRuleSetId="TestPlcRunRuleSet1"
             deviceConfigId="TestPlcFactoryConfig1"
-            deviceId="test-plc-1"
+            deviceId="VIRTUAL_PLC_01"
             ruleTypeEnumId="DrtApplyConfig"
             ruleName="Apply PLC factory defaults"
             description="Apply the factory PLC profile to the test PLC"
@@ -562,7 +1067,7 @@ Grant of Patent License.
             deviceRuleId="TestPlcRunRule020"
             deviceRuleSetId="TestPlcRunRuleSet1"
             deviceConfigId="TestPlcProductionConfig1"
-            deviceId="test-plc-1"
+            deviceId="VIRTUAL_PLC_01"
             ruleTypeEnumId="DrtApplyConfig"
             ruleName="Apply PLC production profile"
             description="Apply the production PLC profile to the test PLC"
@@ -571,8 +1076,30 @@ Grant of Patent License.
             runDevice="N"
             fromDate="2026-06-28 00:00:00"/>
 
+    <moqui.device.DeviceRuleSet
+            deviceRuleSetId="TestPlcGatewayRuleSet1"
+            purposeEnumId="DrspProcess"
+            deviceId="VIRTUAL_PLC_01"
+            sequenceNum="20"
+            ruleSetName="Test PLC Gateway Rule Set"
+            description="Gateway recipe export rule set for the minimal test PLC"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRule
+            deviceRuleId="TestPlcGatewayRule010"
+            deviceRuleSetId="TestPlcGatewayRuleSet1"
+            deviceConfigId="TestPlcGatewayConfig1"
+            deviceId="VIRTUAL_PLC_01"
+            ruleTypeEnumId="DrtApplyConfig"
+            ruleName="Apply Test PLC gateway config"
+            description="Gateway recipe export rule for the minimal test PLC"
+            priority="10"
+            isEnabled="Y"
+            runDevice="N"
+            fromDate="2026-06-28 00:00:00"/>
+
     <moqui.device.Device
-            deviceId="test-plc-1"
+            deviceId="VIRTUAL_PLC_01"
             deviceRuleSetId="TestPlcRunRuleSet1"
             deviceRuleId="TestPlcRunRule010"/>
 
@@ -581,8 +1108,8 @@ Grant of Patent License.
     <!-- ========================================================= -->
 
     <moqui.device.DeviceRequest
-            requestName="test-plc-1_ExportProcess"
-            deviceId="test-gateway-1"
+            requestName="VIRTUAL_PLC_01_ExportProcess"
+            deviceId="GW_EDGE_01"
             requestTypeEnumId="DrtConfigWrite"
             purposeEnumId="DrpCommissioning"
             requestGroup="TEST_GATEWAY_EXPORT"
@@ -591,13 +1118,13 @@ Grant of Patent License.
             description="Dispatch DeviceConfig export for the minimal test PLC via moqui-device-gateway"
             routerEnumId="DrrMoquiDeviceGateway"
             runServiceName="moqui.device.DeviceGatewayServices.export#DeviceConfig"
-            brokerUri="http://localhost:8081"
+            brokerUri="http://localhost:8081?apiKey=change-me-in-production"
             timeout="30000"
             fromDate="2026-06-28 00:00:00"/>
 
     <moqui.device.DeviceRequest
-            requestName="test-plc-1_SyncParameters"
-            deviceId="test-gateway-1"
+            requestName="VIRTUAL_PLC_01_SyncParameters"
+            deviceId="GW_EDGE_01"
             requestTypeEnumId="DrtWrite"
             purposeEnumId="DrpControl"
             requestGroup="TEST_GATEWAY_SYNC"
@@ -607,14 +1134,14 @@ Grant of Patent License.
             runServiceName="moqui.device.DeviceGatewayServices.run#GatewayDeviceRequest"
             onlyChangedParameters="N"
             routerEnumId="DrrMoquiDeviceGateway"
-            brokerUri="http://localhost:8081"
-            query="test-plc-1_GatewayWrite"
+            brokerUri="http://localhost:8081?apiKey=change-me-in-production"
+            query="VIRTUAL_PLC_01_GatewayWrite"
             timeout="30000"
             fromDate="2026-06-28 00:00:00"/>
 
     <moqui.device.DeviceRequest
-            requestName="test-plc-1_GatewayWrite"
-            deviceId="test-plc-1"
+            requestName="VIRTUAL_PLC_01_GatewayWrite"
+            deviceId="VIRTUAL_PLC_01"
             requestTypeEnumId="DrtWrite"
             purposeEnumId="DrpControl"
             requestGroup="TEST_GATEWAY_SYNC"
@@ -629,7 +1156,7 @@ Grant of Patent License.
             fromDate="2026-06-28 00:00:00"/>
 
     <moqui.device.DeviceRequestItem
-            requestName="test-plc-1_GatewayWrite"
+            requestName="VIRTUAL_PLC_01_GatewayWrite"
             requestItemName="PLC_CYCLE"
             parameterId="TestPlcCycleTimeParam"
             sequenceNum="10"
@@ -637,12 +1164,249 @@ Grant of Patent License.
             itemTypeEnumId="DritInt"/>
 
     <moqui.device.DeviceRequestItem
-            requestName="test-plc-1_GatewayWrite"
+            requestName="VIRTUAL_PLC_01_GatewayWrite"
             requestItemName="PLC_PROGRAM"
             parameterId="TestPlcProgramParam"
             sequenceNum="20"
             query="iot/parameters/out"
             itemTypeEnumId="DritWord"/>
+
+    <moqui.device.DeviceRequest
+            requestName="TestPlcMqttPublishReq01"
+            deviceId="VIRTUAL_PLC_01"
+            requestTypeEnumId="DrtWrite"
+            purposeEnumId="DrpControl"
+            requestGroup="TEST_GATEWAY_MQTT"
+            priority="10"
+            sequenceNum="30"
+            description="Generic MQTT publish request mirroring moqui-device-gateway integration tests"
+            routerEnumId="DrrMoquiDeviceGateway"
+            brokerUri="paho-mqtt5:?brokerUrl=tcp://localhost:1883&amp;userName=artemis&amp;password=artemis"
+            onlyChangedParameters="N"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRequestItem
+            requestName="TestPlcMqttPublishReq01"
+            requestItemName="virtualPlcReference"
+            parameterId="TestPlcReferenceParam"
+            sequenceNum="10"
+            query="mqtt-write-device-request/virtual-plc/reference"
+            itemTypeEnumId="DritReal"/>
+
+    <moqui.device.DeviceRequestItem
+            requestName="TestPlcMqttPublishReq01"
+            requestItemName="virtualPlcMainControlWord"
+            parameterId="TestPlcMainControlWordParam"
+            sequenceNum="20"
+            query="mqtt-write-device-request/virtual-plc/main-control-word"
+            itemTypeEnumId="DritWord"/>
+
+    <moqui.device.DeviceRequest
+            requestName="TestPlcMqttSubscribeReq01"
+            deviceId="VIRTUAL_PLC_01"
+            requestTypeEnumId="DrtCyclic"
+            purposeEnumId="DrpControl"
+            requestGroup="TEST_GATEWAY_MQTT"
+            priority="10"
+            sequenceNum="40"
+            description="Generic MQTT subscription request mirroring moqui-device-gateway integration tests"
+            routerEnumId="DrrMoquiDeviceGateway"
+            brokerUri="paho-mqtt5:?brokerUrl=tcp://localhost:1883&amp;userName=artemis&amp;password=artemis"
+            pollingInterval="100"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRequestItem
+            requestName="TestPlcMqttSubscribeReq01"
+            requestItemName="virtualPlcFeedback"
+            parameterId="TestPlcFeedbackParam"
+            sequenceNum="10"
+            query="mqtt-subscribe-device-request/virtual-plc/feedback"
+            itemTypeEnumId="DritReal"/>
+
+    <moqui.device.DeviceRequestItem
+            requestName="TestPlcMqttSubscribeReq01"
+            requestItemName="virtualPlcFault"
+            parameterId="TestPlcFaultParam"
+            sequenceNum="20"
+            query="mqtt-subscribe-device-request/virtual-plc/fault"
+            itemTypeEnumId="DritBool"/>
+
+    <moqui.device.DeviceRequest
+            requestName="TestPlcMqttUnsubscribeReq01"
+            parentRequestName="TestPlcMqttSubscribeReq01"
+            deviceId="VIRTUAL_PLC_01"
+            requestTypeEnumId="DrtUnsubscribe"
+            purposeEnumId="DrpControl"
+            requestGroup="TEST_GATEWAY_MQTT"
+            priority="10"
+            sequenceNum="50"
+            description="Generic MQTT unsubscribe request mirroring moqui-device-gateway integration tests"
+            routerEnumId="DrrMoquiDeviceGateway"
+            brokerUri="paho-mqtt5:?brokerUrl=tcp://localhost:1883&amp;userName=artemis&amp;password=artemis"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceConnection
+            connectionName="TestPlcOpcUaConn01"
+            deviceId="VIRTUAL_PLC_01"
+            connectionTypeEnumId="DctDirectConnection"
+            purposeEnumId="DcpOperations"
+            driverEnumId="DcdOpcUa"
+            transportEnumId="DctrTcp"
+            transportConfig="opc.tcp://127.0.0.1:12686/milo"/>
+
+    <moqui.device.DeviceRequest
+            requestName="TestPlcOpcUaReadReq01"
+            deviceId="VIRTUAL_PLC_01"
+            requestTypeEnumId="DrtCyclic"
+            purposeEnumId="DrpControl"
+            requestGroup="TEST_GATEWAY_OPCUA"
+            priority="10"
+            sequenceNum="60"
+            description="Generic OPC UA subscription request mirroring moqui-device-gateway integration tests"
+            routerEnumId="DrrDirect"
+            connectionName="TestPlcOpcUaConn01"
+            pollingInterval="100"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRequestItem
+            requestName="TestPlcOpcUaReadReq01"
+            requestItemName="virtualPlcFeedback"
+            parameterId="TestPlcFeedbackParam"
+            sequenceNum="10"
+            query="ns=2;s=Demo.Dynamic.Scalar.Double"
+            itemTypeEnumId="DritReal"/>
+
+    <moqui.device.DeviceRequestItem
+            requestName="TestPlcOpcUaReadReq01"
+            requestItemName="virtualPlcFault"
+            parameterId="TestPlcFaultParam"
+            sequenceNum="20"
+            query="ns=2;s=Demo.Dynamic.Scalar.Boolean"
+            itemTypeEnumId="DritBool"/>
+
+    <moqui.device.DeviceRequest
+            requestName="TestPlcOpcUaUnsubscribeReq01"
+            parentRequestName="TestPlcOpcUaReadReq01"
+            deviceId="VIRTUAL_PLC_01"
+            requestTypeEnumId="DrtUnsubscribe"
+            purposeEnumId="DrpControl"
+            requestGroup="TEST_GATEWAY_OPCUA"
+            priority="10"
+            sequenceNum="70"
+            description="Generic OPC UA unsubscribe request mirroring moqui-device-gateway integration tests"
+            routerEnumId="DrrDirect"
+            connectionName="TestPlcOpcUaConn01"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRequest
+            requestName="TestPlcOpcUaWriteReq01"
+            deviceId="VIRTUAL_PLC_01"
+            requestTypeEnumId="DrtWrite"
+            purposeEnumId="DrpControl"
+            requestGroup="TEST_GATEWAY_OPCUA"
+            priority="10"
+            sequenceNum="80"
+            description="Generic OPC UA write request mirroring moqui-device-gateway integration tests"
+            routerEnumId="DrrDirect"
+            connectionName="TestPlcOpcUaConn01"
+            onlyChangedParameters="N"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRequestItem
+            requestName="TestPlcOpcUaWriteReq01"
+            requestItemName="virtualPlcReference"
+            parameterId="TestPlcReferenceParam"
+            sequenceNum="10"
+            query="ns=2;s=Demo.Dynamic.Scalar.Double"
+            itemTypeEnumId="DritReal"/>
+
+    <moqui.device.DeviceRequest
+            requestName="TestPlcOpcUaOneshotReq01"
+            deviceId="VIRTUAL_PLC_01"
+            requestTypeEnumId="DrtRead"
+            purposeEnumId="DrpControl"
+            requestGroup="TEST_GATEWAY_OPCUA"
+            priority="10"
+            sequenceNum="90"
+            description="Generic OPC UA one-shot read request mirroring moqui-device-gateway integration tests"
+            routerEnumId="DrrDirect"
+            connectionName="TestPlcOpcUaConn01"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRequestItem
+            requestName="TestPlcOpcUaOneshotReq01"
+            requestItemName="virtualPlcFeedback"
+            parameterId="TestPlcFeedbackParam"
+            sequenceNum="10"
+            query="ns=2;s=Demo.Dynamic.Scalar.Double"
+            itemTypeEnumId="DritReal"/>
+
+    <moqui.device.DeviceRequest
+            requestName="VIRTUAL_PLC_01_LiveParametersMqttSub"
+            deviceId="VIRTUAL_PLC_01"
+            requestTypeEnumId="DrtCyclic"
+            purposeEnumId="DrpMonitoring"
+            requestGroup="TEST_FRAMEWORK_MQTT"
+            priority="10"
+            sequenceNum="100"
+            description="Standard live-parameter MQTT request for moqui-plc MqttParameterSub"
+            routerEnumId="DrrBroker"
+            brokerUri="paho-mqtt5:virtual_plc_live?brokerUrl=tcp://localhost:1883"
+            pollingInterval="100"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRequestItem
+            requestName="VIRTUAL_PLC_01_LiveParametersMqttSub"
+            requestItemName="virtualPlcFault"
+            parameterId="TestPlcFaultParam"
+            sequenceNum="10"
+            query="virtual_plc_fault"
+            itemTypeEnumId="DritBool"/>
+
+    <moqui.device.DeviceRequest
+            requestName="VIRTUAL_PLC_01_FrameworkStatusRead"
+            deviceId="VIRTUAL_PLC_01"
+            requestTypeEnumId="DrtCyclic"
+            purposeEnumId="DrpStatusMonitoring"
+            requestGroup="TEST_FRAMEWORK_MQTT"
+            priority="10"
+            sequenceNum="110"
+            description="Standard moqui-plc framework status subscription"
+            routerEnumId="DrrBroker"
+            brokerUri="paho-mqtt5:framework_status?brokerUrl=tcp://localhost:1883"
+            pollingInterval="100"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkStatusRead" parameterId="FwFaultParam" sequenceNum="10" requestItemName="fault" query="fault" itemTypeEnumId="DritBool"/>
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkStatusRead" parameterId="FwErrorParam" sequenceNum="20" requestItemName="error" query="error" itemTypeEnumId="DritBool"/>
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkStatusRead" parameterId="FwCommErrorParam" sequenceNum="30" requestItemName="commError" query="commError" itemTypeEnumId="DritBool"/>
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkStatusRead" parameterId="FwAllConfigLoadedParam" sequenceNum="40" requestItemName="allConfigLoaded" query="allConfigLoaded" itemTypeEnumId="DritBool"/>
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkStatusRead" parameterId="FwIsPrimaryParam" sequenceNum="50" requestItemName="isPrimary" query="isPrimary" itemTypeEnumId="DritBool"/>
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkStatusRead" parameterId="FwHeartbeatParam" sequenceNum="60" requestItemName="heartbeat" query="heartbeat" itemTypeEnumId="DritULInt"/>
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkStatusRead" parameterId="FwRetryCountParam" sequenceNum="70" requestItemName="retryCount" query="retryCount" itemTypeEnumId="DritUInt"/>
+
+    <moqui.device.DeviceRequest
+            requestName="VIRTUAL_PLC_01_FrameworkControlWrite"
+            deviceId="VIRTUAL_PLC_01"
+            requestTypeEnumId="DrtWrite"
+            purposeEnumId="DrpControl"
+            requestGroup="TEST_FRAMEWORK_MQTT"
+            priority="10"
+            sequenceNum="120"
+            description="Standard moqui-plc framework control write request"
+            routerEnumId="DrrBroker"
+            brokerUri="paho-mqtt5:framework_control?brokerUrl=tcp://localhost:1883"
+            onlyChangedParameters="N"
+            fromDate="2026-06-28 00:00:00"/>
+
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkControlWrite" parameterId="FwEnableParam" sequenceNum="10" requestItemName="enable" query="enable" itemTypeEnumId="DritBool"/>
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkControlWrite" parameterId="FwInitParam" sequenceNum="20" requestItemName="init" query="init" itemTypeEnumId="DritBool"/>
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkControlWrite" parameterId="FwResetParam" sequenceNum="30" requestItemName="reset" query="reset" itemTypeEnumId="DritBool"/>
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkControlWrite" parameterId="FwAutoResetParam" sequenceNum="40" requestItemName="autoReset" query="autoReset" itemTypeEnumId="DritBool"/>
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkControlWrite" parameterId="FwLogAppenderEnableParam" sequenceNum="50" requestItemName="logAppenderEnable" query="logAppenderEnable" itemTypeEnumId="DritBool"/>
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkControlWrite" parameterId="FwParamsPubEnableParam" sequenceNum="60" requestItemName="paramsPubEnable" query="paramsPubEnable" itemTypeEnumId="DritBool"/>
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkControlWrite" parameterId="FwParamsSubEnableParam" sequenceNum="70" requestItemName="paramsSubEnable" query="paramsSubEnable" itemTypeEnumId="DritBool"/>
+    <moqui.device.DeviceRequestItem requestName="VIRTUAL_PLC_01_FrameworkControlWrite" parameterId="FwRetryTimeParam" sequenceNum="80" requestItemName="retryTime" query="retryTime" itemTypeEnumId="DritUInt"/>
 
     <!-- ========================================================= -->
     <!-- Test Telemetry Logs                                       -->
@@ -811,77 +1575,77 @@ Grant of Patent License.
 
     <moqui.device.DeviceLog
             deviceLogId="TestCellDeviceLog001"
-            deviceId="test-cell-group-1"
+            deviceId="DG_EDGE_01"
             sequenceNum="1"
             observedDate="2026-06-22 10:00:00"
             payload="{&quot;status&quot;:&quot;online&quot;,&quot;membersAlive&quot;:3,&quot;message&quot;:&quot;factory default cycle available&quot;}"/>
 
     <moqui.device.DeviceLog
             deviceLogId="TestCellDeviceLog002"
-            deviceId="test-cell-group-1"
+            deviceId="DG_EDGE_01"
             sequenceNum="2"
             observedDate="2026-06-28 10:12:00"
             payload="{&quot;status&quot;:&quot;running&quot;,&quot;membersAlive&quot;:3,&quot;activeRuleSet&quot;:&quot;FactoryDefaults&quot;,&quot;message&quot;:&quot;cell cycle in progress&quot;}"/>
 
     <moqui.device.DeviceLog
             deviceLogId="TestPlcDeviceLog001"
-            deviceId="test-plc-1"
+            deviceId="VIRTUAL_PLC_01"
             sequenceNum="1"
             observedDate="2026-06-22 09:05:00"
             payload="{&quot;status&quot;:&quot;standstill&quot;,&quot;task&quot;:&quot;program loaded&quot;,&quot;scanTimeMs&quot;:20}"/>
 
     <moqui.device.DeviceLog
             deviceLogId="TestPlcDeviceLog002"
-            deviceId="test-plc-1"
+            deviceId="VIRTUAL_PLC_01"
             sequenceNum="2"
             observedDate="2026-06-25 09:55:00"
             payload="{&quot;status&quot;:&quot;running&quot;,&quot;task&quot;:&quot;automatic cycle active&quot;,&quot;scanTimeMs&quot;:24}"/>
 
     <moqui.device.DeviceLog
             deviceLogId="TestPlcDeviceLog003"
-            deviceId="test-plc-1"
+            deviceId="VIRTUAL_PLC_01"
             sequenceNum="3"
             observedDate="2026-06-28 12:14:00"
             payload="{&quot;status&quot;:&quot;running&quot;,&quot;task&quot;:&quot;recipe change applied&quot;,&quot;scanTimeMs&quot;:22}"/>
 
     <moqui.device.DeviceLog
             deviceLogId="TestDriveDeviceLog001"
-            deviceId="test-drive-1"
+            deviceId="DRV_EDGE_01"
             sequenceNum="1"
             observedDate="2026-06-22 08:10:00"
             payload="{&quot;status&quot;:&quot;standstill&quot;,&quot;message&quot;:&quot;drive enabled&quot;,&quot;speedRpm&quot;:0}"/>
 
     <moqui.device.DeviceLog
             deviceLogId="TestDriveDeviceLog002"
-            deviceId="test-drive-1"
+            deviceId="DRV_EDGE_01"
             sequenceNum="2"
             observedDate="2026-06-24 08:55:00"
             payload="{&quot;status&quot;:&quot;running&quot;,&quot;message&quot;:&quot;speed reference updated&quot;,&quot;speedRpm&quot;:1625}"/>
 
     <moqui.device.DeviceLog
             deviceLogId="TestDriveDeviceLog003"
-            deviceId="test-drive-1"
+            deviceId="DRV_EDGE_01"
             sequenceNum="3"
             observedDate="2026-06-28 10:16:00"
             payload="{&quot;status&quot;:&quot;running&quot;,&quot;message&quot;:&quot;torque stabilized&quot;,&quot;speedRpm&quot;:1580,&quot;torqueNm&quot;:190}"/>
 
     <moqui.device.DeviceLog
             deviceLogId="TestGatewayDeviceLog001"
-            deviceId="test-gateway-1"
+            deviceId="GW_EDGE_01"
             sequenceNum="1"
             observedDate="2026-06-22 07:30:00"
             payload="{&quot;status&quot;:&quot;online&quot;,&quot;cpu&quot;:22.1,&quot;message&quot;:&quot;gateway boot completed&quot;}"/>
 
     <moqui.device.DeviceLog
             deviceLogId="TestGatewayDeviceLog002"
-            deviceId="test-gateway-1"
+            deviceId="GW_EDGE_01"
             sequenceNum="2"
             observedDate="2026-06-25 08:09:00"
             payload="{&quot;status&quot;:&quot;warning&quot;,&quot;cpu&quot;:31.2,&quot;latencyMs&quot;:142,&quot;message&quot;:&quot;broker reconnect&quot;}"/>
 
     <moqui.device.DeviceLog
             deviceLogId="TestGatewayDeviceLog003"
-            deviceId="test-gateway-1"
+            deviceId="GW_EDGE_01"
             sequenceNum="3"
             observedDate="2026-06-28 10:18:00"
             payload="{&quot;status&quot;:&quot;online&quot;,&quot;cpu&quot;:24.6,&quot;latencyMs&quot;:95,&quot;message&quot;:&quot;broker link restored&quot;}"/>
@@ -895,458 +1659,97 @@ Grant of Patent License.
             measurementTypeId="Power"
             measurementDate="2026-06-22 10:02:00"
             measurementValue="8.4"
-            workEffortId="test-cell-group-1"/>
+            workEffortId="DG_EDGE_01"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestCellPower002"
             measurementTypeId="Power"
             measurementDate="2026-06-28 10:08:00"
             measurementValue="9.1"
-            workEffortId="test-cell-group-1"/>
+            workEffortId="DG_EDGE_01"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestPlcTemp001"
             measurementTypeId="Temperature"
             measurementDate="2026-06-22 09:01:00"
             measurementValue="37.1"
-            workEffortId="test-plc-1"/>
+            workEffortId="VIRTUAL_PLC_01"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestPlcTemp002"
             measurementTypeId="Temperature"
             measurementDate="2026-06-28 12:11:00"
             measurementValue="38.3"
-            workEffortId="test-plc-1"/>
+            workEffortId="VIRTUAL_PLC_01"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestPlcVibration001"
             measurementTypeId="Vibration"
             measurementDate="2026-06-24 09:07:00"
             measurementValue="0.55"
-            workEffortId="test-plc-1"/>
+            workEffortId="VIRTUAL_PLC_01"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestPlcVibration002"
             measurementTypeId="Vibration"
             measurementDate="2026-06-28 12:17:00"
             measurementValue="0.48"
-            workEffortId="test-plc-1"/>
+            workEffortId="VIRTUAL_PLC_01"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestDrivePower001"
             measurementTypeId="Power"
             measurementDate="2026-06-22 08:03:00"
             measurementValue="4.2"
-            workEffortId="test-drive-1"/>
+            workEffortId="DRV_EDGE_01"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestDrivePower002"
             measurementTypeId="Power"
             measurementDate="2026-06-28 10:13:00"
             measurementValue="4.8"
-            workEffortId="test-drive-1"/>
+            workEffortId="DRV_EDGE_01"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestDriveTemp001"
             measurementTypeId="Temperature"
             measurementDate="2026-06-24 08:09:00"
             measurementValue="44.6"
-            workEffortId="test-drive-1"/>
+            workEffortId="DRV_EDGE_01"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestDriveTemp002"
             measurementTypeId="Temperature"
             measurementDate="2026-06-28 10:19:00"
             measurementValue="46.1"
-            workEffortId="test-drive-1"/>
+            workEffortId="DRV_EDGE_01"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestGatewayHumidity001"
             measurementTypeId="Humidity"
             measurementDate="2026-06-22 07:34:00"
             measurementValue="55"
-            workEffortId="test-gateway-1"/>
+            workEffortId="GW_EDGE_01"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestGatewayHumidity002"
             measurementTypeId="Humidity"
             measurementDate="2026-06-28 10:14:00"
             measurementValue="57"
-            workEffortId="test-gateway-1"/>
+            workEffortId="GW_EDGE_01"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestGatewayLatency001"
             measurementTypeId="Latency"
             measurementDate="2026-06-25 08:10:00"
             measurementValue="142"
-            workEffortId="test-gateway-1"/>
+            workEffortId="GW_EDGE_01"/>
 
     <mantle.work.measurement.Measurement
             measurementId="TestGatewayLatency002"
             measurementTypeId="Latency"
             measurementDate="2026-06-28 10:20:00"
             measurementValue="95"
-            workEffortId="test-gateway-1"/>
-
-
-
-
-    <!-- ========================================================= -->
-    <!-- AI/HPC Parameter Definitions                              -->
-    <!-- ========================================================= -->
-
-    <moqui.math.ParameterDef parameterDefId="AIHpcModelNameDef"
-            parameterTypeEnumId="PtTextShort" purposeEnumId="PpDeviceConfiguration"
-            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
-            isRequired="N" hasValue="Y" priority="10"
-            parameterCode="AIHpcModelName" parameterName="AI/HPC Model Name"
-            description="Model or runtime artifact name used by AI/HPC serving or training profiles"/>
-
-    <moqui.math.ParameterDef parameterDefId="AIHpcPrecisionDef"
-            parameterTypeEnumId="PtTextShort" purposeEnumId="PpDeviceConfiguration"
-            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
-            isRequired="N" hasValue="Y" priority="20"
-            parameterCode="AIHpcPrecision" parameterName="AI/HPC Numeric Precision"
-            description="Numeric precision profile such as fp32, tf32, fp16, bf16, int8"/>
-
-    <moqui.math.ParameterDef parameterDefId="AIHpcMaxPowerWDef"
-            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
-            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
-            isRequired="N" hasValue="Y" priority="30" minValue="50" maxValue="1000" defaultValue="650"
-            parameterCode="AIHpcMaxPowerW" parameterName="AI/HPC Max Power W"
-            description="Maximum accelerator power limit in watts"/>
-
-    <moqui.math.ParameterDef parameterDefId="AIHpcMigModeDef"
-            parameterTypeEnumId="PtTextShort" purposeEnumId="PpDeviceConfiguration"
-            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
-            isRequired="N" hasValue="Y" priority="40"
-            parameterCode="AIHpcMigMode" parameterName="AI/HPC MIG Mode"
-            description="GPU multi-instance mode flag or profile name"/>
-
-    <moqui.math.ParameterDef parameterDefId="AIHpcBatchSizeDef"
-            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
-            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
-            isRequired="N" hasValue="Y" priority="50" minValue="1" maxValue="8192" defaultValue="32"
-            parameterCode="AIHpcBatchSize" parameterName="AI/HPC Batch Size"
-            description="Training or inference batch size"/>
-
-    <moqui.math.ParameterDef parameterDefId="AIHpcTensorParallelSizeDef"
-            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
-            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
-            isRequired="N" hasValue="Y" priority="60" minValue="1" maxValue="1024" defaultValue="2"
-            parameterCode="AIHpcTensorParallelSize" parameterName="AI/HPC Tensor Parallel Size"
-            description="Tensor-parallel degree for distributed model execution"/>
-
-    <moqui.math.ParameterDef parameterDefId="AIHpcEmbeddingDimensionsDef"
-            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
-            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
-            isRequired="N" hasValue="Y" priority="70" minValue="1" maxValue="32768" defaultValue="1536"
-            parameterCode="AIHpcEmbeddingDimensions" parameterName="AI/HPC Embedding Dimensions"
-            description="Embedding vector dimensionality for vector search and RAG pipelines"/>
-
-    <moqui.math.ParameterDef parameterDefId="AIHpcSimilarityMetricDef"
-            parameterTypeEnumId="PtTextShort" purposeEnumId="PpDeviceConfiguration"
-            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
-            isRequired="N" hasValue="Y" priority="80"
-            parameterCode="AIHpcSimilarityMetric" parameterName="AI/HPC Similarity Metric"
-            description="Vector similarity metric, for example cosine, dot_product, or l2"/>
-
-    <moqui.math.ParameterDef parameterDefId="AIHpcHnswMDef"
-            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
-            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
-            isRequired="N" hasValue="Y" priority="90" minValue="1" maxValue="1024" defaultValue="32"
-            parameterCode="AIHpcHnswM" parameterName="AI/HPC HNSW M"
-            description="HNSW graph out-degree parameter for vector indexing"/>
-
-    <moqui.math.ParameterDef parameterDefId="AIHpcEfSearchDef"
-            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
-            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
-            isRequired="N" hasValue="Y" priority="100" minValue="1" maxValue="4096" defaultValue="128"
-            parameterCode="AIHpcEfSearch" parameterName="AI/HPC HNSW EF Search"
-            description="HNSW ef_search parameter for query-time vector search"/>
-
-    <moqui.math.ParameterDef parameterDefId="AIHpcMaxLatencyMsDef"
-            parameterTypeEnumId="PtNumberInteger" purposeEnumId="PpDeviceConfiguration"
-            groupEnumId="PgControl" classEnumId="PcMain" permissionEnumId="PpeReadWrite"
-            isRequired="N" hasValue="Y" priority="110" minValue="1" maxValue="60000" defaultValue="250"
-            parameterCode="AIHpcMaxLatencyMs" parameterName="AI/HPC Max Latency ms"
-            description="Maximum target latency in milliseconds for inference serving"/>
-
-    <!-- ========================================================= -->
-    <!-- AI/HPC Devices                                            -->
-    <!-- ========================================================= -->
-
-    <moqui.device.Device deviceId="AIHPCCluster01" deviceTypeEnumId="DgtGpuCluster"
-            purposeEnumId="DepAITraining" statusTypeId="DeviceGroupBasicStatus"
-            statusFlowId="DeviceGroupBasicStatusFlow" statusId="DgbsStandstill"
-            description="Example AI/HPC GPU cluster root device for training, inference, vector search and RAG tests"/>
-    <moqui.device.DeviceGroup deviceId="AIHPCCluster01" groupName="AI/HPC GPU Cluster 01"/>
-
-    <moqui.device.Device deviceId="AIHPCGpuServer01" parentDeviceId="AIHPCCluster01"
-            deviceTypeEnumId="DtTrainingServer" purposeEnumId="DepAITraining"
-            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
-            description="Example GPU training server"/>
-    <moqui.device.PhysicalDevice deviceId="AIHPCGpuServer01" deviceName="AI/HPC GPU Server 01"
-            vendorName="Example Vendor" modelName="8xH100 Training Server" version="1"
-            hardwareVersion="rev-a" firmwareVersion="1.0.0" operatingSystem="Ubuntu 24.04"
-            softwareApplication="vLLM/NCCL/CUDA stack" serialNumber="AIHPC-SRV-0001"
-            uuid="00000000-0000-4000-8000-aihpcsrv0001" hash="sha256:aihpc-gpu-server-01"
-            location="lab/rack-a/u01" cycleTime="1000" isMulticore="Y"/>
-
-    <moqui.device.Device deviceId="AIHPCGpuServer01Gpu0" parentDeviceId="AIHPCGpuServer01"
-            deviceTypeEnumId="DtGPU" purposeEnumId="DepGpuAcceleration"
-            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
-            description="Example GPU accelerator 0"/>
-    <moqui.device.PhysicalDevice deviceId="AIHPCGpuServer01Gpu0" deviceName="AI/HPC GPU 0"
-            vendorName="NVIDIA" modelName="H100 SXM" hardwareVersion="h100" firmwareVersion="535.xx"
-            serialNumber="GPU-H100-0000" uuid="GPU-00000000-0000-0000-0000-000000000000"
-            hash="sha256:aihpc-gpu-0" location="lab/rack-a/u01/gpu0" cycleTime="1000"/>
-
-    <moqui.device.Device deviceId="AIHPCGpuServer01Gpu1" parentDeviceId="AIHPCGpuServer01"
-            deviceTypeEnumId="DtGPU" purposeEnumId="DepGpuAcceleration"
-            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
-            description="Example GPU accelerator 1"/>
-    <moqui.device.PhysicalDevice deviceId="AIHPCGpuServer01Gpu1" deviceName="AI/HPC GPU 1"
-            vendorName="NVIDIA" modelName="H100 SXM" hardwareVersion="h100" firmwareVersion="535.xx"
-            serialNumber="GPU-H100-0001" uuid="GPU-00000000-0000-0000-0000-000000000001"
-            hash="sha256:aihpc-gpu-1" location="lab/rack-a/u01/gpu1" cycleTime="1000"/>
-
-    <moqui.device.Device deviceId="AIHPCVectorIndex01" parentDeviceId="AIHPCCluster01"
-            deviceTypeEnumId="DtVectorDatabaseNode" purposeEnumId="DepVectorSearch"
-            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
-            description="Example OpenSearch/Elastic vector index runtime"/>
-
-    <moqui.device.Device deviceId="AIHPCEmbeddingRuntime01" parentDeviceId="AIHPCCluster01"
-            deviceTypeEnumId="DtEmbeddingRuntime" purposeEnumId="DepEmbeddingGeneration"
-            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
-            description="Example embedding runtime"/>
-
-    <moqui.device.Device deviceId="AIHPCModelServing01" parentDeviceId="AIHPCCluster01"
-            deviceTypeEnumId="DtModelServingRuntime" purposeEnumId="DepModelServing"
-            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
-            description="Example model serving runtime"/>
-
-    <moqui.device.Device deviceId="AIHPCRagRuntime01" parentDeviceId="AIHPCCluster01"
-            deviceTypeEnumId="DtRagRuntime" purposeEnumId="DepRagRetrieval"
-            statusTypeId="DeviceAdvancedStatus" statusFlowId="DeviceAdvancedStatusFlow" statusId="DasStandstill"
-            description="Example RAG orchestration runtime"/>
-
-    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCGpuServer01"
-            purposeEnumId="DgmpTrainingWorker" sequenceNum="10" description="Training server member"/>
-    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCGpuServer01Gpu0"
-            purposeEnumId="DgmpGpuWorker" sequenceNum="20" description="GPU accelerator member 0"/>
-    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCGpuServer01Gpu1"
-            purposeEnumId="DgmpGpuWorker" sequenceNum="30" description="GPU accelerator member 1"/>
-    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCVectorIndex01"
-            purposeEnumId="DgmpVectorIndexNode" sequenceNum="40" description="Vector index data-plane member"/>
-    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCEmbeddingRuntime01"
-            purposeEnumId="DgmpEmbeddingProvider" sequenceNum="50" description="Embedding provider member"/>
-    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCModelServing01"
-            purposeEnumId="DgmpInferenceReplica" sequenceNum="60" description="Inference replica member"/>
-    <moqui.device.DeviceGroupMember deviceId="AIHPCCluster01" memberDeviceId="AIHPCRagRuntime01"
-            purposeEnumId="DgmpRagRuntime" sequenceNum="70" description="RAG runtime member"/>
-
-    <!-- ========================================================= -->
-    <!-- AI/HPC Device Configs                                     -->
-    <!-- ========================================================= -->
-
-    <moqui.device.DeviceConfig deviceConfigId="AIHPCClusterNCCLConfig"
-            deviceTypeEnumId="DgtGpuCluster" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
-            controlMethodEnumId="DcmNone" configName="AI/HPC Cluster NCCL Runtime Config"
-            description="Cluster-level distributed runtime profile" fromDate="2026-06-28 00:00:00"/>
-
-    <moqui.device.DeviceConfig deviceConfigId="AIHPCGpuServerTrainingBaseline"
-            deviceTypeEnumId="DtTrainingServer" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
-            controlMethodEnumId="DcmNone" configName="AI/HPC GPU Server Training Baseline"
-            description="Server-level training runtime baseline" fromDate="2026-06-28 00:00:00"/>
-
-    <moqui.device.DeviceConfig deviceConfigId="AIHPCH100Bf16TrainingConfig"
-            deviceTypeEnumId="DtGPU" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
-            controlMethodEnumId="DcmNone" configName="H100 BF16 Training Profile"
-            description="Per-GPU training profile for H100 accelerators" fromDate="2026-06-28 00:00:00"/>
-
-    <moqui.device.DeviceConfig deviceConfigId="AIHPCVectorIndexHnswConfig"
-            deviceTypeEnumId="DtVectorDatabaseNode" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
-            controlMethodEnumId="DcmNone" configName="Vector Index HNSW Profile"
-            description="Vector database HNSW configuration" fromDate="2026-06-28 00:00:00"/>
-
-    <moqui.device.DeviceConfig deviceConfigId="AIHPCEmbeddingRuntimeConfig"
-            deviceTypeEnumId="DtEmbeddingRuntime" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
-            controlMethodEnumId="DcmNone" configName="Embedding Runtime Profile"
-            description="Embedding generation runtime configuration" fromDate="2026-06-28 00:00:00"/>
-
-    <moqui.device.DeviceConfig deviceConfigId="AIHPCModelServingLowLatencyConfig"
-            deviceTypeEnumId="DtModelServingRuntime" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
-            controlMethodEnumId="DcmNone" configName="Low Latency Model Serving Profile"
-            description="Low-latency LLM serving profile" fromDate="2026-06-28 00:00:00"/>
-
-    <moqui.device.DeviceConfig deviceConfigId="AIHPCRagRuntimeConfig"
-            deviceTypeEnumId="DtRagRuntime" configTypeEnumId="DctApplyConfig" purposeEnumId="DcpRunConfig"
-            controlMethodEnumId="DcmNone" configName="RAG Runtime Profile"
-            description="RAG orchestration profile" fromDate="2026-06-28 00:00:00"/>
-
-    <!-- DeviceConfig parameter values: deviceId intentionally null. -->
-    <moqui.math.Parameter parameterId="AIHPCClusterTensorParallelCfgParam"
-            deviceConfigId="AIHPCClusterNCCLConfig" parameterDefId="AIHpcTensorParallelSizeDef"
-            parameterAlias="TENSOR_PARALLEL_SIZE" sequenceNum="10" numericValue="2"/>
-    <moqui.math.Parameter parameterId="AIHPCClusterPrecisionCfgParam"
-            deviceConfigId="AIHPCClusterNCCLConfig" parameterDefId="AIHpcPrecisionDef"
-            parameterAlias="CLUSTER_PRECISION" sequenceNum="20" symbolicValue="bf16"/>
-
-    <moqui.math.Parameter parameterId="AIHPCServerModelNameCfgParam"
-            deviceConfigId="AIHPCGpuServerTrainingBaseline" parameterDefId="AIHpcModelNameDef"
-            parameterAlias="MODEL_NAME" sequenceNum="10" symbolicValue="example-transformer-small"/>
-    <moqui.math.Parameter parameterId="AIHPCServerBatchSizeCfgParam"
-            deviceConfigId="AIHPCGpuServerTrainingBaseline" parameterDefId="AIHpcBatchSizeDef"
-            parameterAlias="TRAIN_BATCH_SIZE" sequenceNum="20" numericValue="64"/>
-
-    <moqui.math.Parameter parameterId="AIHPCGpuPrecisionCfgParam"
-            deviceConfigId="AIHPCH100Bf16TrainingConfig" parameterDefId="AIHpcPrecisionDef"
-            parameterAlias="GPU_PRECISION" sequenceNum="10" symbolicValue="bf16"/>
-    <moqui.math.Parameter parameterId="AIHPCGpuPowerCfgParam"
-            deviceConfigId="AIHPCH100Bf16TrainingConfig" parameterDefId="AIHpcMaxPowerWDef"
-            parameterAlias="GPU_MAX_POWER_W" sequenceNum="20" numericValue="650"/>
-    <moqui.math.Parameter parameterId="AIHPCGpuMigCfgParam"
-            deviceConfigId="AIHPCH100Bf16TrainingConfig" parameterDefId="AIHpcMigModeDef"
-            parameterAlias="GPU_MIG_MODE" sequenceNum="30" symbolicValue="disabled"/>
-
-    <moqui.math.Parameter parameterId="AIHPCVectorDimsCfgParam"
-            deviceConfigId="AIHPCVectorIndexHnswConfig" parameterDefId="AIHpcEmbeddingDimensionsDef"
-            parameterAlias="VECTOR_DIMENSIONS" sequenceNum="10" numericValue="1536"/>
-    <moqui.math.Parameter parameterId="AIHPCVectorMetricCfgParam"
-            deviceConfigId="AIHPCVectorIndexHnswConfig" parameterDefId="AIHpcSimilarityMetricDef"
-            parameterAlias="SIMILARITY_METRIC" sequenceNum="20" symbolicValue="cosine"/>
-    <moqui.math.Parameter parameterId="AIHPCVectorHnswMCfgParam"
-            deviceConfigId="AIHPCVectorIndexHnswConfig" parameterDefId="AIHpcHnswMDef"
-            parameterAlias="HNSW_M" sequenceNum="30" numericValue="32"/>
-    <moqui.math.Parameter parameterId="AIHPCVectorEfSearchCfgParam"
-            deviceConfigId="AIHPCVectorIndexHnswConfig" parameterDefId="AIHpcEfSearchDef"
-            parameterAlias="HNSW_EF_SEARCH" sequenceNum="40" numericValue="128"/>
-
-    <moqui.math.Parameter parameterId="AIHPCEmbeddingModelCfgParam"
-            deviceConfigId="AIHPCEmbeddingRuntimeConfig" parameterDefId="AIHpcModelNameDef"
-            parameterAlias="EMBEDDING_MODEL" sequenceNum="10" symbolicValue="example-embedding-model"/>
-    <moqui.math.Parameter parameterId="AIHPCServingLatencyCfgParam"
-            deviceConfigId="AIHPCModelServingLowLatencyConfig" parameterDefId="AIHpcMaxLatencyMsDef"
-            parameterAlias="MAX_LATENCY_MS" sequenceNum="10" numericValue="250"/>
-    <moqui.math.Parameter parameterId="AIHPCRagModelCfgParam"
-            deviceConfigId="AIHPCRagRuntimeConfig" parameterDefId="AIHpcModelNameDef"
-            parameterAlias="RAG_MODEL" sequenceNum="10" symbolicValue="example-rag-pipeline"/>
-
-    <!-- ========================================================= -->
-    <!-- Live/materialized Device Parameters                       -->
-    <!-- ========================================================= -->
-
-    <moqui.math.Parameter parameterId="AIHPCGpu0PowerParam" deviceId="AIHPCGpuServer01Gpu0"
-            parameterDefId="AIHpcMaxPowerWDef" parameterAlias="GPU0_MAX_POWER_W" sequenceNum="10" numericValue="650"/>
-    <moqui.math.Parameter parameterId="AIHPCGpu1PowerParam" deviceId="AIHPCGpuServer01Gpu1"
-            parameterDefId="AIHpcMaxPowerWDef" parameterAlias="GPU1_MAX_POWER_W" sequenceNum="10" numericValue="650"/>
-    <moqui.math.Parameter parameterId="AIHPCVectorDimsParam" deviceId="AIHPCVectorIndex01"
-            parameterDefId="AIHpcEmbeddingDimensionsDef" parameterAlias="VECTOR_DIMENSIONS" sequenceNum="10" numericValue="1536"/>
-    <moqui.math.Parameter parameterId="AIHPCServingLatencyParam" deviceId="AIHPCModelServing01"
-            parameterDefId="AIHpcMaxLatencyMsDef" parameterAlias="MAX_LATENCY_MS" sequenceNum="10" numericValue="250"/>
-
-    <!-- ========================================================= -->
-    <!-- AI/HPC Rule Set and Rules                                 -->
-    <!-- ========================================================= -->
-
-    <moqui.device.DeviceRuleSet deviceRuleSetId="AIHPCClusterProductionCycle01"
-            purposeEnumId="DrspProcess" deviceId="AIHPCCluster01" sequenceNum="10"
-            ruleSetName="AI/HPC Cluster Production Cycle 01"
-            description="Example multi-device AI/HPC production cycle scoped to AIHPCCluster01"
-            fromDate="2026-06-28 00:00:00"/>
-
-    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule010"
-            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCClusterNCCLConfig"
-            deviceId="AIHPCCluster01" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply cluster distributed runtime profile"
-            priority="10" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
-    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule020"
-            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCGpuServerTrainingBaseline"
-            deviceId="AIHPCGpuServer01" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply GPU server training baseline"
-            priority="20" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
-    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule030Gpu0"
-            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCH100Bf16TrainingConfig"
-            deviceId="AIHPCGpuServer01Gpu0" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply H100 BF16 training profile to GPU 0"
-            priority="30" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
-    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule030Gpu1"
-            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCH100Bf16TrainingConfig"
-            deviceId="AIHPCGpuServer01Gpu1" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply H100 BF16 training profile to GPU 1"
-            priority="30" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
-    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule040Vector"
-            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCVectorIndexHnswConfig"
-            deviceId="AIHPCVectorIndex01" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply vector index HNSW profile"
-            priority="40" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
-    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule050Embedding"
-            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCEmbeddingRuntimeConfig"
-            deviceId="AIHPCEmbeddingRuntime01" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply embedding runtime profile"
-            priority="50" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
-    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule060Serving"
-            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCModelServingLowLatencyConfig"
-            deviceId="AIHPCModelServing01" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply low-latency model serving profile"
-            priority="60" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
-    <moqui.device.DeviceRule deviceRuleId="AIHPCClusterRule070Rag"
-            deviceRuleSetId="AIHPCClusterProductionCycle01" deviceConfigId="AIHPCRagRuntimeConfig"
-            deviceId="AIHPCRagRuntime01" ruleTypeEnumId="DrtApplyConfig" ruleName="Apply RAG runtime profile"
-            priority="70" isEnabled="Y" runDevice="N" fromDate="2026-06-28 00:00:00"/>
-
-    <!-- ========================================================= -->
-    <!-- Optional MathModel + DeviceMathModel binding              -->
-    <!-- ========================================================= -->
-
-    <moqui.math.MathModelDef mathModelDefId="AIHpcSmokeInferenceModelDef"
-            modelTypeEnumId="MmtDlFeedforward" usageContextEnumId="MmucInference"
-            domainEnumId="MmdEngineering" serviceName="moqui.device.AIHPCTestServices.run#SmokeInference"
-            modelName="AI/HPC Smoke Inference Model" versionNumber="1"
-            releaseStatusId="MathModelProduction"
-            description="Small synthetic model definition used only to exercise DeviceMathModel binding on AI/HPC devices"/>
-
-    <moqui.math.MathModel mathModelId="AIHpcSmokeInferenceModelV1"
-            mathModelDefId="AIHpcSmokeInferenceModelDef" sourceEnumId="MmsSimulated"
-            modelAlias="aihpc-smoke-inference-v1"
-            description="Synthetic production model instance for AI/HPC device binding tests"
-            statusId="MathModelProduction" statusFlowId="MathModelStatusFlow"/>
-
-    <moqui.device.DeviceMathModel deviceId="AIHPCModelServing01"
-            mathModelId="AIHpcSmokeInferenceModelV1" bindingPurposeEnumId="MmbpClosedLoopControl"
-            sequenceNum="10" description="Model serving runtime executes the smoke inference model"
-            fromDate="2026-06-28 00:00:00"/>
-    <moqui.device.DeviceMathModel deviceId="AIHPCCluster01"
-            mathModelId="AIHpcSmokeInferenceModelV1" bindingPurposeEnumId="MmbpMonitoring"
-            sequenceNum="20" description="Cluster-level binding for monitoring the synthetic model deployment"
-            fromDate="2026-06-28 00:00:00"/>
-
-    <!-- ========================================================= -->
-    <!-- Dashboard and mock telemetry request                      -->
-    <!-- ========================================================= -->
-
-    <moqui.device.DeviceDashboard dashboardId="ai-hpc-cluster-summary" deviceId="AIHPCCluster01"
-            dashboardPath="/d/ai-hpc-cluster/ai-hpc-cluster?orgId=1&amp;kiosk&amp;var-device_id=AIHPCCluster01"
-            purposeEnumId="DdpSummary" sequenceNum="10"/>
-    <moqui.device.DeviceDashboard dashboardId="ai-hpc-cluster-summary" deviceId="AIHPCCluster01"
-            dashboardPath="/d/ai-hpc-cluster/ai-hpc-cluster?orgId=1&amp;kiosk&amp;var-device_id=AIHPCCluster01"
-            purposeEnumId="DdpMetrics" sequenceNum="20"/>
-
-    <moqui.device.DeviceConnection connectionName="AIHPCGpuServer01MockConnection"
-            deviceId="AIHPCGpuServer01" connectionTypeEnumId="DctDirectConnection" purposeEnumId="DcpDiagnostics"
-            description="Mock connection for AI/HPC GPU server telemetry" driverEnumId="DcdMockDriver"
-            transportEnumId="DctrMoquiMock" transportConfig="mock://aihpc/gpu-server-01"/>
-
-    <moqui.device.DeviceRequest requestName="AIHPCGpuTelemetryRead"
-            deviceId="AIHPCGpuServer01" requestTypeEnumId="DrtRead" purposeEnumId="DrpMonitoring"
-            requestGroup="AIHPC_TELEMETRY" priority="10" sequenceNum="10"
-            description="Mock read request for GPU power and serving latency parameters"
-            routerEnumId="DrrDirect" connectionName="AIHPCGpuServer01MockConnection" timeout="1000"/>
-
-    <moqui.device.DeviceRequestItem requestName="AIHPCGpuTelemetryRead" requestItemName="GPU0_MAX_POWER_W"
-            parameterId="AIHPCGpu0PowerParam" sequenceNum="10" query="gpu/0/powerLimitW"
-            itemTypeEnumId="DritInt" minItemValue="50" maxItemValue="1000" defaultItemValue="650"
-            itemUomId="WT" allowDuplicate="N" tolerance="1.0" scalingFactor="1.0" offsetValue="0.0"
-            significantDigits="0"/>
-    <moqui.device.DeviceRequestItem requestName="AIHPCGpuTelemetryRead" requestItemName="GPU1_MAX_POWER_W"
-            parameterId="AIHPCGpu1PowerParam" sequenceNum="20" query="gpu/1/powerLimitW"
-            itemTypeEnumId="DritInt" minItemValue="50" maxItemValue="1000" defaultItemValue="650"
-            itemUomId="WT" allowDuplicate="N" tolerance="1.0" scalingFactor="1.0" offsetValue="0.0"
-            significantDigits="0"/>
-
+            workEffortId="GW_EDGE_01"/>
 
 </entity-facade-xml>

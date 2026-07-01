@@ -505,6 +505,25 @@ waypoints as `DeviceConfig/Parameter` entries under a `DeviceRuleSet`, then call
 `export#DeviceConfig` to serialise them as a Codesys txt recipe that the PLC
 recipe FB loads autonomously from the filesystem.
 
+## Unified test data
+
+`data/DeviceTestData.xml` is the canonical Moqui-side test suite for the component.
+It is intentionally small but complete enough to exercise the main industrial
+flows together:
+
+- one control-cell `DeviceGroup`;
+- one generic PLC, one drive, and one gateway as physical devices;
+- atomic `DeviceConfig` records for factory defaults and production profiles;
+- `DeviceRuleSet` and `DeviceRule` rows for process/task application;
+- device-scoped `Parameter` values and config-scoped `Parameter` values;
+- observability records for `ParameterLog`, `DeviceLog`, and `Measurement`;
+- Grafana-ready `DeviceDashboard` assignments used by the SimpleScreens UI.
+
+This XML seed is the reference scenario mirrored by the local SQL fixtures in
+`moqui-device-gateway`. The SQL files may stay transport-oriented for Camel
+tests, but the IDs, device roles, and operational meaning should remain aligned
+with `DeviceTestData.xml`.
+
 ## Related components
 
 - **[moqui-math](https://github.com/moqui/moqui-math)** — the dual math model (models, runs, lineage, trajectories).
