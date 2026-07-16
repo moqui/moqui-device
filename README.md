@@ -57,6 +57,18 @@ model, command, log, and audit both how a device *moves* and how it *switches*.
 | Trajectory Binding | `TrajectoryAxisBinding` — maps `moqui.math.Trajectory` axes to device parameters (position, velocity, acceleration, jerk, snap) |
 | Dashboards | `DeviceDashboard` |
 
+### Device-level and parameter-level logs
+
+`DeviceLog` and `ParameterLog` represent different scopes, independently from
+whether a payload is numeric, textual, or enumerated. In the `moqui-plc`
+`LogEvent` transport contract, `loggerName` is the exact owning
+`Device.deviceId`. An empty `source` denotes a device-level event stored in
+`DeviceLog`; a non-empty `source` is the exact, pre-existing
+`Parameter.parameterId` and is stored in `ParameterLog`. Descriptive
+`deviceName` and `parameterName` values are not persistent keys, and the gateway
+must neither concatenate logger fields nor create missing Parameters from an
+inbound log.
+
 ### Device status flows, and why automation reduces to FSMs
 
 Two built-in status flows are provided as seed data:
