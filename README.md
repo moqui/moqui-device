@@ -591,6 +591,15 @@ This XML seed is the reference scenario mirrored by the local SQL fixtures in
 tests, but the IDs, device roles, and operational meaning should remain aligned
 with `DeviceTestData.xml`.
 
+`data/HVACDemoData.xml` is the process-automation example reverse-engineered
+from the `mantle-hvac` CODESYS application in `moqui-plc`. It contains the flat
+HVAC status flow, Application/CPU, subsystem and atomic-device tree, the Civil
+Cooling/Heating/Dehumidifying recipes composed through `DeviceRuleSet`, and the
+approved MQTT live-parameter whitelist. Recipe values exclude runtime `actual`
+durations and process feedback; those remain device-bound parameters. Device
+and parameter names are logical Moqui names without the CODESYS `dev.` prefix;
+the gateway/PLC projection adds that namespace only when emitting IEC paths.
+
 ## Related components
 
 - **[moqui-math](https://github.com/moqui/moqui-math)** — the dual math model (models, runs, lineage, trajectories).

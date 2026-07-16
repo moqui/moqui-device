@@ -142,6 +142,12 @@ along with this software (see the LICENSE.md file). If not, see
             File format (one line per parameter):
                 DeviceName.ParameterName:=ParameterValue
 
+            Moqui stores logical device/parameter names without an IEC namespace.
+            For moqui-plc targets the gateway projection adds `dev.`: PLC-level
+            parameters become `dev.parameterName`, while atomic FB parameters
+            become `dev.deviceName.parameterName`. An explicit
+            DeviceRequestItem.requestItemName remains the output override.
+
             Filename pattern: {ruleSetName}_p{priority:02d}.txt
             Response:  { "files": [{"filename": ..., "priority": ..., "rowCount": ...}] }
 
