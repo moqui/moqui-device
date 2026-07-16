@@ -17,12 +17,23 @@ what it *runs*, and what it *did*.
 
 ## Trajectories and discrete-event systems
 
-A device's behaviour over time falls into one of two forms, and the model covers
-both. Either it is a **trajectory** — a continuous path through a state space — or
-it is a **discrete-event system (DES)**, a sequence of state transitions fired by
-events. A robot arm moving through space and a thermodynamic process following a
-temperature profile are trajectories; a batch advancing through its phases or an
-industrial bioprocess stepping between operating states is a DES.
+A device's behaviour over time can be described in two fundamental forms, and
+the model covers both. A **trajectory** is a continuous path through a state
+space; its states are transitory and constantly evolving, as with a robot arm
+moving through space or a thermodynamic process following a temperature
+profile. A **discrete-event system (DES)** instead evolves through a sequence of
+state transitions fired by events or transition conditions. Its states are
+stable and discrete: the system dwells in a state until the required condition
+or event allows it to leave that state and enter the next one, as with a batch
+advancing through its phases or an industrial bioprocess stepping between
+operating states.
+
+The distinction concerns state evolution, not an exclusive classification of
+the physical device. Industrial systems are often hybrid: a DES orchestrates
+stable operating modes while one or more trajectories describe the continuous
+motion or process evolution performed inside a mode. The model therefore allows
+StatusFlow-based discrete orchestration and mathematical trajectories to be
+used together while preserving their different semantics.
 
 The math/device duality captures the continuous case directly:
 `moqui.math.Trajectory` describes the path, and `TrajectoryAxisBinding` maps its
