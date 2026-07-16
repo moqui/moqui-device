@@ -611,6 +611,53 @@ durations and process feedback; those remain device-bound parameters. Device
 and parameter names are logical Moqui names without the CODESYS `dev.` prefix;
 the gateway/PLC projection adds that namespace only when emitting IEC paths.
 
+### HVAC seed-first example
+
+The HVAC file is also a worked example of how to create the declaration layer
+for a real PLC Application. Its records are derived in the following order:
+
+1. model the CODESYS Application/CPU as one `Device`/`PhysicalDevice`;
+2. decompose the application into developer-approved subsystem `DeviceGroup`
+   records and atomic devices such as pumps, valves, fans and dampers;
+3. create reusable `ParameterDef` records, then bind logical values and runtime
+   feedback to their owning devices with `Parameter`;
+4. represent the UI-visible FSM with `StatusFlow`, `StatusFlowItem` and
+   `StatusFlowTransition`, while keeping predicates, interlocks, state output
+   functions and deterministic invocation order in PLC code;
+5. declare atomic `DeviceConfig` recipes and compose them for each process mode
+   through ordered `DeviceRuleSet`/`DeviceRule` rows;
+6. whitelist only the reviewed, device-bound parameters that may receive live
+   updates through `DeviceRequestItem`.
+
+After `moqui-math` and `moqui-device` are installed under
+`runtime/component`, load the example with the normal Moqui seed-data flow:
+
+```shell
+./gradlew load -Ptypes=seed
+```
+
+The same reviewed seed then drives three downstream projections:
+
+| Seed model | PLC/code-generation use | Gateway use |
+| --- | --- | --- |
+| `Device`, `PhysicalDevice`, groups and parameters | Generate and cross-check the `DeviceFacade`, atomic FB catalog and diagnostics scaffolding | Resolve controller, device and parameter identity without embedding IEC names in Moqui |
+| `StatusFlow` topology | Generate status declarations and transition topology; complete code-owned predicates and state actions through the reviewed agent workflow | Expose the machine state model to Moqui screens and other consumers |
+| `DeviceConfig`, `DeviceRuleSet`, `DeviceRule` | Define the complete configurable recipe surface, excluding actual/feedback values | `export#DeviceConfig` emits deterministic CODESYS txtrecipe assignments such as `dev.tempSetpoint` and `dev.coldGlycolPump.enableTime` |
+| device-bound feedback parameters plus transport requests | Generate typed PLC/gateway mappings after protocol and physical binding are reviewed | Subscribe or poll acquisition values over MQTT v5 or OPC UA and update the corresponding Moqui parameters |
+| approved live-update `DeviceRequestItem` rows | Generate the Application-specific `JsonToParametersMapper` used by `MqttParameterSub` | Publish only the whitelisted setpoints and timing parameters to the configured MQTT topic |
+
+`HVACDemoData.xml` currently provides the authoritative device/feedback catalog,
+the recipe-export request and the approved live-update request. Acquisition
+`DeviceRequest` rows are application- and transport-specific: the agent creates
+them from the reviewed signal catalog, sampling domains, MQTT topics or OPC UA
+node IDs instead of inventing physical bindings in this generic example.
+
+This separation is intentional. The seed remains authoritative for persistent
+identity, configuration, request metadata and StatusFlow topology; generated
+PLC code remains authoritative for process semantics, interlocks and the exact
+execution order. The gateway executes the reviewed transport projection without
+becoming a second configuration source.
+
 ## Related components
 
 - **[moqui-math](https://github.com/moqui/moqui-math)** — the dual math model (models, runs, lineage, trajectories).
