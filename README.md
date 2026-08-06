@@ -595,6 +595,66 @@ waypoints as `DeviceConfig/Parameter` entries under a `DeviceRuleSet`, then call
 `export#DeviceConfig` to serialise them as a Codesys txt recipe that the PLC
 recipe FB loads autonomously from the filesystem.
 
+## Example service: OpenVLA action and visual grounding
+
+`moqui.device.TrajectoryPlannerServices` also exposes two OpenVLA-oriented helper
+services designed to bridge Moqui `Device` / `DeviceContent` image records with
+external vision-language-action inference endpoints:
+
+- `run#OpenVla`
+- `run#OpenVlaGrounding`
+
+Both services resolve an image from `DeviceContent` associated with a `Device`,
+encode it as base64 through the Moqui resource system, and delegate the real HTTP
+call to a `type="remote-rest"` wrapper service. This keeps the transport contract
+declarative while still letting Moqui validate device/image ownership before any
+remote inference call is made.
+
+### `run#OpenVla`
+
+`run#OpenVla` targets the `/act` endpoint of an OpenVLA-compatible service. It
+returns the predicted continuous action vector together with the model metadata.
+This is the direct VLA path for robot control scenarios where the remote service
+already knows how to convert the RGB scene and instruction into action-space
+values.
+
+### `run#OpenVlaGrounding`
+
+`run#OpenVlaGrounding` targets a `/ground` endpoint and is intended for the
+intermediate perception step: identify an object or region in the image and
+return reusable geometric data to the Moqui model.
+
+Returned outputs:
+
+- `boundingBox` — `[xMin, yMin, xMax, yMax]` in image pixel coordinates
+- `center` — `[x, y]` in image pixel coordinates
+- `targetPose` — optional target pose vector produced by the remote service
+- `goalPose` — alias of `targetPose`, ready to pass to `run#RobotArmTrajectoryPlanner`
+- `objectLabel`, `confidence`, `coordinateSystem`, `modelId`
+
+When `saveResult = true`, the service also persists the result into
+`moqui.math.Vector` / `VectorComponent` so the grounding output can be reused in
+later steps or audited independently from the original inference response:
+
+- `boundingBoxMinVectorId`
+- `boundingBoxMaxVectorId`
+- `centerVectorId`
+- `targetPoseVectorId`
+
+This means the same grounding result can be:
+
+- consumed immediately in-memory by a caller
+- stored in the mathematical model for later reuse
+- forwarded as `goalPose` into `run#RobotArmTrajectoryPlanner`
+- or all three at once
+
+### Production note
+
+The intended production setup is GPU-backed OpenVLA / OWLv2 inference deployed
+through `moqui-deploy/industrial/openvla`. A CPU-only fallback was validated for
+the `/ground` path using a lighter OWLViT grounding model, but the main
+`openvla/openvla-7b` action model remains a GPU-oriented deployment target.
+
 ## Unified test data
 
 `data/DeviceTestData.xml` is the canonical Moqui-side test suite for the component.

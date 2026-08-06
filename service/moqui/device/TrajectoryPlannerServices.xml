@@ -15,6 +15,319 @@ along with this software (see the LICENSE.md file). If not, see
 <services xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-definition-3.xsd">
 
+    <service verb="call" noun="OpenVla" type="remote-rest" method="post"
+            location="${openVlaLocation}">
+        <description>
+            Calls the OpenVLA REST endpoint and returns the predicted robot action.
+            This is the thin transport wrapper around the real HTTP call.
+        </description>
+        <in-parameters>
+            <parameter name="openVlaLocation" required="true"/>
+            <parameter name="instruction" required="true"/>
+            <parameter name="image_base64" required="true"/>
+            <parameter name="unnorm_key"/>
+            <parameter name="do_sample" type="Boolean"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="action" type="List"/>
+            <parameter name="modelId"/>
+            <parameter name="unnormKey"/>
+        </out-parameters>
+    </service>
+
+    <service verb="call" noun="OpenVlaGrounding" type="remote-rest" method="post"
+            location="${openVlaLocation}">
+        <description>
+            Calls an OpenVLA-compatible visual grounding endpoint and returns the
+            object localization result in image space, with an optional target TCP pose.
+        </description>
+        <in-parameters>
+            <parameter name="openVlaLocation" required="true"/>
+            <parameter name="instruction" required="true"/>
+            <parameter name="image_base64" required="true"/>
+            <parameter name="return_target_pose" type="Boolean"/>
+            <parameter name="target_pose_dimension" type="Integer"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="boundingBox" type="List"/>
+            <parameter name="center" type="List"/>
+            <parameter name="targetPose" type="List"/>
+            <parameter name="objectLabel"/>
+            <parameter name="confidence"/>
+            <parameter name="coordinateSystem"/>
+            <parameter name="modelId"/>
+        </out-parameters>
+    </service>
+
+    <service verb="run" noun="OpenVla">
+        <description>
+            Resolves a device image from DeviceContent and delegates the inference call
+            to OpenVLA through the remote-rest service wrapper.
+        </description>
+        <in-parameters>
+            <parameter name="deviceId" required="true"/>
+            <parameter name="prompt" required="true"/>
+            <parameter name="deviceContentId"/>
+            <parameter name="openVlaBaseUrl" default-value="http://openvla:8000"/>
+            <parameter name="apiKey"/>
+            <parameter name="unnormKey"/>
+            <parameter name="doSample" type="Boolean"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="action" type="List"/>
+            <parameter name="modelId"/>
+            <parameter name="unnormKey"/>
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="moqui.device.Device" value-field="device">
+                <field-map field-name="deviceId"/>
+            </entity-find-one>
+            <if condition="!device">
+                <return error="true" message="Device ${deviceId} not found"/>
+            </if>
+
+            <if condition="deviceContentId">
+                <then>
+                    <entity-find-one entity-name="moqui.device.DeviceContent" value-field="deviceContent">
+                        <field-map field-name="deviceContentId"/>
+                    </entity-find-one>
+                    <if condition="!deviceContent || deviceContent.deviceId != deviceId">
+                        <return error="true" message="DeviceContent ${deviceContentId} not found for device ${deviceId}"/>
+                    </if>
+                    <set field="imageLocation" from="deviceContent.contentLocation"/>
+                </then>
+                <else>
+                    <service-call name="moqui.device.DeviceServices.get#DeviceContentLocation"
+                            in-map="[deviceId:deviceId, contentTypeEnumIdList:['DCntImage']]" out-map="context"/>
+                    <if condition="!deviceContent">
+                        <return error="true" message="No image DeviceContent found for device ${deviceId}"/>
+                    </if>
+                    <set field="imageLocation" from="contentLocation"/>
+                </else>
+            </if>
+
+            <if condition="!imageLocation">
+                <return error="true" message="DeviceContent ${deviceContent ? deviceContent.deviceContentId : deviceContentId} has no contentLocation"/>
+            </if>
+
+            <script><![CDATA[
+                import org.moqui.BaseException
+
+                def rr = ec.resource.getLocationReference(imageLocation)
+                if (rr == null) throw new BaseException("Could not resolve image location ${imageLocation}.")
+                byte[] imageBytes
+                rr.openStream().withStream { stream -> imageBytes = stream.bytes }
+                if (!imageBytes) throw new BaseException("Image at ${imageLocation} is empty.")
+
+                imageBase64 = imageBytes.encodeBase64().toString()
+                String baseUrl = (openVlaBaseUrl ?: "http://openvla:8000").replaceAll('/+$', '')
+                openVlaLocation = apiKey ? "${baseUrl}/act?apiKey=${java.net.URLEncoder.encode(apiKey, 'UTF-8')}" : "${baseUrl}/act"
+            ]]></script>
+
+            <service-call name="moqui.device.TrajectoryPlannerServices.call#OpenVla"
+                    in-map="[openVlaLocation:openVlaLocation, instruction:prompt, image_base64:imageBase64,
+                            unnorm_key:unnormKey, do_sample:doSample]"
+                    out-map="openVlaResult"/>
+
+            <set field="action" from="openVlaResult.action"/>
+            <set field="modelId" from="openVlaResult.modelId"/>
+            <set field="unnormKey" from="openVlaResult.unnormKey"/>
+        </actions>
+    </service>
+
+    <service verb="run" noun="OpenVlaGrounding">
+        <description>
+            Resolves an image from DeviceContent, calls an OpenVLA-compatible visual
+            grounding endpoint, and optionally persists the geometric result as
+            Vector / VectorComponent records. The returned targetPose can be passed
+            directly as goalPose to run#RobotArmTrajectoryPlanner.
+        </description>
+        <in-parameters>
+            <parameter name="deviceId" required="true"/>
+            <parameter name="prompt" required="true"/>
+            <parameter name="deviceContentId"/>
+            <parameter name="openVlaBaseUrl" default-value="http://openvla:8000"/>
+            <parameter name="apiKey"/>
+            <parameter name="returnTargetPose" type="Boolean" default-value="false"/>
+            <parameter name="targetPoseDimension" type="Integer" default-value="6"/>
+            <parameter name="saveResult" type="Boolean" default-value="false"/>
+            <parameter name="saveBoundingBox" type="Boolean" default-value="true"/>
+            <parameter name="saveCenter" type="Boolean" default-value="true"/>
+            <parameter name="saveTargetPose" type="Boolean" default-value="true"/>
+            <parameter name="imageVectorSpaceEnumId" default-value="EuclideanSpace2D"/>
+            <parameter name="targetPoseVectorSpaceEnumId" default-value="EngTcpPose6Dof"/>
+        </in-parameters>
+        <out-parameters>
+            <parameter name="boundingBox" type="List"/>
+            <parameter name="center" type="List"/>
+            <parameter name="targetPose" type="List"/>
+            <parameter name="goalPose" type="List"/>
+            <parameter name="objectLabel"/>
+            <parameter name="confidence"/>
+            <parameter name="coordinateSystem"/>
+            <parameter name="modelId"/>
+            <parameter name="boundingBoxMinVectorId"/>
+            <parameter name="boundingBoxMaxVectorId"/>
+            <parameter name="centerVectorId"/>
+            <parameter name="targetPoseVectorId"/>
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="moqui.device.Device" value-field="device">
+                <field-map field-name="deviceId"/>
+            </entity-find-one>
+            <if condition="!device">
+                <return error="true" message="Device ${deviceId} not found"/>
+            </if>
+
+            <if condition="deviceContentId">
+                <then>
+                    <entity-find-one entity-name="moqui.device.DeviceContent" value-field="deviceContent">
+                        <field-map field-name="deviceContentId"/>
+                    </entity-find-one>
+                    <if condition="!deviceContent || deviceContent.deviceId != deviceId">
+                        <return error="true" message="DeviceContent ${deviceContentId} not found for device ${deviceId}"/>
+                    </if>
+                    <set field="imageLocation" from="deviceContent.contentLocation"/>
+                </then>
+                <else>
+                    <service-call name="moqui.device.DeviceServices.get#DeviceContentLocation"
+                            in-map="[deviceId:deviceId, contentTypeEnumIdList:['DCntImage']]" out-map="context"/>
+                    <if condition="!deviceContent">
+                        <return error="true" message="No image DeviceContent found for device ${deviceId}"/>
+                    </if>
+                    <set field="imageLocation" from="contentLocation"/>
+                </else>
+            </if>
+
+            <if condition="!imageLocation">
+                <return error="true" message="DeviceContent ${deviceContent ? deviceContent.deviceContentId : deviceContentId} has no contentLocation"/>
+            </if>
+
+            <script><![CDATA[
+                import org.moqui.BaseException
+
+                def rr = ec.resource.getLocationReference(imageLocation)
+                if (rr == null) throw new BaseException("Could not resolve image location ${imageLocation}.")
+                byte[] imageBytes
+                rr.openStream().withStream { stream -> imageBytes = stream.bytes }
+                if (!imageBytes) throw new BaseException("Image at ${imageLocation} is empty.")
+
+                imageBase64 = imageBytes.encodeBase64().toString()
+                String baseUrl = (openVlaBaseUrl ?: "http://openvla:8000").replaceAll('/+$', '')
+                openVlaLocation = apiKey ? "${baseUrl}/ground?apiKey=${java.net.URLEncoder.encode(apiKey, 'UTF-8')}" : "${baseUrl}/ground"
+            ]]></script>
+
+            <service-call name="moqui.device.TrajectoryPlannerServices.call#OpenVlaGrounding"
+                    in-map="[openVlaLocation:openVlaLocation, instruction:prompt, image_base64:imageBase64,
+                            return_target_pose:returnTargetPose, target_pose_dimension:targetPoseDimension]"
+                    out-map="groundingResult"/>
+
+            <script><![CDATA[
+                import org.moqui.BaseException
+
+                def normalizeNumberList = { Object value, String fieldName, Integer minSize = null ->
+                    if (value == null) return null
+                    List<?> sourceList = value instanceof List ? (List<?>) value : [value]
+                    List<BigDecimal> normalized = []
+                    sourceList.eachWithIndex { Object entry, int idx ->
+                        if (entry == null || entry.toString().trim().isEmpty()) {
+                            throw new BaseException("${fieldName}[${idx}] is empty.")
+                        }
+                        normalized.add(new BigDecimal(entry.toString()))
+                    }
+                    if (minSize != null && normalized.size() < minSize) {
+                        throw new BaseException("${fieldName} must contain at least ${minSize} values.")
+                    }
+                    return normalized
+                }
+
+                List<BigDecimal> boundingBoxList = normalizeNumberList(groundingResult.boundingBox, "boundingBox", 4)
+                List<BigDecimal> centerList = normalizeNumberList(groundingResult.center, "center", 2)
+                List<BigDecimal> targetPoseList = normalizeNumberList(groundingResult.targetPose, "targetPose",
+                    returnTargetPose ? (targetPoseDimension ?: 6) : null)
+
+                if (!boundingBoxList && !centerList && !targetPoseList) {
+                    throw new BaseException("OpenVLA grounding response for device ${deviceId} did not contain boundingBox, center, or targetPose.")
+                }
+
+                boundingBox = boundingBoxList
+                center = centerList
+                targetPose = targetPoseList
+                goalPose = targetPoseList
+                objectLabel = groundingResult.objectLabel
+                confidence = groundingResult.confidence
+                coordinateSystem = groundingResult.coordinateSystem ?: "image-pixel"
+                modelId = groundingResult.modelId
+            ]]></script>
+
+            <if condition="saveResult">
+                <script><![CDATA[
+                    def createVector = { String name, String description, String vectorSpaceEnumId, String purposeEnumId, List<BigDecimal> values ->
+                        if (!values) return null
+                        def vectorValue = ec.entity.makeValue("moqui.math.Vector")
+                        vectorValue.setAll([
+                            vectorTypeEnumId: "VtOrdinary",
+                            purposeEnumId: purposeEnumId,
+                            vectorSpaceEnumId: vectorSpaceEnumId,
+                            name: name,
+                            description: description,
+                            dimension: values.size()
+                        ])
+                        vectorValue.setSequencedIdPrimary()
+                        vectorValue.create()
+                        values.eachWithIndex { BigDecimal value, int idx ->
+                            def componentValue = ec.entity.makeValue("moqui.math.VectorComponent")
+                            componentValue.setAll([
+                                vectorId: vectorValue.vectorId,
+                                dimensionIndex: idx,
+                                componentTypeEnumId: "VctCanonical",
+                                realValue: value
+                            ])
+                            componentValue.setSequencedIdPrimary()
+                            componentValue.create()
+                        }
+                        return vectorValue.vectorId
+                    }
+
+                    if (saveBoundingBox && boundingBox) {
+                        boundingBoxMinVectorId = createVector(
+                            "bbox_min_${deviceId}",
+                            "Visual grounding bounding-box min corner for device ${deviceId}, image ${deviceContent.deviceContentId}",
+                            imageVectorSpaceEnumId ?: "EuclideanSpace2D",
+                            "VpPosition",
+                            [boundingBox[0], boundingBox[1]]
+                        )
+                        boundingBoxMaxVectorId = createVector(
+                            "bbox_max_${deviceId}",
+                            "Visual grounding bounding-box max corner for device ${deviceId}, image ${deviceContent.deviceContentId}",
+                            imageVectorSpaceEnumId ?: "EuclideanSpace2D",
+                            "VpPosition",
+                            [boundingBox[2], boundingBox[3]]
+                        )
+                    }
+                    if (saveCenter && center) {
+                        centerVectorId = createVector(
+                            "bbox_center_${deviceId}",
+                            "Visual grounding center point for device ${deviceId}, image ${deviceContent.deviceContentId}",
+                            imageVectorSpaceEnumId ?: "EuclideanSpace2D",
+                            "VpPosition",
+                            center
+                        )
+                    }
+                    if (saveTargetPose && targetPose) {
+                        targetPoseVectorId = createVector(
+                            "target_pose_${deviceId}",
+                            "Target TCP pose inferred from visual grounding for device ${deviceId}, image ${deviceContent.deviceContentId}",
+                            targetPoseVectorSpaceEnumId ?: "EngTcpPose6Dof",
+                            "VpPosition",
+                            targetPose
+                        )
+                    }
+                ]]></script>
+            </if>
+        </actions>
+    </service>
+
     <!-- ========== Trajectory Planner ========== -->
 
     <service verb="run" noun="RobotArmTrajectoryPlanner">
