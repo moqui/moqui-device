@@ -14,7 +14,7 @@ along with this software (see the LICENSE.md file). If not, see
 -->
 <entity-facade-xml type="seed">
 
-    <!-- ========== 6-DOF Joint Space vector-space definition ========== -->
+    <!-- ========== 6-DOF Joint Space + TCP Pose vector-space definitions ========== -->
     <!-- vectorSpaceEnumId references EnumGroup entries in moqui.basic.Enumeration.
         EnumGroupMember links dimension enumerations to the group.
     -->
@@ -37,12 +37,31 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.basic.EnumGroupMember enumId="DimJ5" enumGroupEnumId="EngJointSpace6Dof" sequenceNum="5"/>
     <moqui.basic.EnumGroupMember enumId="DimJ6" enumGroupEnumId="EngJointSpace6Dof" sequenceNum="6"/>
 
+    <!-- Dimension enumerations for 6-DOF TCP poses expressed as X,Y,Z,A,B,C -->
+    <moqui.basic.EnumerationType description="TCP Pose Dimension" enumTypeId="TcpPoseDimension"/>
+    <moqui.basic.Enumeration description="TCP X Position" enumId="DimTcpX" enumCode="X" enumTypeId="TcpPoseDimension"/>
+    <moqui.basic.Enumeration description="TCP Y Position" enumId="DimTcpY" enumCode="Y" enumTypeId="TcpPoseDimension"/>
+    <moqui.basic.Enumeration description="TCP Z Position" enumId="DimTcpZ" enumCode="Z" enumTypeId="TcpPoseDimension"/>
+    <moqui.basic.Enumeration description="TCP A Orientation" enumId="DimTcpA" enumCode="A" enumTypeId="TcpPoseDimension"/>
+    <moqui.basic.Enumeration description="TCP B Orientation" enumId="DimTcpB" enumCode="B" enumTypeId="TcpPoseDimension"/>
+    <moqui.basic.Enumeration description="TCP C Orientation" enumId="DimTcpC" enumCode="C" enumTypeId="TcpPoseDimension"/>
+
+    <!-- EnumGroup: 6-DOF TCP pose space aligned with PLCopen motion FBs -->
+    <moqui.basic.Enumeration description="6-DOF TCP Pose Space" enumId="EngTcpPose6Dof" enumTypeId="EnumGroup"/>
+    <moqui.basic.EnumGroupMember enumId="DimTcpX" enumGroupEnumId="EngTcpPose6Dof" sequenceNum="1"/>
+    <moqui.basic.EnumGroupMember enumId="DimTcpY" enumGroupEnumId="EngTcpPose6Dof" sequenceNum="2"/>
+    <moqui.basic.EnumGroupMember enumId="DimTcpZ" enumGroupEnumId="EngTcpPose6Dof" sequenceNum="3"/>
+    <moqui.basic.EnumGroupMember enumId="DimTcpA" enumGroupEnumId="EngTcpPose6Dof" sequenceNum="4"/>
+    <moqui.basic.EnumGroupMember enumId="DimTcpB" enumGroupEnumId="EngTcpPose6Dof" sequenceNum="5"/>
+    <moqui.basic.EnumGroupMember enumId="DimTcpC" enumGroupEnumId="EngTcpPose6Dof" sequenceNum="6"/>
+
     <!-- ========== Gateway device + DeviceRequest for export#Trajectory ========== -->
     <!--
         Minimal records needed to test moqui.device.DeviceGatewayServices.export#Trajectory.
         Replace brokerUri with the actual gateway address in production.
         The MQTT topic in DeviceRequest.query must match the MqttParameterSub subscription
-        on the PLC side (JsonToParametersMapper expected keys: "J1"…"J6").
+        on the PLC side (JsonToParametersMapper expected keys: "X","Y","Z","A","B","C"
+        for TCP pose trajectories, or "J1"…"J6" for joint-space trajectories).
     -->
     <moqui.device.Device deviceId="moqui-device-gateway1"
         deviceTypeEnumId="DtServer"/>
@@ -61,7 +80,7 @@ along with this software (see the LICENSE.md file). If not, see
         timeout="30"
         description="Exports 6-DOF robot arm trajectory waypoints to moqui-device-gateway for MQTT publishing (ephemeral bulk path)."/>
 
-    <!-- ========== MathModelDef: 6-DOF MLP Trajectory Planner ========== -->
+    <!-- ========== MathModelDef: 6-DOF TCP waypoint planner ========== -->
     <!-- 
         Model type  : MmtDlFeedforward (Feedforward Neural Network, sub-type of MmtDlModel)
         Usage : MmucInference
@@ -71,10 +90,11 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.math.MathModelDef mathModelDefId="TrjPlannerMlp6Dof"
         modelTypeEnumId="MmtDlFeedforward" usageContextEnumId="MmucInference"
         domainEnumId="MmdEngineering" serviceName="moqui.device.TrajectoryPlannerServices.run#RobotArmTrajectoryPlanner"
-        modelName="6-DOF MLP Trajectory Planner"
-        description="Three-layer MLP (12→128→256→N*6) trained on synthetic quintic-spline
-            trajectories. Input: [q_start(6) ‖ q_goal(6)]. Output: N_WAYPOINTS × 6
-            joint angles (flat). Default N_WAYPOINTS=10."
+        modelName="6-DOF TCP Waypoint Planner"
+        description="AI waypoint planner whose service contract is now TCP-pose based.
+            Input: [tcp_start(6) ‖ tcp_goal(6)] with TCP components [X,Y,Z,A,B,C].
+            Output: N_WAYPOINTS × 6 TCP poses (flat). Retrain or replace the bundled
+            ONNX model accordingly before production use."
         versionNumber="1" releaseStatusId="MathModelProduction"/>
 
     <!-- ========== MathModelDefIdentification: internal registry ========== -->
@@ -85,7 +105,7 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.math.MathModelDefIdentification mathModelDefId="TrjPlannerMlp6Dof"
         externalSystemEnumId="MmesInternal" fromDate="2026-06-22 00:00:00"
         externalId="moqui-device/trajectory-planner-mlp-6dof" externalVersion="1.0"
-        isPrimary="Y" description="Internal identifier for the bundled 6-DOF trajectory planner model."/>
+        isPrimary="Y" description="Internal identifier for the bundled 6-DOF TCP waypoint planner model."/>
 
     <!-- ========== MathModelDefContent: ONNX file ========== -->
     <!-- 
@@ -95,13 +115,13 @@ along with this software (see the LICENSE.md file). If not, see
     <moqui.math.MathModelDefContent mathModelContentId="TrjPlannerMlp6DofOnnx"
         mathModelDefId="TrjPlannerMlp6Dof" contentLocation="component://moqui-device/data/ml/trajectory_planner.onnx"
         contentTypeEnumId="MmCntOnnx" purposeEnumId="MmCnpMainLogic" contentDate="2026-06-22 00:00:00"
-        description="ONNX export of the 6-DOF MLP trajectory planner.
+        description="ONNX export of the 6-DOF TCP waypoint planner.
             Generate with: python script/train_robot_arm_trajectory_planner.py"/>
 
     <!-- ========== MathModel: production instance ========== -->
     <!-- sourceEnumId: MmsSimulated (trained on synthetic quintic-spline data) -->
     <moqui.math.MathModel mathModelId="TrjPlannerMlp6DofV1" mathModelDefId="TrjPlannerMlp6Dof"
         sourceEnumId="MmsSimulated" modelAlias="trj-planner-v1"
-        description="Production instance of the 6-DOF MLP trajectory planner v1."
+        description="Production instance of the 6-DOF TCP waypoint planner v1."
         statusId="MathModelProduction" statusFlowId="MathModelStatusFlow"/>
 </entity-facade-xml>

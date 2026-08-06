@@ -17,14 +17,14 @@ import org.moqui.BaseException
 import org.moqui.context.ExecutionContext
 
 class TrajectoryGenerator {
-    static List<Double> normalizeJointConfig(Object config, String fieldName) {
+    static List<Double> normalizePoseVector(Object config, String fieldName) {
         if (!(config instanceof List)) {
-            throw new BaseException("${fieldName} must be a List with exactly 6 numeric joint angles.")
+            throw new BaseException("${fieldName} must be a List with exactly 6 numeric values.")
         }
 
         List configList = (List) config
         if (configList.size() != 6) {
-            throw new BaseException("${fieldName} must contain exactly 6 joint angles, found ${configList.size()}.")
+            throw new BaseException("${fieldName} must contain exactly 6 numeric values, found ${configList.size()}.")
         }
 
         List<Double> normalized = []
@@ -51,8 +51,12 @@ class TrajectoryGenerator {
         return normalized
     }
 
+    static List<Double> normalizeJointConfig(Object config, String fieldName) {
+        return normalizePoseVector(config, fieldName)
+    }
+
     static Map<String, Object> runInference(ExecutionContext ec, String onnxContentLocation,
-            List<Double> startConfig, List<Double> goalConfig) {
+            List<Double> startPose, List<Double> goalPose) {
         if (!onnxContentLocation) throw new BaseException("Missing ONNX content location.")
 
         float[] rawOutput
@@ -90,8 +94,8 @@ class TrajectoryGenerator {
 
             float[] inputData = new float[12]
             for (int i = 0; i < 6; i++) {
-                inputData[i] = startConfig.get(i).floatValue()
-                inputData[6 + i] = goalConfig.get(i).floatValue()
+                inputData[i] = startPose.get(i).floatValue()
+                inputData[6 + i] = goalPose.get(i).floatValue()
             }
 
             def inputArr = manager.create(inputData, new ai.djl.ndarray.types.Shape(1L, 12L))
@@ -114,7 +118,7 @@ class TrajectoryGenerator {
             throw new BaseException("Trajectory inference returned an empty output tensor.")
         }
         if ((rawOutput.length % 6) != 0) {
-            throw new BaseException("Trajectory inference returned ${rawOutput.length} values, not divisible by 6 joints.")
+            throw new BaseException("Trajectory inference returned ${rawOutput.length} values, not divisible by 6 TCP pose components.")
         }
 
         List<List<Double>> waypoints = []

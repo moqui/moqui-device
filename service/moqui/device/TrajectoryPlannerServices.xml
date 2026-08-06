@@ -19,13 +19,15 @@ along with this software (see the LICENSE.md file). If not, see
 
     <service verb="run" noun="RobotArmTrajectoryPlanner">
         <description>
-            Run a 6-DOF robot trajectory planner using a DJL ONNX MLP model.
+            Run a 6-DOF robot TCP waypoint planner using a DJL ONNX model.
 
-            The model accepts [q_start(6) || q_goal(6)] (12 inputs) and produces
-            N_WAYPOINTS x 6 joint angles (flat output).
+            The model accepts [tcp_start(6) || tcp_goal(6)] (12 inputs) and produces
+            N_WAYPOINTS x 6 TCP poses (flat output), aligned with the PLC waypoint
+            space used by PLCopen Part 4 coordinated-motion FBs such as
+            MC_MoveLinearAbsolute and MC_MoveCircularAbsolute.
 
             Persists results to:
-                Vector / VectorComponent        — per-waypoint joint positions + q_start/q_goal
+                Vector / VectorComponent        — per-waypoint TCP poses + tcp_start/tcp_goal
                 ApproximatedFunction            — parent function container
                 ParametricPath                  — path-level metadata
                 Trajectory                      — time-tagged motion
@@ -38,17 +40,18 @@ along with this software (see the LICENSE.md file). If not, see
 
             The ONNX model file is resolved from MathModelDefContent.contentLocation
             (e.g. component://moqui-device/data/ml/trajectory_planner.onnx).
-            Run script/train_robot_arm_trajectory_planner.py once to produce it.
+            The current bundled model must be retrained/exported in the same TCP pose
+            space (X,Y,Z,A,B,C) to match this service contract.
         </description>
         <in-parameters>
             <parameter name="mathModelId" required="true">
                 <description>ID of the MathModel instance to use for inference.</description>
             </parameter>
-            <parameter name="startConfig" type="List" required="true">
-                <description>6 joint angles in radians — start configuration.</description>
+            <parameter name="startPose" type="List" required="true">
+                <description>6 TCP pose values [X,Y,Z,A,B,C] — start pose in the same space used by the PLC.</description>
             </parameter>
-            <parameter name="goalConfig" type="List" required="true">
-                <description>6 joint angles in radians — goal configuration.</description>
+            <parameter name="goalPose" type="List" required="true">
+                <description>6 TCP pose values [X,Y,Z,A,B,C] — goal pose in the same space used by the PLC.</description>
             </parameter>
             <parameter name="trajectoryName" type="String" default-value=""/>
         </in-parameters>
@@ -74,12 +77,16 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
 
             <script><![CDATA[
+                import org.moqui.BaseException
                 import groovy.json.JsonOutput
                 import org.moqui.device.TrajectoryGenerator
 
-                startConfigList = TrajectoryGenerator.normalizeJointConfig(startConfig, "startConfig")
-                goalConfigList = TrajectoryGenerator.normalizeJointConfig(goalConfig, "goalConfig")
-                mathModelRunParameters = JsonOutput.toJson([startConfig: startConfigList, goalConfig: goalConfigList])
+                if (startPose == null) throw new BaseException("Missing startPose.")
+                if (goalPose == null) throw new BaseException("Missing goalPose.")
+
+                startPoseList = TrajectoryGenerator.normalizePoseVector(startPose, "startPose")
+                goalPoseList = TrajectoryGenerator.normalizePoseVector(goalPose, "goalPose")
+                mathModelRunParameters = JsonOutput.toJson([startPose: startPoseList, goalPose: goalPoseList])
                 trajectoryLabel = trajectoryName ?: null
             ]]></script>
 
@@ -102,7 +109,7 @@ along with this software (see the LICENSE.md file). If not, see
 
                 try {
                     Map inference = TrajectoryGenerator.runInference(ec, onnxContent.contentLocation as String,
-                        startConfigList, goalConfigList)
+                        startPoseList, goalPoseList)
                     waypoints = inference.waypoints
                     waypointCount = inference.waypointCount
                     inferenceLatencyMs = inference.inferenceLatencyMs ?: 0L
@@ -119,9 +126,9 @@ along with this software (see the LICENSE.md file). If not, see
             ]]></script>
 
             <set field="trajectoryLabel" from="trajectoryLabel ?: 'AI Trajectory ' + runId"/>
-            <set field="approximatedFunctionFields" from="[vectorSpaceEnumId: 'EngJointSpace6Dof', codomainTypeEnumId: 'AfctVector',
+            <set field="approximatedFunctionFields" from="[vectorSpaceEnumId: 'EngTcpPose6Dof', codomainTypeEnumId: 'AfctVector',
                 dataStorageEnumId: 'AfdsPointTable', purposeEnumId: 'AfpRobotMotion', interpolationEnumId: 'AfiAIPath',
-                name: trajectoryLabel, description: '6-DOF robot trajectory from MLP planner']"/>
+                name: trajectoryLabel, description: '6-DOF TCP waypoint trajectory from AI planner']"/>
             <entity-make-value entity-name="moqui.math.ApproximatedFunction" value-field="approximatedFunctionValue" map="approximatedFunctionFields"/>
             <script><![CDATA[approximatedFunctionValue.setSequencedIdPrimary()]]></script>
             <entity-create value-field="approximatedFunctionValue"/>
@@ -131,8 +138,8 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-make-value entity-name="moqui.math.ParametricPath" value-field="parametricPathValue" map="parametricPathFields"/>
             <entity-create value-field="parametricPathValue"/>
 
-            <set field="trajectoryFields" from="[approximatedFunctionId: approximatedFunctionId, actuationTypeEnumId: 'PtaDirect',
-                actuatorTypeEnumId: 'PtactRevolute', controlMethodEnumId: 'PtcmNNControl']"/>
+            <set field="trajectoryFields" from="[approximatedFunctionId: approximatedFunctionId, actuationTypeEnumId: 'PtaVirtual',
+                controlMethodEnumId: 'PtcmNNControl']"/>
             <entity-make-value entity-name="moqui.math.Trajectory" value-field="trajectoryValue" map="trajectoryFields"/>
             <entity-create value-field="trajectoryValue"/>
 
@@ -145,14 +152,14 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-create value-field="waypointVectorValue"/>
                 <set field="waypointVectorId" from="waypointVectorValue.vectorId"/>
 
-                <set field="jointIndex" from="0" type="Integer"/>
-                <iterate list="waypoint" entry="jointValue">
-                    <set field="waypointComponentFields" from="[vectorId: waypointVectorId, dimensionIndex: jointIndex,
-                        componentTypeEnumId: 'VctCanonical', realValue: jointValue]"/>
+                <set field="poseIndex" from="0" type="Integer"/>
+                <iterate list="waypoint" entry="poseValue">
+                    <set field="waypointComponentFields" from="[vectorId: waypointVectorId, dimensionIndex: poseIndex,
+                        componentTypeEnumId: 'VctCanonical', realValue: poseValue]"/>
                     <entity-make-value entity-name="moqui.math.VectorComponent" value-field="waypointComponentValue" map="waypointComponentFields"/>
                     <script><![CDATA[waypointComponentValue.setSequencedIdPrimary()]]></script>
                     <entity-create value-field="waypointComponentValue"/>
-                    <set field="jointIndex" from="jointIndex + 1" type="Integer"/>
+                    <set field="poseIndex" from="poseIndex + 1" type="Integer"/>
                 </iterate>
 
                 <set field="sampleTypeEnumId" from="waypointIndex == 0 ? 'AfstStartPoint' : (waypointIndex == (waypointCount - 1) ? 'AfstEndPoint' : 'AfstWaypoint')"/>
@@ -176,7 +183,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="waypointIndex" from="waypointIndex + 1" type="Integer"/>
             </iterate>
 
-            <set field="inputVectorList" from="[[name: 'q_start', values: startConfigList], [name: 'q_goal', values: goalConfigList]]"/>
+            <set field="inputVectorList" from="[[name: 'tcp_start', values: startPoseList], [name: 'tcp_goal', values: goalPoseList]]"/>
             <set field="inputVectorIdList" from="[]" type="NewList"/>
             <iterate list="inputVectorList" entry="inputVector">
                 <set field="inputVectorFields" from="[vectorTypeEnumId: 'VtOrdinary', purposeEnumId: 'VpPosition',
@@ -186,14 +193,14 @@ along with this software (see the LICENSE.md file). If not, see
                 <entity-create value-field="inputVectorValue"/>
                 <script><![CDATA[inputVectorIdList.add(inputVectorValue.vectorId)]]></script>
 
-                <set field="jointIndex" from="0" type="Integer"/>
-                <iterate list="inputVector.values" entry="jointValue">
-                    <set field="inputVectorComponentFields" from="[vectorId: inputVectorValue.vectorId, dimensionIndex: jointIndex,
-                        componentTypeEnumId: 'VctCanonical', realValue: jointValue]"/>
+                <set field="poseIndex" from="0" type="Integer"/>
+                <iterate list="inputVector.values" entry="poseValue">
+                    <set field="inputVectorComponentFields" from="[vectorId: inputVectorValue.vectorId, dimensionIndex: poseIndex,
+                        componentTypeEnumId: 'VctCanonical', realValue: poseValue]"/>
                     <entity-make-value entity-name="moqui.math.VectorComponent" value-field="inputVectorComponentValue" map="inputVectorComponentFields"/>
                     <script><![CDATA[inputVectorComponentValue.setSequencedIdPrimary()]]></script>
                     <entity-create value-field="inputVectorComponentValue"/>
-                    <set field="jointIndex" from="jointIndex + 1" type="Integer"/>
+                    <set field="poseIndex" from="poseIndex + 1" type="Integer"/>
                 </iterate>
             </iterate>
 

@@ -369,9 +369,11 @@ along with this software (see the LICENSE.md file). If not, see
             topic specified in DeviceRequest.query; MqttParameterSub on the PLC then
             delivers each key/value pair to JsonToParametersMapper.
 
-            Axis names are derived from VectorComponent.dimensionIndex (0 → "J1", …, 5 → "J6").
-            TrajectoryAxisBinding is intentionally not used here: it belongs to
-            run#RobotArmTrajectoryPlanner as a servo-drive parameter limit verification tool.
+            Axis names are derived from the trajectory vector space:
+              - EngJointSpace6Dof → J1..J6
+              - EngTcpPose6Dof    → X,Y,Z,A,B,C
+            TrajectoryAxisBinding is intentionally not used here because this export
+            serialises the already planned waypoint stream directly.
 
             JSON payload shape sent to gateway:
                 {
@@ -379,8 +381,8 @@ along with this software (see the LICENSE.md file). If not, see
                   "waypointCount": 10,
                   "mqttTopic": "moqui/robot/arm1/trajectory",
                   "axes": {
-                    "J1": [0.10, 0.20, …],
-                    "J2": [0.00, 0.05, …],
+                    "X": [850.0, 860.0, …],
+                    "Y": [0.0, 20.0, …],
                     …
                   }
                 }
@@ -438,14 +440,22 @@ along with this software (see the LICENSE.md file). If not, see
                 return
             }
 
-            // build per-axis arrays: dimensionIndex 0 → "J1", …, 5 → "J6"
+            EntityValue approxFunc = ec.entity.find("moqui.math.ApproximatedFunction")
+                .condition("approximatedFunctionId", approximatedFunctionId).one()
+            String vectorSpaceEnumId = approxFunc?.vectorSpaceEnumId ?: ''
+            List<String> axisNames = vectorSpaceEnumId == 'EngTcpPose6Dof' ?
+                ['X', 'Y', 'Z', 'A', 'B', 'C'] :
+                ['J1', 'J2', 'J3', 'J4', 'J5', 'J6']
+
+            // build per-axis arrays according to the trajectory vector space
             Map<String, List<Double>> axes = [:]
             for (def sample in samples) {
                 def components = ec.entity.find("moqui.math.VectorComponent")
                     .condition("vectorId", sample.sampleVectorId)
                     .orderBy("dimensionIndex").list()
                 for (def comp in components) {
-                    String axisKey = "J${(comp.dimensionIndex as int) + 1}"
+                    int dim = comp.dimensionIndex as int
+                    String axisKey = dim < axisNames.size() ? axisNames[dim] : "D${dim}"
                     if (!axes.containsKey(axisKey)) axes[axisKey] = []
                     axes[axisKey] << (comp.realValue as double)
                 }

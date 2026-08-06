@@ -1,26 +1,20 @@
 """
-6-DOF MLP Trajectory Planner — Training & ONNX Export
-======================================================
+6-DOF TCP Waypoint Planner — Training & ONNX Export
+===================================================
 
-Trains a 3-layer MLP on synthetic quintic-spline trajectories and exports
+Trains a 3-layer MLP on synthetic TCP waypoint trajectories and exports
 the trained model to ONNX format for use with the moqui-device
 run#RobotArmTrajectoryPlanner service.
 
-Usage
------
-    pip install torch numpy onnx onnxscript
-    python script/train_trajectory_planner.py
+The generated waypoints live in the same 6D TCP pose space expected by
+the PLC side:
+    [X, Y, Z, A, B, C]
 
-Output
-------
-    data/ml/trajectory_planner.onnx
-
-Model I/O
----------
-    Input  : float32[1, 12]  — [q_start(6) || q_goal(6)], joint angles in radians
-    Output : float32[1, 60]  — 10 waypoints × 6 joints (flat, row-major)
-
-The DJL service reads the flat output and reconstructs shape [N_WAYPOINTS, 6].
+The synthetic dataset is intentionally obstacle-like: between start and goal
+poses the generator injects a smooth Cartesian detour on XYZ, while A/B/C are
+interpolated smoothly. This gives the neural net examples closer to "avoid an
+obstacle and then rejoin the nominal path" rather than plain straight-line
+interpolation.
 """
 
 import os
@@ -31,48 +25,99 @@ import torch.optim as optim
 
 # Configuration
 
-N_JOINTS = 6
-N_WAYPOINTS = 10
-N_OUT = N_WAYPOINTS * N_JOINTS # 60
+N_DIMS = 6
+N_WAYPOINTS = int(os.environ.get("TRAJECTORY_WAYPOINTS", "10"))
+N_OUT = N_WAYPOINTS * N_DIMS
 
-JOINT_LIMITS = (-np.pi, np.pi) # radians, symmetric
+# TCP pose ranges: X/Y/Z in mm, A/B/C in degrees
+POSE_LIMITS = np.array([
+    [200.0, 1200.0],   # X
+    [-800.0, 800.0],   # Y
+    [100.0, 1600.0],   # Z
+    [-180.0, 180.0],   # A
+    [-180.0, 180.0],   # B
+    [-180.0, 180.0],   # C
+], dtype=np.float32)
 
-N_TRAIN = 50_000
-N_VAL = 5_000
-BATCH = 512
-EPOCHS = 80
-LR = 1e-3
+N_TRAIN = int(os.environ.get("TRAJECTORY_TRAIN_SAMPLES", "50000"))
+N_VAL = int(os.environ.get("TRAJECTORY_VAL_SAMPLES", "5000"))
+BATCH = int(os.environ.get("TRAJECTORY_BATCH_SIZE", "512"))
+EPOCHS = int(os.environ.get("TRAJECTORY_EPOCHS", "80"))
+LR = float(os.environ.get("TRAJECTORY_LR", "1e-3"))
 
 OUT_DIR  = os.path.join(os.path.dirname(__file__), "..", "data", "ml")
 OUT_PATH = os.path.join(OUT_DIR, "trajectory_planner.onnx")
 
-# Synthetic data generation (quintic spline)
+# Synthetic data generation
 
-def quintic_spline_waypoints(q_start: np.ndarray, q_goal: np.ndarray,
-    n_waypoints: int) -> np.ndarray:
-    """
-    Interpolate between q_start and q_goal using a degree-5 polynomial that
-    enforces zero velocity and acceleration at both endpoints.
+def _quintic_progress(t: np.ndarray) -> np.ndarray:
+    return 6 * t**5 - 15 * t**4 + 10 * t**3
 
-    Returns array of shape (n_waypoints, n_joints).
+
+def _sample_pose(n: int) -> np.ndarray:
+    lo = POSE_LIMITS[:, 0]
+    hi = POSE_LIMITS[:, 1]
+    return np.random.uniform(lo, hi, (n, N_DIMS)).astype(np.float32)
+
+
+def _bounded_obstacle_offset(start_xyz: np.ndarray, goal_xyz: np.ndarray) -> np.ndarray:
+    delta = goal_xyz - start_xyz
+    norm = np.linalg.norm(delta)
+    if norm < 1e-6:
+        return np.array([0.0, 0.0, 0.0], dtype=np.float32)
+
+    direction = delta / norm
+    reference = np.array([0.0, 0.0, 1.0], dtype=np.float32)
+    if abs(np.dot(direction, reference)) > 0.95:
+        reference = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+
+    lateral = np.cross(direction, reference)
+    lateral_norm = np.linalg.norm(lateral)
+    if lateral_norm < 1e-6:
+        lateral = np.array([1.0, 0.0, 0.0], dtype=np.float32)
+        lateral_norm = 1.0
+    lateral = lateral / lateral_norm
+
+    vertical = np.cross(direction, lateral)
+    vertical = vertical / max(np.linalg.norm(vertical), 1e-6)
+
+    amplitude = min(max(norm * np.random.uniform(0.08, 0.22), 20.0), 250.0)
+    return amplitude * (
+        np.random.uniform(-1.0, 1.0) * lateral +
+        np.random.uniform(0.2, 1.0) * vertical
+    )
+
+
+def tcp_waypoints(start_pose: np.ndarray, goal_pose: np.ndarray, n_waypoints: int) -> np.ndarray:
     """
-    t = np.linspace(0.0, 1.0, n_waypoints)
-    # Quintic basis: ensures pos/vel/acc continuity at endpoints
-    s = 6*t**5 - 15*t**4 + 10*t**3
-    # s(0)=0, s(1)=1, s'(0)=s'(1)=0, s''(0)=s''(1)=0
-    waypoints = q_start[None, :] + s[:, None] * (q_goal - q_start)[None, :]
+    Generate a smooth TCP trajectory with a synthetic XYZ detour and
+    quintic orientation interpolation.
+    """
+    t = np.linspace(0.0, 1.0, n_waypoints, dtype=np.float32)
+    s = _quintic_progress(t).astype(np.float32)
+    bell = (16.0 * (t**2) * ((1.0 - t) ** 2)).astype(np.float32)
+
+    start_xyz = start_pose[:3]
+    goal_xyz = goal_pose[:3]
+    start_abc = start_pose[3:]
+    goal_abc = goal_pose[3:]
+
+    xyz = start_xyz[None, :] + s[:, None] * (goal_xyz - start_xyz)[None, :]
+    xyz += bell[:, None] * _bounded_obstacle_offset(start_xyz, goal_xyz)[None, :]
+
+    abc = start_abc[None, :] + s[:, None] * (goal_abc - start_abc)[None, :]
+    waypoints = np.concatenate([xyz, abc], axis=1)
     return waypoints.astype(np.float32)
 
 
 def generate_dataset(n: int):
-    lo, hi = JOINT_LIMITS
-    q_start = np.random.uniform(lo, hi, (n, N_JOINTS)).astype(np.float32)
-    q_goal  = np.random.uniform(lo, hi, (n, N_JOINTS)).astype(np.float32)
+    pose_start = _sample_pose(n)
+    pose_goal = _sample_pose(n)
     targets = np.array([
-        quintic_spline_waypoints(q_start[i], q_goal[i], N_WAYPOINTS).flatten()
+        tcp_waypoints(pose_start[i], pose_goal[i], N_WAYPOINTS).flatten()
         for i in range(n)
     ], dtype=np.float32)
-    inputs = np.concatenate([q_start, q_goal], axis=1)  # (n, 12)
+    inputs = np.concatenate([pose_start, pose_goal], axis=1)
     return inputs, targets
 
 
@@ -96,7 +141,7 @@ class TrajectoryMLP(nn.Module):
 # Training loop
 
 def train():
-    print("Generating training data …")
+    print("Generating synthetic TCP waypoint data …")
     X_train, y_train = generate_dataset(N_TRAIN)
     X_val, y_val = generate_dataset(N_VAL)
 
@@ -174,4 +219,4 @@ if __name__ == "__main__":
     torch.manual_seed(42)
     model = train()
     export_onnx(model)
-    print("Done. Start moqui and call run#TrajectoryPlanner with mathModelId=TrjPlannerMlp6DofV1.")
+    print("Done. Start moqui and call run#RobotArmTrajectoryPlanner with mathModelId=TrjPlannerMlp6DofV1.")
